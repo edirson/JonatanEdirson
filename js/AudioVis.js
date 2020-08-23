@@ -39,14 +39,14 @@ var self = window;
 		lightRed: [
 			
 			'#ffffff',
-			'turquoise'   //'#e50000'
+			'yellow'   //'#e50000'
 			
 		],
 		
 		lightViolet: [
 			
 			'#ffffff',
-			'hotpink' //'#ee82ee'
+			'fuchsia' //'#ee82ee'
 						
 		],
 		
@@ -129,11 +129,11 @@ var self = window;
 		container.style.zIndex = -1;
 		container.style.overflow = 'hidden';
     
-		container.style.background = '-webkit-radial-gradient(#ffcc99, #ff9933)';
-		container.style.background = '-moz-radial-gradient(#ffcc99, #ff9933)';
-		container.style.background = '-ms-radial-gradient(#ffcc99, #ff9933)';
-		container.style.background = '-o-radial-gradient(#ffcc99, #ff9933)';
-		container.style.background = 'radial-gradient(#ffcc99, #ff9933)';
+		container.style.background = '-webkit-radial-gradient(#b7f2e0, #68f9ce)';  //'-webkit-radial-gradient(#ffcc99, #ff9933)';
+		container.style.background = '-moz-radial-gradient(#b7f2e0, #68f9ce)';
+		container.style.background = '-ms-radial-gradient(#b7f2e0, #68f9ce)';
+		container.style.background = '-o-radial-gradient(#b7f2e0, #68f9ce)';
+		container.style.background = 'radial-gradient(#b7f2e0, #68f9ce)';
 			
 		body.appendChild(container);
 		
