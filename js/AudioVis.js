@@ -39,7 +39,7 @@ var self = window;
 		lightRed: [
 			
 			'#ffffff',
-			'peru'   //'#e50000'
+			'turquoise'   //'#e50000'
 			
 		],
 		
@@ -53,9 +53,10 @@ var self = window;
 		lightBlue: [
 		
 			'#ffffff',
-			'ghostwhite'  //'#00bcff'
+			'crimson'  //'#00bcff'
 		
 		]
+
 	
 	};
 	
@@ -137,7 +138,7 @@ var self = window;
 		body.appendChild(container);
 		
 		// Setup
-		camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+		camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000); //THREE.PerspectiveCamera(75,
 		camera.position.z = cameraZ;
 		
 		scene = new THREE.Scene();
@@ -216,7 +217,8 @@ var self = window;
 				
 				band: Math.floor(Math.random(128)),
 				scale: 0,
-				level: ~~(Math.random() * (7 - 2 + 1) + 2)
+				level: ~~(Math.random() * (7 - 2 + 1) + 2)  //level: ~~(Math.random() * (7 - 32 + 51) + 2)
+
 					
 			});
 			
@@ -626,11 +628,11 @@ var self = window;
 				
 				new TWEEN.Tween(object.mesh.scale).to({
 
-					x: object.level / 1.35,
-					y: object.level / 1.35,
-					z: object.level / 1.35 
+					x: object.level / 1.90, //Edirson 1.90,antes 1.35,
+					y: object.level / 5.35,
+					z: object.level / 5.35 
 						
-				}, 500).start();
+				}, 100).start(); //500
 
 			}
 		
@@ -659,11 +661,11 @@ var self = window;
 				// Random rotation				
 				new TWEEN.Tween(object.mesh.rotation).to({
 				
-					x: Math.random() * 2 * Math.PI,
+					x: Math.random() * 12 * Math.PI, //*2
 					y: Math.random() * 2 * Math.PI,
 					z: Math.random() * 2 * Math.PI 
 						
-				}, 3000).start();
+				}, 3000).start(); //3000
 
 			}
 		
@@ -722,14 +724,14 @@ var self = window;
 				
 				particles.rotation.copy(group.rotation);
 				
-				particles.rotation.x *= 0.4;
+				particles.rotation.x *= 10.4; //0.4
 				particles.rotation.y *= 0.4;
 				
 				uniforms.bass.value += (object.scale / 2.7 - uniforms.bass.value) * 0.5;
 				uniforms.opacity.value = Math.max(0.0, currentLevel / Math.min(12, currentLevel));
 				
 				// Scale fov						
-				camera.fov += (75 - object.scale * 3 - camera.fov) * 0.008;
+				camera.fov += (75 - object.scale * 45 - camera.fov) * 0.008;  //camera.fov += (75 - object.scale * 3 - camera.fov) * 0.008;
 				camera.updateProjectionMatrix();
 				
 			}
