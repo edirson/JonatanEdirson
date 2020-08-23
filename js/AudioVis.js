@@ -110,8 +110,8 @@ var self = window;
 		var GUI = new dat.GUI();
 						
 		// Dat GUI main
-		GUI.add(settings, 'showStats').onChange(settings.enableStats);
-		GUI.add(settings, 'fullScreen');
+		//Edirson   GUI.add(settings, 'showStats').onChange(settings.enableStats);
+		//Edirson   GUI.add(settings, 'fullScreen');
 		  
 		var body = document.querySelector('body');
 	
