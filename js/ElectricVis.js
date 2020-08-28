@@ -100,7 +100,7 @@ window.onload = function() {
           this.segments[i].show();
         }
         c.strokeStyle = "hsl("+(this.rand*60+180)+",100%," + (this.rand * 60 + 25) + "%)";   //c.strokeStyle = "hsl("+(this.rand*60+180)+",100%," + (this.rand * 60 + 25) + "%)";
-        c.lineWidth = this.rand * 3; //2
+        c.lineWidth = this.rand * 2; //2
         c.lineCap="round";
         c.lineJoin="round";
         c.stroke();
