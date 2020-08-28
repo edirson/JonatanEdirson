@@ -99,8 +99,8 @@ window.onload = function() {
         for (let i = 0; i < this.n; i++) {
           this.segments[i].show();
         }
-        c.strokeStyle = "hsl("+(this.rand*60+180)+",100%," + (this.rand * 60 + 25) + "%)";
-        c.lineWidth = this.rand * 2;
+        c.strokeStyle = "hsl("+(this.rand*60+180)+",100%," + (this.rand * 60 + 25) + "%)";   //c.strokeStyle = "hsl("+(this.rand*60+180)+",100%," + (this.rand * 60 + 25) + "%)";
+        c.lineWidth = this.rand * 7; //2
         c.lineCap="round";
         c.lineJoin="round";
         c.stroke();
