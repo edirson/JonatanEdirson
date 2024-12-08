@@ -196,7 +196,7 @@ a {
   -o-transition: .3s all ease-in-out;
   transition: .3s all ease-in-out; }
   .play-single-big > span {
-    font-size: 50px;
+    font-size: 13px;
     position: absolute;
     top: 50%;
     left: 50%;
