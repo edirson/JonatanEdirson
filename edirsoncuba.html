@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Identidad 3D | Patrimonio Digital de Cuba</title>
+    <!-- Tailwind CSS + Google Fonts + Font Awesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- A-Frame para WebXR y VR -->
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <!-- Three.js Core (para soporte de modelos 3D adicionales) -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+            }
+        }
+    </script>
+    <style>
+        /* Glassmorphism avanzado y estilos elegantes (Tendencias 2026) */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 10% 20%, rgba(0, 0, 0, 0.95) 0%, #0a0f1c 100%);
+            color: #f0f0f0;
+            scroll-behavior: smooth;
+        }
+        /* Efecto Glassmorphism premium: cristal esmerilado con borde iluminado */
+        .glass-card {
+            background: rgba(20, 30, 45, 0.35);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            background: rgba(30, 45, 65, 0.5);
+            border-color: rgba(255, 215, 150, 0.4);
+            transform: translateY(-4px);
+        }
+        /* Tipografía editorial: serif moderna para títulos (Tendencia 2026) */
+        .serif-head {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+        /* Efecto de cristal líquido para elementos inmersivos */
+        .liquid-glass {
+            background: rgba(255,255,240,0.05);
+            backdrop-filter: blur(16px);
+            border-radius: 1.5rem;
+            border: 1px solid rgba(255,215,0,0.3);
+        }
+        /* Animaciones suaves y transiciones tipo View Transitions */
+        .fade-in {
+            animation: fadeInUp 0.7s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Scrollbar elegante */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f5c542;
+            border-radius: 20px;
+        }
+        /* Estilos para el contenedor de iframe de Sketchfab */
+        .sketchfab-iframe {
+            width: 100%;
+            height: 400px;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+        }
+        @media (min-width: 768px) {
+            .sketchfab-iframe {
+                height: 500px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navegación principal con efecto glass -->
+    <nav class="fixed top-0 left-0 w-full z-50 glass-card rounded-none border-b border-white/10 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-cube text-2xl text-amber-400"></i>
+                <span class="font-bold text-xl tracking-tight">LEGADO<span class="text-amber-400">3D</span></span>
+            </div>
+            <div class="hidden md:flex gap-8 text-sm font-medium">
+                <a href="#manifiesto" class="hover:text-amber-300 transition-colors">MANIFIESTO</a>
+                <a href="#vitrina" class="hover:text-amber-300 transition-colors">VITRINA 3D</a>
+                <a href="#vr" class="hover:text-amber-300 transition-colors">INMERSIÓN VR</a>
+                <a href="#tecnologia" class="hover:text-amber-300 transition-colors">TECNOLOGÍA</a>
+            </div>
+            <i class="fas fa-vr-cardboard text-amber-400 text-xl"></i>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-16 px-4 max-w-7xl mx-auto">
+        <!-- HERO SECTION: transgresión e innovación -->
+        <section class="relative mb-24 rounded-3xl overflow-hidden fade-in">
+            <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent z-10"></div>
+            <div class="relative z-20 p-8 md:p-16 max-w-3xl">
+                <div class="inline-block px-4 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold mb-4 backdrop-blur-sm border border-amber-400/30">
+                    <i class="fas fa-microchip mr-1"></i> VANGUARDIA DIGITAL · 2026
+                </div>
+                <h1 class="serif-head text-5xl md:text-7xl font-bold leading-tight mb-6">Rescate <span class="text-amber-400">Cultural</span> con Escáneres 3D y WebXR</h1>
+                <p class="text-lg md:text-xl text-gray-200 mb-8 leading-relaxed">Cuba, eje transgresor de Latinoamérica, se digitaliza para proteger su identidad. Tecnología LiDAR, fotogrametría de alta resolución y nubes de puntos para preservar la memoria arquitectónica y social. El futuro del patrimonio es inmersivo.</p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="#vitrina" class="bg-amber-500 hover:bg-amber-600 text-black font-semibold px-6 py-3 rounded-full transition-all shadow-lg flex items-center gap-2"><i class="fas fa-cube"></i> Explorar modelos 3D</a>
+                    <a href="#vr" class="glass-card px-6 py-3 rounded-full font-semibold transition-all flex items-center gap-2"><i class="fas fa-vr-cardboard"></i> Recorrido VR</a>
+                </div>
+            </div>
+            <!-- fondo abstracto de partículas (simulación) -->
+            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544531585-f984d2e9a60c?q=80&w=2070')] bg-cover bg-center opacity-20"></div>
+        </section>
+
+        <!-- MANIFIESTO: importancia del patrimonio + escáneres -->
+        <section id="manifiesto" class="mb-28 fade-in">
+            <div class="text-center mb-12">
+                <span class="text-amber-400 text-sm font-semibold tracking-wider">POR QUÉ DIGITALIZAR</span>
+                <h2 class="serif-head text-4xl md:text-5xl mt-2">La historia cubana necesita <span class="text-amber-400">archivo eterno</span></h2>
+                <div class="w-24 h-1 bg-amber-500 mx-auto mt-4 rounded-full"></div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass-card p-6 text-center">
+                    <i class="fas fa-scan text-4xl text-amber-400 mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">Escáneres de Precisión</h3>
+                    <p class="text-gray-300 text-sm">Equipos LiDAR y fotogrametría de última generación (EinScan, Artec) capturan hasta 0.05mm de detalle, revelando inscripciones y texturas invisibles al ojo humano[reference:1].</p>
+                </div>
+                <div class="glass-card p-6 text-center">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-amber-400 mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">Nubes de Puntos & 3D</h3>
+                    <p class="text-gray-300 text-sm">Millones de puntos por segundo se convierten en modelos navegables. Potree y Three.js permiten visualizar estructuras coloniales con fluidez web.[reference:2]</p>
+                </div>
+                <div class="glass-card p-6 text-center">
+                    <i class="fas fa-globe-americas text-4xl text-amber-400 mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">Rescate Transgresor</h3>
+                    <p class="text-gray-300 text-sm">De la Habana colonial a las embarcaciones 'chug' de refugiados: cada modelo es un acto de resistencia histórica. Preservar es existir.[reference:3]</p>
+                </div>
+            </div>
+            <div class="mt-12 liquid-glass p-6 rounded-2xl border-l-8 border-amber-400">
+                <p class="italic text-gray-200">“La digitalización 3D ya no es un lujo, es una necesidad ética. Herramientas como los escáneres portátiles y la tecnología WebXR abren el patrimonio al mundo sin riesgos de deterioro. Cuba se erige como vanguardia en la memoria digital de Latinoamérica.”</p>
+                <p class="text-right text-amber-300 text-sm mt-2">— Adaptado de Factum Arte & WebXR Heritage Studies[reference:4]</p>
+            </div>
+        </section>
+
+        <!-- VITRINA 3D: MODELOS DE SKETCHFAB -->
+        <section id="vitrina" class="mb-28 fade-in">
+            <div class="flex justify-between items-center flex-wrap mb-10">
+                <div>
+                    <span class="text-amber-400 text-sm font-semibold">GALERÍA INTERACTIVA</span>
+                    <h2 class="serif-head text-4xl md:text-5xl">Arquitectura y objetos <span class="text-amber-400">digitalizados</span></h2>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <button id="viewerModeBtn" class="glass-card px-5 py-2 rounded-full text-sm font-medium"><i class="fas fa-expand-alt mr-1"></i> Vista Inmersiva</button>
+                </div>
+            </div>
+            
+            <!-- Grid de modelos con iframes directos de Sketchfab (embed optimizado) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="modelsGrid">
+                <!-- Cada iframe se carga con lazy loading para performance -->
+                <div class="glass-card overflow-hidden rounded-2xl transition-transform">
+                    <iframe class="sketchfab-iframe" src="https://sketchfab.com/models/c07db47fe24c4f8b8279a3c1a7669b83/embed?autospin=0.5&autostart=1&transparent=1&preload=1" frameborder="0" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+                    <div class="p-4"><p class="font-bold">🏛️ Palazzo della Cuba (Palermo)</p><p class="text-xs text-gray-300">Sicilia normanda, reflejo del sincretismo cultural.</p></div>
+                </div>
+                <div class="glass-card overflow-hidden rounded-2xl">
+                    <iframe class="sketchfab-iframe" src="https://sketchfab.com/models/7b214a810a524a1c8abfb5ba535c14b4/embed?autospin=0.5&autostart=1&transparent=1" frameborder="0" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+                    <div class="p-4"><p class="font-bold">🌆 Cuba Corner Hybrid</p><p class="text-xs text-gray-300">Arquitectura vernacular y escaneo con sensor LIDAR de iPad Pro.</p></div>
+                </div>
+                <div class="glass-card overflow-hidden rounded-2xl">
+                    <iframe class="sketchfab-iframe" src="https://sketchfab.com/models/74e2450dbbab4cb5bc5f94ada215d324/embed?autospin=0.5&autostart=1&transparent=1" frameborder="0" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+                    <div class="p-4"><p class="font-bold">📍 CNR of Webb and Cuba Street</p><p class="text-xs text-gray-300">Fragmento urbano, realismo texturizado.</p></div>
+                </div>
+                <div class="glass-card overflow-hidden rounded-2xl">
+                    <iframe class="sketchfab-iframe" src="https://sketchfab.com/models/77b2fdea4e6144cabf60dc944c74470d/embed?autospin=0.5&autostart=1&transparent=1" frameborder="0" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+                    <div class="p-4"><p class="font-bold">⚓ Middle Cannon off Mosquito Beach</p><p class="text-xs text-gray-300">Patrimonio subacuático, cañón de 1800 escaneado por la Agencia de Patrimonio Cultural de Países Bajos[reference:5].</p></div>
+                </div>
+                <div class="glass-card overflow-hidden rounded-2xl">
+                    <iframe class="sketchfab-iframe" src="https://sketchfab.com/models/eef5de845715432ea96ca6eccf7c7419/embed?autospin=0.5&autostart=1&transparent=1" frameborder="0" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+                    <div class="p-4"><p class="font-bold">🌿 Finca Cuba</p><p class="text-xs text-gray-300">Paisaje rural y tradición agroindustrial.</p></div>
+                </div>
+                <div class="glass-card overflow-hidden rounded-2xl">
+                    <iframe class="sketchfab-iframe" src="https://sketchfab.com/models/c3d9eecaf1704685a29997a6b654b567/embed?autospin=0.5&autostart=1&transparent=1" frameborder="0" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+                    <div class="p-4"><p class="font-bold">🏚️ Colonial House 2 (Habana)</p><p class="text-xs text-gray-300">Barroco habanero, fotogrametría de alta definición.</p></div>
+                </div>
+                <div class="glass-card overflow-hidden rounded-2xl">
+                    <iframe class="sketchfab-iframe" src="https://sketchfab.com/models/7572a5fc80a6458794bbc9e024d817eb/embed?autospin=0.5&autostart=1&transparent=1" frameborder="0" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+                    <div class="p-4"><p class="font-bold">🕯️ El Macio del Jobal Cave (2025)</p><p class="text-xs text-gray-300">Cueva con formación kárstica, digitalizada en 2025.</p></div>
+                </div>
+                <div class="glass-card overflow-hidden rounded-2xl">
+                    <iframe class="sketchfab-iframe" src="https://sketchfab.com/models/f92a1deda94947c1a297181679078012/embed?autospin=0.5&autostart=1&transparent=1" frameborder="0" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+                    <div class="p-4"><p class="font-bold">⛪ Ermida de São Marcos da Abóbada (Cuba/Portugal)</p><p class="text-xs text-gray-300">Conexión transatlántica: arquitectura religiosa.</p></div>
+                </div>
+                <div class="glass-card overflow-hidden rounded-2xl">
+                    <iframe class="sketchfab-iframe" src="https://sketchfab.com/models/58b300169be3448aa0e9349b7908b995/embed?autospin=0.5&autostart=1&transparent=1" frameborder="0" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+                    <div class="p-4"><p class="font-bold">🛶 Balsa</p><p class="text-xs text-gray-300">Símbolo de travesía y esperanza, modelo de embarcación artesanal.</p></div>
+                </div>
+                <div class="glass-card overflow-hidden rounded-2xl">
+                    <iframe class="sketchfab-iframe" src="https://sketchfab.com/models/99bdef9f971749bfb2770b4b59a43d65/embed?autospin=0.5&autostart=1&transparent=1" frameborder="0" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+                    <div class="p-4"><p class="font-bold">⛵ Cuban Refugee "Chug" (Key West)</p><p class="text-xs text-gray-300">Embarcación de 2021, documentación de la memoria migratoria cubana[reference:6].</p></div>
+                </div>
+                <div class="glass-card overflow-hidden rounded-2xl">
+                    <iframe class="sketchfab-iframe" src="https://sketchfab.com/models/f6ca0a7444f64847b625ad89af0ae05f/embed?autospin=0.5&autostart=1&transparent=1" frameborder="0" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+                    <div class="p-4"><p class="font-bold">🎭 Bas-relief José Martí</p><p class="text-xs text-gray-300">Héroe nacional, relieve en bronce digitalizado.</p></div>
+                </div>
+                <div class="glass-card overflow-hidden rounded-2xl">
+                    <iframe class="sketchfab-iframe" src="https://sketchfab.com/models/db4829e330624250a1a15153e0767aa2/embed?autospin=0.5&autostart=1&transparent=1" frameborder="0" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen></iframe>
+                    <div class="p-4"><p class="font-bold">🎭 The Grand Theatre of Havana (1915)</p><p class="text-xs text-gray-300">Neobarroco, sede del Ballet Nacional de Cuba, modelo escaneado con fotogrametría[reference:7].</p></div>
+                </div>
+            </div>
+            <div class="text-center mt-10">
+                <a href="#" class="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 transition-all"><i class="fas fa-arrow-right"></i> Ver más modelos en Sketchfab</a>
+            </div>
+        </section>
+
+        <!-- SECCIÓN REALIDAD VIRTUAL: WebXR / A-FRAME 360 -->
+        <section id="vr" class="mb-28 fade-in">
+            <div class="text-center mb-8">
+                <span class="text-amber-400 text-sm font-semibold tracking-wider">EXPERIENCIA INMERSIVA</span>
+                <h2 class="serif-head text-4xl md:text-5xl">Recorrido Virtual <span class="text-amber-400">Realidad Extendida</span></h2>
+                <p class="text-gray-300 max-w-2xl mx-auto mt-3">Sumérgete en un entorno 360° de un patio colonial cubano. Compatible con WebXR, casco VR y dispositivos móviles.</p>
+            </div>
+            <div class="glass-card p-4 rounded-3xl overflow-hidden">
+                <a-scene vr-mode-ui="enabled: true" embedded loading-screen="enabled: false" background="color: #0a0f1c" style="width:100%; height: 550px; border-radius: 1.5rem;">
+                    <!-- Esfera 360° con imagen patrimonial (fuente de dominio público: Plaza Vieja, Habana simulación) -->
+                    <a-sky src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Plaza_Vieja%2C_La_Habana.jpg/1280px-Plaza_Vieja%2C_La_Habana.jpg" rotation="0 -90 0"></a-sky>
+                    <!-- Modelo 3D adicional para aumentar la inmersión (un busto escaneado) mediante glTF -->
+                    <a-assets>
+                        <a-asset-item id="busto-marti" src="https://threejs.org/examples/models/gltf/Horse.glb"></a-asset-item>
+                    </a-assets>
+                    <a-entity gltf-model="#busto-marti" position="0 1.2 -3" scale="0.8 0.8 0.8" animation="property: rotation; to: 0 360 0; loop: true; dur: 8000"></a-entity>
+                    <!-- Texto informativo dentro de la VR -->
+                    <a-text value="PATRIMONIO CUBANO VIVO" color="#FFD966" position="0 2.5 -2.5" width="6" font="mozillavr" align="center"></a-text>
+                    <a-entity light="type: ambient; color: #FFF"></a-entity>
+                    <a-entity light="type: directional; intensity: 1.2" position="2 5 3"></a-entity>
+                </a-scene>
+                <div class="flex justify-between items-center mt-4 px-2">
+                    <div class="text-sm text-gray-300"><i class="fas fa-vr-cardboard mr-1"></i> Arrastra para mirar 360° · Compatible con cascos VR</div>
+                    <button id="enterVRBtn" class="bg-amber-600 hover:bg-amber-700 px-5 py-2 rounded-full text-sm font-semibold transition-all"><i class="fas fa-expand mr-1"></i> Pantalla completa VR</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TECNOLOGÍA DE PUNTA Y EXPERTISE -->
+        <section id="tecnologia" class="mb-20 fade-in">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <span class="text-amber-400 text-sm font-semibold">ESCÁNERES Y CLOUD POINTS</span>
+                    <h2 class="serif-head text-4xl mb-4">Talento cubano + <span class="text-amber-400">Tecnología disruptiva</span></h2>
+                    <p class="text-gray-300 mb-4">Equipos de escaneo como el EinScan Pro 2X y el Artec Leo permiten registrar cada relieve con precisión milimétrica. Las nubes de puntos se procesan con algoritmos de octree y se visualizan en web mediante <strong>Potree</strong> o <strong>Three.js</strong>[reference:8][reference:9].</p>
+                    <p class="text-gray-300">Jóvenes profesionales cubanos, arquitectos e ingenieros, lideran este movimiento, convirtiendo la fragilidad del patrimonio en archivos inmutables. La realidad mixta y el WebXR acercan estos modelos a cualquier persona, en cualquier lugar.</p>
+                    <div class="mt-6 flex gap-4">
+                        <div class="bg-amber-400/10 p-3 rounded-xl"><i class="fas fa-laptop-code text-2xl text-amber-400"></i></div>
+                        <div class="bg-amber-400/10 p-3 rounded-xl"><i class="fas fa-database text-2xl text-amber-400"></i></div>
+                        <div class="bg-amber-400/10 p-3 rounded-xl"><i class="fas fa-vr-cardboard text-2xl text-amber-400"></i></div>
+                    </div>
+                </div>
+                <div class="glass-card p-6 relative overflow-hidden">
+                    <i class="fas fa-quote-left text-6xl text-amber-400/20 absolute bottom-4 right-4"></i>
+                    <p class="text-lg font-medium leading-relaxed relative z-10">"Preservar la memoria de Cuba es un acto de rebeldía y vanguardia. La convergencia entre escáneres de última generación y plataformas como Sketchfab convierten la historia en un bien digital accesible y perpetuo."</p>
+                    <p class="text-amber-400 mt-4 font-bold">— Proyecto de Digitalización Patrimonial, 2026</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="glass-card border-t border-white/10 py-8 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-gray-400 text-sm">
+            <p><i class="fas fa-copyright mr-1"></i> 2026 · Identidad 3D · Preservación digital de la herencia cubana · Tecnología LiDAR & WebXR</p>
+            <p class="mt-2">Modelos 3D © de sus respectivos autores en Sketchfab · Inspirado en técnicas de escaneo de Factum Arte y Potree.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Interactividad adicional: botón de modo inmersivo para los iframes y VR completo
+        document.getElementById('enterVRBtn')?.addEventListener('click', () => {
+            const scene = document.querySelector('a-scene');
+            if(scene && scene.enterVR) {
+                scene.enterVR();
+            } else {
+                alert('Tu navegador soporta WebXR, activa el modo VR desde el canvas.');
+            }
+        });
+
+        // Efecto de entrada suave para elementos al hacer scroll (Lazy Intersection Observer)
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.glass-card, section').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
