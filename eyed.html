@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Jonatan Edirson Casado Avendaño | Inmersive & Interactive Portfolio</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js Core -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+            }
+        }
+    </script>
+    <!-- A-Frame for WebXR & Gallery -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <!-- GSAP y lil-gui para el ojo interactivo -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lil-gui@0.16.1/dist/lil-gui.umd.js"></script>
+    <!-- MediaPipe FaceMesh para reconocimiento facial -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <style>
+        body {
+            overflow-x: hidden;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        /* Loader */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a2a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 1s ease;
+            color: white;
+            font-family: monospace;
+        }
+        .loader-bar {
+            width: 250px;
+            height: 6px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .loader-progress {
+            width: 0%;
+            height: 100%;
+            background: #00aaff;
+            transition: width 0.3s;
+        }
+        /* smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+        /* 3d parallax container */
+        #parallax-3d-container {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #0b1120, #03050b);
+        }
+        canvas#parallax-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        /* Game container */
+        .game-wrapper {
+            background: #11121f;
+            border-radius: 2rem;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+        /* A-Frame scene customization */
+        a-scene {
+            height: 500px;
+            width: 100%;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 30px -10px rgba(0,0,0,0.4);
+        }
+        /* custom scroll */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f0f1f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
+        }
+        .glow-text {
+            text-shadow: 0 0 8px rgba(59,130,246,0.5);
+        }
+        .card-3d {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card-3d:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 30px -15px rgba(0,0,0,0.5);
+        }
+        /* Contenedor para el ojo interactivo con Face Tracking */
+        #eye-face-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            overflow: hidden;
+            border-radius: 2rem;
+            background: radial-gradient(circle at center, #111122, #02020a);
+            box-shadow: 0 25px 40px rgba(0,0,0,0.5);
+        }
+        #eye-canvas-wrapper {
+            width: 100%;
+            height: 100%;
+        }
+        #webcam-overlay {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 12px;
+            color: #0f0;
+            font-family: monospace;
+            z-index: 20;
+            pointer-events: none;
+        }
+        .status-led {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #0f0;
+            animation: pulse 1s infinite;
+            margin-right: 6px;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.4; transform: scale(0.8);}
+            100% { opacity: 1; transform: scale(1.2);}
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-slate-900 to-black text-white">
+
+    <!-- PRELOADER -->
+    <div id="preloader">
+        <div class="text-2xl font-bold tracking-wider">JONATAN EDIRSON</div>
+        <div class="text-sm mt-2 text-blue-300">Cargando experiencias inmersivas...</div>
+        <div class="loader-bar">
+            <div class="loader-progress" id="progressBar"></div>
+        </div>
+        <div class="mt-4 text-xs text-gray-400">WebGL • WebXR • A-Frame • Three.js</div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="relative z-10">
+        <!-- Hero Section -->
+        <section class="min-h-screen flex flex-col justify-center items-center text-center px-6 relative overflow-hidden">
+            <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 800 800%22%3E%3Cdefs%3E%3ClinearGradient id=%22grad%22 x1=%220%25%22 y1=%220%25%22 x2=%22100%25%22 y2=%22100%25%22%3E%3Cstop offset=%220%25%22 stop-color=%22%233b82f6%22/%3E%3Cstop offset=%22100%25%22 stop-color=%22%239d4edd%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx=%22400%22 cy=%22400%22 r=%22300%22 fill=%22url(%23grad)%22 opacity=%220.05%22/%3E%3C/svg%3E')] bg-cover opacity-30"></div>
+            <div class="relative z-10 animate-fade-in">
+                <h1 class="text-5xl md:text-7xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">Jonatan Edirson Casado Avendaño</h1>
+                <p class="text-xl md:text-2xl mt-4 text-gray-300 max-w-3xl">Especialista en Experiencias Inmersivas | WebGL | VR/AR/XR | Arte Generativo | IA Educativa</p>
+                <div class="flex flex-wrap gap-4 justify-center mt-8">
+                    <span class="px-4 py-2 bg-white/10 backdrop-blur rounded-full text-sm">🎮 Desarrollo Web Interactivo</span>
+                    <span class="px-4 py-2 bg-white/10 backdrop-blur rounded-full text-sm">🕹️ Videojuegos 3D</span>
+                    <span class="px-4 py-2 bg-white/10 backdrop-blur rounded-full text-sm">🎨 Canvas & Animación 2D/3D</span>
+                    <span class="px-4 py-2 bg-white/10 backdrop-blur rounded-full text-sm">🥽 VR • AR • XR • WebXR</span>
+                    <span class="px-4 py-2 bg-white/10 backdrop-blur rounded-full text-sm">🤖 IA con Enfoque Ético</span>
+                </div>
+            </div>
+            <div class="absolute bottom-8 animate-bounce">
+                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+            </div>
+        </section>
+
+        <!-- Sección: Tecnologías Vanguardistas & Multimedia -->
+        <section class="py-20 px-6 max-w-7xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="text-4xl font-bold mb-6 border-l-4 border-blue-500 pl-4">Desarrollo Web Interactivo & Video</h2>
+                    <p class="text-gray-300 text-lg leading-relaxed">Integración de <strong>canvas, video, animación 2D/3D, VR, XR, AR y WebXR</strong> para crear narrativas inmersivas. Producciones multimedia para teatro, instalaciones interactivas y arte generativo con algoritmos en tiempo real.</p>
+                    <div class="mt-8 flex gap-4">
+                        <div class="bg-blue-500/20 p-4 rounded-2xl backdrop-blur"><span class="text-3xl">🎭</span><p class="text-sm">Teatro & Multimedia</p></div>
+                        <div class="bg-purple-500/20 p-4 rounded-2xl backdrop-blur"><span class="text-3xl">🎨</span><p class="text-sm">Arte Generativo</p></div>
+                        <div class="bg-green-500/20 p-4 rounded-2xl backdrop-blur"><span class="text-3xl">🤖</span><p class="text-sm">IA Ética Educativa</p></div>
+                    </div>
+                </div>
+                <!-- Canvas 2D interactivo (animación generativa) -->
+                <div class="bg-black/40 rounded-2xl p-1 backdrop-blur-sm">
+                    <canvas id="generativeCanvas" width="500" height="300" class="w-full rounded-xl border border-white/20"></canvas>
+                    <p class="text-center text-xs mt-2 text-gray-400">✨ Arte generativo en tiempo real • Algoritmos evolutivos</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCROLL PARALLAX 3D SECTION (Three.js + efecto scroll) -->
+        <section class="relative" id="parallax-section">
+            <div id="parallax-3d-container">
+                <canvas id="parallax-canvas"></canvas>
+                <div class="absolute bottom-10 left-0 right-0 text-center text-white z-20 pointer-events-none">
+                    <p class="text-sm bg-black/40 inline-block px-4 py-1 rounded-full backdrop-blur">✨ Scroll Parallax 3D • Movimiento inmersivo</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- NUEVA SECCIÓN: OJO INTERACTIVO CON RECONOCIMIENTO FACIAL (shader GLSL + FaceMesh) -->
+        <section class="py-20 px-6 max-w-6xl mx-auto">
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">👁️ Ojo Interactivo - Seguimiento Facial</h2>
+                <p class="text-gray-300 mt-2">El ojo 3D con shader orgánico sigue tu mirada y movimiento de cabeza mediante reconocimiento facial (MediaPipe FaceMesh). Tecnología de vanguardia + arte generativo.</p>
+            </div>
+            <div id="eye-face-container">
+                <div id="eye-canvas-wrapper"></div>
+                <div id="webcam-overlay">
+                    <span class="status-led"></span> Reconocimiento facial activo • Mueve tu rostro
+                </div>
+            </div>
+            <p class="text-center text-sm text-blue-300 mt-3">Permite acceso a la cámara para que el ojo te siga • Shader inspirado en Inigo Quilez</p>
+        </section>
+
+        <!-- VIDEOJUEGO 3D: VR Collector - habla del uso de VR -->
+        <section class="py-20 px-6 max-w-6xl mx-auto">
+            <div class="text-center mb-10">
+                <h2 class="text-4xl font-bold"><span class="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">🎮 3D Videojuego: VR Consciousness</span></h2>
+                <p class="text-gray-300 mt-2">Explora el potencial de la Realidad Virtual - ¡Recoge los cascos VR y descubre mensajes inmersivos!</p>
+            </div>
+            <div class="game-wrapper relative">
+                <div id="game-container" style="width:100%; height:500px; background:#0a0c1a;"></div>
+                <div class="absolute top-4 left-4 z-10 bg-black/70 px-4 py-2 rounded-lg backdrop-blur-sm">
+                    <span class="font-mono text-xl font-bold">🎯 Puntaje: <span id="game-score">0</span></span>
+                    <span class="ml-4 text-sm">⬆️ W A S D o ⬆️ ⬅️ ⬇️ ➡️</span>
+                </div>
+                <div class="absolute bottom-4 right-4 z-10 bg-black/60 text-xs p-2 rounded-lg">💡 Mensaje: ¡La VR transforma la educación y la empatía!</div>
+            </div>
+            <p class="text-center text-sm mt-3 text-blue-300">Mueve el cubo plateado y colecciona los visores VR (objetos flotantes). Cada uno representa un avance en tecnología inmersiva.</p>
+        </section>
+
+        <!-- SECCIÓN GALERÍA SKETCHFAB + WEB XR (A-Frame + Subir Archivos) -->
+        <section class="py-20 px-6 max-w-7xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold">🖼️ Galería 3D Interactiva • WebXR</h2>
+                <p class="text-gray-300 mt-2">Modelos 3D estilo Sketchfab + Carga tus propios archivos para A-Frame con tecnología WebXR (VR/AR)</p>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="bg-slate-800/40 p-4 rounded-2xl backdrop-blur-sm">
+                    <h3 class="text-xl font-semibold mb-3 text-center">📁 Ejemplos destacados</h3>
+                    <div class="flex flex-wrap justify-center gap-3 mb-4">
+                        <button class="model-btn bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded-full text-sm" data-model="https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb">🤖 Robot VR</button>
+                        <button class="model-btn bg-purple-600 hover:bg-purple-500 px-3 py-1 rounded-full text-sm" data-model="https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf">⛑️ Casco Galáctico</button>
+                        <button class="model-btn bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded-full text-sm" data-model="https://threejs.org/examples/models/gltf/Flamingo.gltf">🦩 Flamenco XR</button>
+                    </div>
+                    <div id="aframe-gallery-container">
+                        <a-scene id="galleryScene" embedded ar-ui="enabled: true" webxr="optional" background="color: #0a0a2a" vr-mode-ui="enabled: true">
+                            <a-assets>
+                                <a-asset-item id="customModel" src="https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf"></a-asset-item>
+                            </a-assets>
+                            <a-entity id="displayModel" gltf-model="#customModel" scale="1.5 1.5 1.5" position="0 1.2 -2" animation="property: rotation; to: 0 360 0; loop: true; dur: 10000"></a-entity>
+                            <a-light type="ambient" intensity="0.8"></a-light>
+                            <a-light type="directional" intensity="1" position="2 5 3"></a-light>
+                            <a-sky color="#0a0a2a"></a-sky>
+                            <a-entity id="cameraRig" position="0 1.6 3">
+                                <a-camera look-controls wasd-controls></a-camera>
+                            </a-entity>
+                        </a-scene>
+                    </div>
+                    <div class="mt-3 text-center text-xs text-gray-400">✨ Haz clic en "Enter VR" dentro de la escena para experiencia inmersiva (WebXR)</div>
+                </div>
+                <div class="bg-slate-800/40 p-6 rounded-2xl backdrop-blur-sm flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-2">📂 Cargar modelo 3D</h3>
+                        <p class="text-gray-300 text-sm">Sube tu archivo .gltf / .glb y visualízalo en WebXR con A-Frame. Vive tu modelo en realidad virtual aumentada.</p>
+                        <input type="file" id="modelUpload" accept=".gltf,.glb,.json" class="mt-4 block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"/>
+                        <div class="mt-6 p-4 bg-black/40 rounded-xl">
+                            <p class="font-mono text-sm">🎯 WebXR activo: compatible con gafas VR/AR. Presiona el botón en la esquina inferior derecha de la escena para entrar en modo VR.</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-xs text-cyan-300">✨ Tecnología de vanguardia: A-Frame + Three.js + WebXR, integración educativa de modelos 3D.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección IA Ética y Educativa + Video para Teatro -->
+        <section class="py-20 px-6 max-w-6xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="text-3xl font-bold bg-gradient-to-r from-pink-400 to-orange-400 bg-clip-text text-transparent">Uso ético de IAs & Producciones Multimedia</h2>
+                    <p class="text-gray-300 mt-4">Implementación de inteligencia artificial generativa con enfoque educativo y responsable. Producciones audiovisuales para teatro, danza y eventos multimedia integrando videomapping, animación 2D/3D, y diseño sonoro inmersivo.</p>
+                    <div class="mt-6 flex space-x-3">
+                        <div class="bg-white/5 p-3 rounded-lg"><span>🎬 Video mapping</span></div>
+                        <div class="bg-white/5 p-3 rounded-lg"><span>🧠 IA Generativa ética</span></div>
+                        <div class="bg-white/5 p-3 rounded-lg"><span>🎭 Escenografía digital</span></div>
+                    </div>
+                </div>
+                <div class="relative rounded-2xl overflow-hidden shadow-2xl">
+                    <video autoplay muted loop playsinline class="w-full rounded-xl border border-white/20">
+                        <source src="https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
+                        Tu navegador no soporta video.
+                    </video>
+                    <p class="absolute bottom-2 left-2 bg-black/60 text-xs px-2 py-1 rounded">🎥 Producción audiovisual / Teatro inmersivo</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="border-t border-white/10 py-10 text-center text-gray-400 text-sm">
+            <p>Jonatan Edirson Casado Avendaño · Innovación en Experiencias Inmersivas · Tecnologías WebXR, Three.js, A-Frame, IA Educativa · Ojo interactivo con FaceMesh</p>
+            <p class="mt-2">© 2026 · Desarrollo web con ética y vanguardia interactiva</p>
+        </footer>
+    </main>
+
+    <script type="module">
+        import * as THREE from 'three';
+        
+        // --------------------- PRELOADER ---------------------
+        let progress = 0;
+        const progressEl = document.getElementById('progressBar');
+        const preloader = document.getElementById('preloader');
+        const interval = setInterval(() => {
+            if (progress < 100) {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+                progressEl.style.width = progress + '%';
+            } else {
+                clearInterval(interval);
+                setTimeout(() => {
+                    preloader.style.opacity = '0';
+                    setTimeout(() => { preloader.style.display = 'none'; }, 1000);
+                }, 300);
+            }
+        }, 150);
+
+        // --------------------- SCROLL PARALLAX 3D (ya existente) ---------------------
+        const container = document.getElementById('parallax-3d-container');
+        const canvasEl = document.getElementById('parallax-canvas');
+        const sceneParallax = new THREE.Scene();
+        sceneParallax.background = new THREE.Color(0x03050b);
+        const cameraParallax = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        cameraParallax.position.set(0, 2, 8);
+        const rendererParallax = new THREE.WebGLRenderer({ canvas: canvasEl, alpha: false });
+        rendererParallax.setSize(container.clientWidth, container.clientHeight);
+        const groupParallax = new THREE.Group();
+        const sphereGeo = new THREE.SphereGeometry(0.8, 32, 32);
+        const coreMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x1e3a8a });
+        const coreSphere = new THREE.Mesh(sphereGeo, coreMat);
+        groupParallax.add(coreSphere);
+        const knotGeo = new THREE.TorusKnotGeometry(1.2, 0.3, 128, 16, 3, 4);
+        const knotMat = new THREE.MeshStandardMaterial({ color: 0xa855f7 });
+        const knot = new THREE.Mesh(knotGeo, knotMat);
+        knot.position.set(1.5, 0.5, -1);
+        groupParallax.add(knot);
+        const particleCount = 800;
+        const particlesGeo = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            positions[i*3] = (Math.random() - 0.5) * 40;
+            positions[i*3+1] = (Math.random() - 0.5) * 20;
+            positions[i*3+2] = (Math.random() - 0.5) * 20 - 10;
+        }
+        particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const particles = new THREE.Points(particlesGeo, new THREE.PointsMaterial({ color: 0x88aaff, size: 0.08 }));
+        groupParallax.add(particles);
+        sceneParallax.add(groupParallax);
+        const ambient = new THREE.AmbientLight(0x404060);
+        sceneParallax.add(ambient);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.position.set(2,5,3);
+        sceneParallax.add(dirLight);
+        window.addEventListener('scroll', () => {
+            const section = document.getElementById('parallax-section');
+            const rect = section.getBoundingClientRect();
+            const scrollPercent = (window.scrollY - rect.top + window.innerHeight) / (rect.height + window.innerHeight);
+            const clamped = Math.min(Math.max(scrollPercent, 0), 1);
+            groupParallax.rotation.y = clamped * Math.PI * 1.5;
+            groupParallax.rotation.x = clamped * 0.8;
+            groupParallax.position.y = (clamped - 0.5) * 1.2;
+            cameraParallax.position.z = 8 - clamped * 2;
+        });
+        function animateParallax() {
+            requestAnimationFrame(animateParallax);
+            knot.rotation.x += 0.008;
+            knot.rotation.z += 0.01;
+            rendererParallax.render(sceneParallax, cameraParallax);
+        }
+        animateParallax();
+        window.addEventListener('resize', () => {
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            cameraParallax.aspect = w / h;
+            cameraParallax.updateProjectionMatrix();
+            rendererParallax.setSize(w, h);
+        });
+
+        // --------------------- VIDEOJUEGO 3D (VR Collector) ---------------------
+        const gameDiv = document.getElementById('game-container');
+        const sceneGame = new THREE.Scene();
+        sceneGame.background = new THREE.Color(0x0a0c1a);
+        const cameraGame = new THREE.PerspectiveCamera(45, gameDiv.clientWidth / gameDiv.clientHeight, 0.1, 1000);
+        cameraGame.position.set(0, 5, 12);
+        const rendererGame = new THREE.WebGLRenderer({ antialias: true });
+        rendererGame.setSize(gameDiv.clientWidth, gameDiv.clientHeight);
+        gameDiv.appendChild(rendererGame.domElement);
+        const gridHelper = new THREE.GridHelper(20, 20, 0x88aaff, 0x335588);
+        sceneGame.add(gridHelper);
+        const ambientGame = new THREE.AmbientLight(0x404060);
+        sceneGame.add(ambientGame);
+        const dirGame = new THREE.DirectionalLight(0xffffff, 1);
+        dirGame.position.set(5,10,7);
+        sceneGame.add(dirGame);
+        const playerGeoBox = new THREE.BoxGeometry(0.8,0.8,0.8);
+        const playerMatSilver = new THREE.MeshStandardMaterial({ color: 0xc0c0e0, metalness: 0.8 });
+        const player = new THREE.Mesh(playerGeoBox, playerMatSilver);
+        player.position.set(0,0.4,0);
+        sceneGame.add(player);
+        const items = [];
+        const itemPositions = [[-3,0.3,-2],[2,0.3,-1.5],[-1,0.3,2.5],[3.5,0.3,1],[-2.5,0.3,2],[0,0.3,-3],[1.5,0.3,-2.8],[-3.8,0.3,-1]];
+        const vrMatItem = new THREE.MeshStandardMaterial({ color: 0x44aaff, emissive: 0x2266aa });
+        itemPositions.forEach(pos => {
+            const item = new THREE.Mesh(new THREE.SphereGeometry(0.4,16,16), vrMatItem);
+            item.userData = { collected: false };
+            item.position.set(pos[0], pos[1], pos[2]);
+            sceneGame.add(item);
+            items.push(item);
+        });
+        let score = 0;
+        const scoreElement = document.getElementById('game-score');
+        const keys = { w: false, s: false, a: false, d: false };
+        window.addEventListener('keydown', (e) => {
+            switch(e.key) { case 'w': keys.w=true; break; case 's': keys.s=true; break; case 'a': keys.a=true; break; case 'd': keys.d=true; break; case 'ArrowUp': keys.w=true; break; case 'ArrowDown': keys.s=true; break; case 'ArrowLeft': keys.a=true; break; case 'ArrowRight': keys.d=true; break; }
+        });
+        window.addEventListener('keyup', (e) => {
+            switch(e.key) { case 'w': keys.w=false; break; case 's': keys.s=false; break; case 'a': keys.a=false; break; case 'd': keys.d=false; break; case 'ArrowUp': keys.w=false; break; case 'ArrowDown': keys.s=false; break; case 'ArrowLeft': keys.a=false; break; case 'ArrowRight': keys.d=false; break; }
+        });
+        function updateGame() {
+            let speed = 0.12;
+            if (keys.w) player.position.z -= speed;
+            if (keys.s) player.position.z += speed;
+            if (keys.a) player.position.x -= speed;
+            if (keys.d) player.position.x += speed;
+            player.position.x = Math.min(Math.max(player.position.x, -7), 7);
+            player.position.z = Math.min(Math.max(player.position.z, -6), 6);
+            items.forEach(item => {
+                if (!item.userData.collected && player.position.distanceTo(item.position) < 0.8) {
+                    item.userData.collected = true;
+                    sceneGame.remove(item);
+                    score++;
+                    scoreElement.innerText = score;
+                    if (score === items.length) alert("¡Felicidades! Has comprendido el poder de la VR para transformar realidades.");
+                }
+            });
+            cameraGame.position.x = player.position.x * 0.5;
+            cameraGame.position.z = player.position.z * 0.5 + 8;
+            cameraGame.lookAt(player.position);
+            rendererGame.render(sceneGame, cameraGame);
+            requestAnimationFrame(updateGame);
+        }
+        updateGame();
+        window.addEventListener('resize', () => {
+            const w = gameDiv.clientWidth;
+            const h = gameDiv.clientHeight;
+            cameraGame.aspect = w/h;
+            cameraGame.updateProjectionMatrix();
+            rendererGame.setSize(w,h);
+        });
+
+        // --------------------- CANVAS 2D GENERATIVO ---------------------
+        const canvas2d = document.getElementById('generativeCanvas');
+        const ctx = canvas2d.getContext('2d');
+        function resizeCanvas2D() { canvas2d.width = canvas2d.parentElement.clientWidth; canvas2d.height = 250; }
+        resizeCanvas2D();
+        let hue = 0;
+        function drawGenerative() {
+            if (!ctx) return;
+            const w = canvas2d.width, h = canvas2d.height;
+            ctx.fillStyle = '#0a0a2a';
+            ctx.fillRect(0,0,w,h);
+            for (let i=0;i<180;i++) {
+                const x = Math.sin(Date.now()*0.001 + i) * w*0.4 + w/2;
+                const y = Math.cos(Date.now()*0.0008 + i*0.2) * h*0.3 + h/2;
+                ctx.beginPath();
+                ctx.arc(x, y, 3 + Math.sin(Date.now()*0.005 + i)*2, 0, Math.PI*2);
+                ctx.fillStyle = `hsl(${hue + i*5}, 70%, 60%)`;
+                ctx.fill();
+            }
+            hue = (hue+1)%360;
+            requestAnimationFrame(drawGenerative);
+        }
+        drawGenerative();
+        window.addEventListener('resize', resizeCanvas2D);
+        
+        // --------------------- GALERÍA A-FRAME ---------------------
+        const modelButtons = document.querySelectorAll('.model-btn');
+        const galleryScene = document.getElementById('galleryScene');
+        modelButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const modelUrl = btn.getAttribute('data-model');
+                const modelEntity = galleryScene.querySelector('#displayModel');
+                if(modelEntity) modelEntity.setAttribute('gltf-model', modelUrl);
+            });
+        });
+        const uploadInput = document.getElementById('modelUpload');
+        uploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if(file && (file.name.endsWith('.gltf') || file.name.endsWith('.glb'))) {
+                const url = URL.createObjectURL(file);
+                const modelEntity = galleryScene.querySelector('#displayModel');
+                if(modelEntity) modelEntity.setAttribute('gltf-model', url);
+                alert('Modelo cargado. ¡Activa WebXR!');
+            } else alert('Sube .gltf o .glb');
+        });
+        
+        // --------------------- OJO INTERACTIVO CON RECONOCIMIENTO FACIAL (shader + face tracking) ---------------------
+        // Extraemos los shaders del HTML (se inyectarán dinámicamente pero los definimos aquí)
+        const fragmentShaderSource = `
+            varying vec2 vUv;
+            uniform float u_shrink;
+            uniform vec3 u_base_color_1;
+            uniform vec3 u_base_color_2;
+            uniform vec3 u_mid_color;
+            uniform float u_vignette;
+            uniform float u_brightness;
+            uniform float u_darkness;
+            float random (in vec2 st) { return fract(sin(dot(st.xy,vec2(12.9898,78.233)))*43758.5453123); }
+            float noise (in vec2 st) {
+                vec2 i = floor(st);
+                vec2 f = fract(st);
+                float a = random(i);
+                float b = random(i + vec2(1.0, 0.0));
+                float c = random(i + vec2(0.0, 1.0));
+                float d = random(i + vec2(1.0, 1.0));
+                vec2 u = f * f * (3.0 - 2.0 * f);
+                return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+            }
+            float fbm (in vec2 st) {
+                float value = 0.0;
+                float amplitude = .5;
+                float frequency = 0.;
+                for (int i = 0; i < 4; i++) {
+                    value += amplitude * noise(st);
+                    st = 2.*st;
+                    amplitude = .5;
+                }
+                return value;
+            }
+            void main() {
+                vec2 st = vec2(.5) - vUv;
+                st.x *= 6.28318531;
+                st.y *= 3.14159265359;
+                float r = length(st) * 1.3;
+                float a = atan(st.y, st.x);
+                float pulsing = 1. + clamp(1. - r, 0., 1.) * u_shrink;
+                float f = fbm(5. * st);
+                vec3 col = mix(u_base_color_1, u_base_color_2, f);
+                col = mix(col, u_mid_color, 1. - smoothstep(0.2, 0.6, r * (.2 + .8 * pulsing)));
+                a += .05 * fbm(20. * st) * fbm(20. * st);
+                f = smoothstep((1. - u_brightness), 1., fbm(vec2(20. * a, 6. * r * pulsing)));
+                col = mix(col, vec3(1.), f);
+                a = fbm(vec2(15. * a, 10. * r * pulsing));
+                f = smoothstep(.4, .9, a);
+                col *= 1. - u_darkness * f;
+                col *= 1. - u_vignette * smoothstep(.6, .8, r * (.9 + .1 * pulsing));
+                f = 1. - smoothstep(.2, .25, r * pulsing);
+                col = mix(col, vec3(.0), f);
+                col = mix(col, vec3(1.), smoothstep(.79, 0.85, r));
+                gl_FragColor = vec4(col, 1.);
+            }
+        `;
+        const vertexShaderSource = `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.);
+            }
+        `;
+        
+        const eyeContainer = document.getElementById('eye-canvas-wrapper');
+        const rendererEye = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        rendererEye.setSize(eyeContainer.clientWidth, eyeContainer.clientHeight);
+        eyeContainer.appendChild(rendererEye.domElement);
+        const sceneEye = new THREE.Scene();
+        sceneEye.background = new THREE.Color(0x050510);
+        const cameraEye = new THREE.PerspectiveCamera(30, eyeContainer.clientWidth / eyeContainer.clientHeight, 1, 1000);
+        cameraEye.position.set(0, 0, 45);
+        const eyeGroup = new THREE.Group();
+        // Crear el ojo con shader
+        const eyeGeometry = new THREE.SphereGeometry(14, 64, 64);
+        const shaderMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                u_shrink: { value: 0.0 },
+                u_base_color_1: { value: new THREE.Color('#03565c') },
+                u_base_color_2: { value: new THREE.Color('#42cf44') },
+                u_mid_color: { value: new THREE.Color('#f2aa00') },
+                u_vignette: { value: 0.65 },
+                u_brightness: { value: 0.6 },
+                u_darkness: { value: 0.5 }
+            },
+            vertexShader: vertexShaderSource,
+            fragmentShader: fragmentShaderSource
+        });
+        const eyeball = new THREE.Mesh(eyeGeometry, shaderMaterial);
+        eyeball.rotation.y = -Math.PI/2;
+        eyeGroup.add(eyeball);
+        sceneEye.add(eyeGroup);
+        // Luz y sombra auxiliar
+        const ambientEye = new THREE.AmbientLight(0x666666);
+        sceneEye.add(ambientEye);
+        const dirEye = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirEye.position.set(1,2,1);
+        sceneEye.add(dirEye);
+        
+        // FaceMesh para seguir la cara
+        let faceMesh = null;
+        let cameraStream = null;
+        let targetRotationX = 0, targetRotationY = 0;
+        function initFaceTracking() {
+            const faceMeshInstance = new FaceMesh({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+            });
+            faceMeshInstance.setOptions({
+                maxNumFaces: 1,
+                refineLandmarks: true,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+            faceMeshInstance.onResults((results) => {
+                if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                    const landmarks = results.multiFaceLandmarks[0];
+                    const noseTip = landmarks[1];
+                    const leftEye = landmarks[33];
+                    const rightEye = landmarks[263];
+                    const faceCenterX = (leftEye.x + rightEye.x) / 2;
+                    const faceCenterY = (leftEye.y + rightEye.y) / 2;
+                    const yaw = (faceCenterX - 0.5) * 2.0;   // -1 a 1
+                    const pitch = (faceCenterY - 0.5) * 1.5;
+                    targetRotationY = yaw * 0.8;
+                    targetRotationX = pitch * 0.5;
+                } else {
+                    targetRotationX = 0; targetRotationY = 0;
+                }
+            });
+            const camera = new Camera(document.createElement('video'), {
+                onFrame: async () => { await faceMeshInstance.send({ image: camera.video }); },
+                width: 640, height: 480
+            });
+            camera.start();
+            faceMesh = faceMeshInstance;
+        }
+        initFaceTracking();
+        
+        function animateEye() {
+            requestAnimationFrame(animateEye);
+            eyeGroup.rotation.x += (targetRotationX - eyeGroup.rotation.x) * 0.1;
+            eyeGroup.rotation.y += (targetRotationY - eyeGroup.rotation.y) * 0.1;
+            rendererEye.render(sceneEye, cameraEye);
+        }
+        animateEye();
+        window.addEventListener('resize', () => {
+            const w = eyeContainer.clientWidth, h = eyeContainer.clientHeight;
+            rendererEye.setSize(w, h);
+            cameraEye.aspect = w/h;
+            cameraEye.updateProjectionMatrix();
+        });
+        // Agregar GUI opcional (pequeña)
+        const guiEye = new lil.GUI({ title: 'Ajustes Ojo', width: 200, container: eyeContainer });
+        guiEye.add(shaderMaterial.uniforms.u_shrink, 'value', -0.9, 0.3, 0.01).name('Contracción');
+        guiEye.addColor({ color: '#03565c' }, 'color').onChange(v => shaderMaterial.uniforms.u_base_color_1.value.set(v)).name('Color base 1');
+        guiEye.addColor({ color: '#42cf44' }, 'color').onChange(v => shaderMaterial.uniforms.u_base_color_2.value.set(v)).name('Color base 2');
+    </script>
+</body>
+</html>
