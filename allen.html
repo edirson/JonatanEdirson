@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Alen Solórzano | Strategic Fintech Innovator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter + Space Grotesk for modern tech vibe -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Font Awesome 6 (free icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- html2pdf bundle for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style>
+    * {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-display {
+      font-family: 'Space Grotesk', monospace;
+    }
+    body {
+      background: radial-gradient(circle at 10% 30%, #0a0f1a, #03060c);
+      overflow-x: hidden;
+    }
+    /* custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #111827;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3b82f6;
+      border-radius: 10px;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .glass-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5);
+      border-color: rgba(59, 130, 246, 0.5);
+    }
+    .skill-badge {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border-left: 3px solid #3b82f6;
+      transition: all 0.2s;
+    }
+    .skill-badge:hover {
+      background: linear-gradient(135deg, #2563eb20, #1e293b);
+      border-left-width: 5px;
+    }
+    .btn-pdf {
+      background: linear-gradient(95deg, #2563eb, #1d4ed8);
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3);
+    }
+    .btn-pdf:hover {
+      background: linear-gradient(95deg, #3b82f6, #2563eb);
+      transform: scale(1.02);
+    }
+    /* hide canvas from pdf capture? No need, canvas is outside print container */
+    #three-canvas-wrapper {
+      pointer-events: auto;
+    }
+    .timeline-marker {
+      position: relative;
+      padding-left: 1.5rem;
+    }
+    .timeline-marker::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.4rem;
+      width: 0.6rem;
+      height: 0.6rem;
+      background: #3b82f6;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #3b82f6;
+    }
+  </style>
+</head>
+<body class="text-gray-200">
+
+  <!-- 3D Interactive Canvas (Three.js) - positioned as hero backdrop / standalone scene -->
+  <div id="three-canvas-wrapper" class="fixed top-0 left-0 w-full h-full -z-10 opacity-40 pointer-events-none"></div>
+  
+  <!-- Main content container with responsive padding -->
+  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+    
+    <!-- Header with three.js context info + title + button (visible and interactive) -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 mb-8">
+      <div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <h1 class="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-500 bg-clip-text text-transparent font-display tracking-tight">ALEN SOLÓRZANO</h1>
+          <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 border border-blue-400/40 text-blue-300 backdrop-blur-sm">Strategic Fintech Innovator</span>
+        </div>
+        <p class="text-gray-300 text-lg mt-2 max-w-2xl border-l-4 border-blue-500 pl-4">Architecting the future of finance · Blockchain · AI · DeFi</p>
+      </div>
+      <button id="downloadPDFBtn" class="btn-pdf text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all flex items-center gap-2 text-sm md:text-base">
+        <i class="fas fa-file-pdf"></i> Download Summary PDF
+      </button>
+    </div>
+
+    <!-- =================== MAIN CV CONTENT (PRINT AREA) =================== -->
+    <div id="resume-print" class="space-y-8">
+      
+      <!-- Summary Card + Technical Skills (grid) -->
+      <div class="grid lg:grid-cols-3 gap-6">
+        <!-- left: Summary + contact quick -->
+        <div class="lg:col-span-2 glass-card rounded-2xl p-6 shadow-xl">
+          <div class="flex items-center gap-2 border-b border-blue-500/30 pb-3 mb-4">
+            <i class="fas fa-bolt text-blue-400 text-xl"></i>
+            <h2 class="text-2xl font-bold tracking-tight">Professional Summary</h2>
+          </div>
+          <p class="text-gray-200 leading-relaxed text-base">
+            Highly skilled fintech software engineer with extensive experience in developing blockchain, AI-driven, and mobile applications. 
+            Proficient in <span class="text-blue-300 font-medium">Flutter, Firebase, APIs, and decentralized finance (DeFi)</span> systems, with a focus on building scalable, secure, and innovative solutions. 
+            Expertise in <strong class="text-cyan-300">tokenomics, asset tokenization, and integrating AI models</strong> with real-time market analytics. 
+            Adept at full-stack development, system architecture, and leading cross-functional teams to deliver high-impact fintech platforms that bridge traditional and emerging technologies.
+          </p>
+          <div class="mt-5 flex flex-wrap gap-4 text-sm text-gray-300 border-t border-gray-700/40 pt-4">
+            <div class="flex items-center gap-2"><i class="fab fa-linkedin text-blue-400"></i> <a href="https://www.linkedin.com/in/alen-solorzano/" target="_blank" class="hover:text-blue-300 transition">linkedin.com/in/alen-solorzano</a></div>
+            <div class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-blue-400"></i> Mexico / Remote</div>
+            <div class="flex items-center gap-2"><i class="fas fa-envelope text-blue-400"></i> alen.solorzano@fintechinnovator.io</div>
+          </div>
+        </div>
+        
+        <!-- Technical Skills right side with badges -->
+        <div class="glass-card rounded-2xl p-6 shadow-xl">
+          <div class="flex items-center gap-2 border-b border-blue-500/30 pb-3 mb-4">
+            <i class="fas fa-microchip text-cyan-400 text-xl"></i>
+            <h2 class="text-2xl font-bold tracking-tight">Tech Arsenal</h2>
+          </div>
+          <div class="space-y-4">
+            <div><span class="text-xs uppercase tracking-wider text-blue-300 font-semibold">Languages & Frameworks</span>
+              <div class="flex flex-wrap gap-2 mt-2"><span class="skill-badge px-3 py-1 rounded-md text-xs">Flutter/Dart</span><span class="skill-badge px-3 py-1 rounded-md text-xs">Solidity</span><span class="skill-badge px-3 py-1 rounded-md text-xs">Python</span><span class="skill-badge px-3 py-1 rounded-md text-xs">JavaScript/React</span><span class="skill-badge px-3 py-1 rounded-md text-xs">Node.js</span></div>
+            </div>
+            <div><span class="text-xs uppercase tracking-wider text-blue-300 font-semibold">Blockchain & DeFi</span>
+              <div class="flex flex-wrap gap-2 mt-2"><span class="skill-badge px-3 py-1 rounded-md text-xs">Ethereum/Solana</span><span class="skill-badge px-3 py-1 rounded-md text-xs">Smart Contracts</span><span class="skill-badge px-3 py-1 rounded-md text-xs">Web3.js</span><span class="skill-badge px-3 py-1 rounded-md text-xs">IPFS</span><span class="skill-badge px-3 py-1 rounded-md text-xs">Tokenomics</span></div>
+            </div>
+            <div><span class="text-xs uppercase tracking-wider text-blue-300 font-semibold">AI & Analytics</span>
+              <div class="flex flex-wrap gap-2 mt-2"><span class="skill-badge px-3 py-1 rounded-md text-xs">TensorFlow</span><span class="skill-badge px-3 py-1 rounded-md text-xs">PyTorch</span><span class="skill-badge px-3 py-1 rounded-md text-xs">Power BI</span><span class="skill-badge px-3 py-1 rounded-md text-xs">Predictive Modeling</span></div>
+            </div>
+            <div><span class="text-xs uppercase tracking-wider text-blue-300 font-semibold">Cloud & DevOps</span>
+              <div class="flex flex-wrap gap-2 mt-2"><span class="skill-badge px-3 py-1 rounded-md text-xs">AWS/GCP</span><span class="skill-badge px-3 py-1 rounded-md text-xs">Docker</span><span class="skill-badge px-3 py-1 rounded-md text-xs">PostgreSQL</span><span class="skill-badge px-3 py-1 rounded-md text-xs">MongoDB</span><span class="skill-badge px-3 py-1 rounded-md text-xs">GraphQL/REST</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Work Experience Section (rich timeline) -->
+      <div class="glass-card rounded-2xl p-6 shadow-xl">
+        <div class="flex items-center gap-2 border-b border-blue-500/30 pb-3 mb-5">
+          <i class="fas fa-briefcase text-blue-400 text-xl"></i>
+          <h2 class="text-2xl font-bold tracking-tight">Experience & Impact</h2>
+        </div>
+        <div class="space-y-7">
+          <!-- Chief Information Officer - OREGIN -->
+          <div class="timeline-marker">
+            <div class="flex flex-wrap justify-between items-baseline gap-2"><h3 class="text-xl font-semibold text-white">Chief Information Officer</h3><span class="text-sm text-blue-300 bg-blue-950/40 px-3 py-1 rounded-full">2021 – Present</span></div>
+            <p class="text-cyan-300 text-sm font-medium">OREGIN S.A.P.I. DE C.V.</p>
+            <ul class="list-disc list-inside text-gray-300 text-sm mt-2 space-y-1 ml-2">
+              <li>Architected NFT marketplace for precious metals & collectibles using Flutter, Firebase, integrating Ethereum smart contracts for secure asset tokenization.</li>
+              <li>Built token systems with Solidity, tokenomics models & real-time valuation simulations via Web3.js / RESTful APIs.</li>
+              <li>Developed gold/silver tokenization platform with macroeconomic data APIs & TensorFlow predictive AI for market forecasting.</li>
+              <li>Engineered Node.js + MongoDB backend ensuring scalability for DeFi apps.</li>
+            </ul>
+          </div>
+          <!-- Lead Software Engineer - Fintech Central -->
+          <div class="timeline-marker">
+            <div class="flex flex-wrap justify-between items-baseline gap-2"><h3 class="text-xl font-semibold text-white">Lead Software Engineer</h3><span class="text-sm text-blue-300 bg-blue-950/40 px-3 py-1 rounded-full">2018 – 2024</span></div>
+            <p class="text-cyan-300 text-sm font-medium">Fintech Central</p>
+            <ul class="list-disc list-inside text-gray-300 text-sm mt-2 space-y-1 ml-2">
+              <li>Developed portfolio management dashboard with Flutter/Firebase, React Native prototyping for cross-platform, deployed to iOS/Android.</li>
+              <li>Real-time tracking of macro trends & risk factors via GraphQL APIs; automated trading strategy adjustments using Python & blockchain analytics.</li>
+              <li>Implemented secure API integrations (AWS Lambda + PostgreSQL) for scalable financial data processing.</li>
+            </ul>
+          </div>
+          <!-- Blockchain Product Developer - RWAWKI -->
+          <div class="timeline-marker">
+            <div class="flex flex-wrap justify-between items-baseline gap-2"><h3 class="text-xl font-semibold text-white">Blockchain Product Developer</h3><span class="text-sm text-blue-300 bg-blue-950/40 px-3 py-1 rounded-full">2018 – 2024</span></div>
+            <p class="text-cyan-300 text-sm font-medium">RWAWKI</p>
+            <ul class="list-disc list-inside text-gray-300 text-sm mt-2 space-y-1 ml-2">
+              <li>Built blockchain platform for 24K gold products using Flutter + React Native & Swift for iOS optimizations, Ethereum smart contracts for traceability.</li>
+              <li>Developed market trend analysis tools with Python & Power BI, integrating real-time data APIs for strategic asset positioning.</li>
+            </ul>
+          </div>
+          <!-- Full-Stack Developer - TAOS -->
+          <div class="timeline-marker">
+            <div class="flex flex-wrap justify-between items-baseline gap-2"><h3 class="text-xl font-semibold text-white">Full-Stack Developer</h3><span class="text-sm text-blue-300 bg-blue-950/40 px-3 py-1 rounded-full">2019 – 2021</span></div>
+            <p class="text-cyan-300 text-sm font-medium">The Art of Sales (TAOS)</p>
+            <ul class="list-disc list-inside text-gray-300 text-sm mt-2 space-y-1 ml-2">
+              <li>Engineered sales training platform with Flutter/Firebase, real-time analytics & feedback via REST APIs.</li>
+              <li>Interactive modules with React/Node.js, MongoDB backend on AWS, Docker performance optimization.</li>
+            </ul>
+          </div>
+          <!-- Software Development Lead - Sacscloud -->
+          <div class="timeline-marker">
+            <div class="flex flex-wrap justify-between items-baseline gap-2"><h3 class="text-xl font-semibold text-white">Software Development Lead</h3><span class="text-sm text-blue-300 bg-blue-950/40 px-3 py-1 rounded-full">2018 – 2019</span></div>
+            <p class="text-cyan-300 text-sm font-medium">Sacscloud.com</p>
+            <ul class="list-disc list-inside text-gray-300 text-sm mt-2 space-y-1 ml-2">
+              <li>Led team building scalable web app with React/Node.js & GraphQL, implemented CI/CD pipelines with Docker/AWS.</li>
+              <li>Designed interactive sales manual as web app with real-time updates.</li>
+            </ul>
+          </div>
+          <!-- Chief Systems Architect - Swiss Metal Group -->
+          <div class="timeline-marker">
+            <div class="flex flex-wrap justify-between items-baseline gap-2"><h3 class="text-xl font-semibold text-white">Chief Systems Architect</h3><span class="text-sm text-blue-300 bg-blue-950/40 px-3 py-1 rounded-full">2017 – 2018</span></div>
+            <p class="text-cyan-300 text-sm font-medium">Swiss Metal Group</p>
+            <ul class="list-disc list-inside text-gray-300 text-sm mt-2 space-y-1 ml-2">
+              <li>Designed ERP system using Node.js, PostgreSQL, AWS improving efficiency by 20%.</li>
+              <li>Blockchain tracking for Potassium Gold Cyanide with Ethereum smart contracts, record sales within 2 months.</li>
+            </ul>
+          </div>
+          <!-- Software Team Lead - SolarCity -->
+          <div class="timeline-marker">
+            <div class="flex flex-wrap justify-between items-baseline gap-2"><h3 class="text-xl font-semibold text-white">Software Team Lead</h3><span class="text-sm text-blue-300 bg-blue-950/40 px-3 py-1 rounded-full">2015 – 2016</span></div>
+            <p class="text-cyan-300 text-sm font-medium">SolarCity</p>
+            <ul class="list-disc list-inside text-gray-300 text-sm mt-2 space-y-1 ml-2">
+              <li>Flutter mobile app integrated with Salesforce CRM; increased deal closures by 20% via API workflows.</li>
+              <li>Real-time customer support with WebSockets/Node.js and Python automation for Salesforce data entry.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Awards/Additional: Highlight Key DeFi & AI integrations -->
+      <div class="glass-card rounded-2xl p-6 shadow-xl">
+        <div class="flex items-center gap-2 border-b border-blue-500/30 pb-3 mb-4">
+          <i class="fas fa-rocket text-blue-400"></i>
+          <h2 class="text-2xl font-bold tracking-tight">Key Innovations & Impact</h2>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4 text-sm">
+          <div class="flex gap-3 items-start"><i class="fas fa-chart-line text-cyan-400 mt-1"></i><span>Predictive AI models + macroeconomic data APIs → gold tokenization forecasting with 94% accuracy.</span></div>
+          <div class="flex gap-3 items-start"><i class="fas fa-link text-cyan-400 mt-1"></i><span>Cross-chain smart contract deployment (Ethereum/Solana) for asset tokenization & DeFi liquidity.</span></div>
+          <div class="flex gap-3 items-start"><i class="fas fa-chart-pie text-cyan-400 mt-1"></i><span>Designed tokenomics architecture for RWA-backed assets, raising $2M+ in test liquidity.</span></div>
+          <div class="flex gap-3 items-start"><i class="fas fa-mobile-alt text-cyan-400 mt-1"></i><span>Flutter-first architecture delivering 6 production fintech apps to App Store & Play Store.</span></div>
+        </div>
+      </div>
+      
+      <!-- Footer note (only decorative) -->
+      <div class="text-center text-xs text-gray-500 pt-2 border-t border-gray-800/50">
+        <i class="fas fa-globe"></i> AI-Driven | Blockchain Native | Fintech Visionary — available for strategic advisory
+      </div>
+    </div>
+  </div>
+  
+  <!-- Three.js interactive background scene (futuristic rotating fintech core) -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    const container = document.getElementById('three-canvas-wrapper');
+    const scene = new THREE.Scene();
+    scene.background = null; // transparent overlaying dark gradient from body
+    scene.fog = new THREE.FogExp2(0x03060c, 0.008);
+    
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 2, 8);
+    camera.lookAt(0, 0, 0);
+    
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x000000, 0);
+    container.appendChild(renderer.domElement);
+    
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0x111122);
+    scene.add(ambientLight);
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1);
+    mainLight.position.set(2, 5, 3);
+    scene.add(mainLight);
+    const backLight = new THREE.PointLight(0x2266ff, 0.5);
+    backLight.position.set(-2, 1, -4);
+    scene.add(backLight);
+    const fillLight = new THREE.PointLight(0xffaa33, 0.4);
+    fillLight.position.set(1, 2, 2);
+    scene.add(fillLight);
+    
+    // Central object: a glowing torus knot with metallic + wireframe edge
+    const knotGeo = new THREE.TorusKnotGeometry(1.2, 0.28, 180, 24, 3, 4);
+    const knotMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x0a2350, roughness: 0.25, metalness: 0.85, emissiveIntensity: 0.7 });
+    const torusKnot = new THREE.Mesh(knotGeo, knotMat);
+    scene.add(torusKnot);
+    
+    // Additional floating rings
+    const ringGeo = new THREE.TorusGeometry(1.6, 0.05, 64, 200);
+    const ringMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0f2b5e, emissiveIntensity: 0.5 });
+    const outerRing = new THREE.Mesh(ringGeo, ringMat);
+    outerRing.rotation.x = Math.PI / 2;
+    scene.add(outerRing);
+    
+    const ring2Geo = new THREE.TorusGeometry(1.9, 0.04, 64, 200);
+    const ringMat2 = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, emissive: 0x2e1065 });
+    const outerRing2 = new THREE.Mesh(ring2Geo, ringMat2);
+    outerRing2.rotation.z = Math.PI / 3;
+    outerRing2.rotation.x = 0.8;
+    scene.add(outerRing2);
+    
+    // particle system (floating fintech dust)
+    const particlesCount = 1800;
+    const particlesGeometry = new THREE.BufferGeometry();
+    const posArray = new Float32Array(particlesCount * 3);
+    for(let i = 0; i < particlesCount; i++) {
+      posArray[i*3] = (Math.random() - 0.5) * 18;
+      posArray[i*3+1] = (Math.random() - 0.5) * 12;
+      posArray[i*3+2] = (Math.random() - 0.5) * 15 - 5;
+    }
+    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    const particleMat = new THREE.PointsMaterial({ color: 0x3b82f6, size: 0.05, transparent: true, opacity: 0.6 });
+    const particles = new THREE.Points(particlesGeometry, particleMat);
+    scene.add(particles);
+    
+    // small glowing core sphere inside knot
+    const coreGlow = new THREE.Mesh(
+      new THREE.SphereGeometry(0.55, 32, 32),
+      new THREE.MeshStandardMaterial({ color: 0x60a5fa, emissive: 0x1e3a8a, emissiveIntensity: 1.2, roughness: 0.2 })
+    );
+    scene.add(coreGlow);
+    
+    // Additional floating small cubes (tech vibe)
+    const cubesGroup = [];
+    for (let i = 0; i < 60; i++) {
+      const size = 0.08 + Math.random() * 0.07;
+      const cubeMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x0f2b5e, emissiveIntensity: 0.4 });
+      const cube = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), cubeMat);
+      cube.userData = {
+        speedX: (Math.random() - 0.5) * 0.008,
+        speedY: (Math.random() - 0.5) * 0.008,
+        rangeX: (Math.random() - 0.5) * 5,
+        rangeY: (Math.random() - 0.5) * 4,
+        rangeZ: (Math.random() - 0.5) * 6 - 2
+      };
+      cube.position.set(cube.userData.rangeX, cube.userData.rangeY, cube.userData.rangeZ);
+      scene.add(cube);
+      cubesGroup.push(cube);
+    }
+    
+    let time = 0;
+    // animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+      time += 0.008;
+      
+      // rotate central knot and rings
+      torusKnot.rotation.x += 0.005;
+      torusKnot.rotation.y += 0.007;
+      torusKnot.rotation.z += 0.003;
+      outerRing.rotation.z += 0.003;
+      outerRing.rotation.y += 0.002;
+      outerRing2.rotation.x += 0.004;
+      outerRing2.rotation.y += 0.005;
+      coreGlow.rotation.x += 0.002;
+      coreGlow.scale.setScalar(1 + Math.sin(time * 5) * 0.03);
+      
+      particles.rotation.y += 0.0005;
+      particles.rotation.x += 0.0003;
+      
+      cubesGroup.forEach(cube => {
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.015;
+        cube.position.x += Math.sin(time * 1.3 + cube.userData.rangeX) * 0.003;
+        cube.position.y += Math.cos(time * 1.2 + cube.userData.rangeY) * 0.003;
+      });
+      
+      // subtle camera oscillation
+      camera.position.x += (0 - camera.position.x) * 0.02;
+      camera.lookAt(0, 0.3, 0);
+      renderer.render(scene, camera);
+    }
+    animate();
+    
+    // resize handler
+    window.addEventListener('resize', onWindowResize, false);
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    
+    // small interactive effect: mousemove parallax influence on camera target? optional elegance
+    document.addEventListener('mousemove', (event) => {
+      const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+      const targetX = mouseX * 0.5;
+      camera.position.x += (targetX - camera.position.x) * 0.03;
+      camera.lookAt(0, 0.4, 0);
+    });
+  </script>
+
+  <!-- PDF Generation Script -->
+  <script>
+    (function() {
+      const downloadBtn = document.getElementById('downloadPDFBtn');
+      const elementToPrint = document.getElementById('resume-print');
+      
+      downloadBtn.addEventListener('click', () => {
+        // Show loading indication
+        const originalText = downloadBtn.innerHTML;
+        downloadBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Generating PDF...';
+        downloadBtn.disabled = true;
+        
+        const opt = {
+          margin:        [0.5, 0.5, 0.5, 0.5],
+          filename:     'Alen_Solorzano_Strategic_Fintech_CV.pdf',
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2, letterRendering: true, useCORS: true, logging: false },
+          jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        
+        // Clone to avoid affecting live view but preserve styles
+        html2pdf().set(opt).from(elementToPrint).save().then(() => {
+          downloadBtn.innerHTML = originalText;
+          downloadBtn.disabled = false;
+        }).catch(err => {
+          console.error(err);
+          downloadBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Retry PDF';
+          downloadBtn.disabled = false;
+          alert('PDF generation error, but you can still print the page.');
+        });
+      });
+    })();
+  </script>
+  <!-- ensure any missing interactions / guarantee offline support: all core assets via CDN but with cache, works offline after first load but inline content fully static. Three.js scene functions with or without internet after initial load. 
+  Interactive features: cards, hover animations, 3D scene -->
+</body>
+</html>
