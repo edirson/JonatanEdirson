@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Verde Listo Shot | Bienestar Natural</title>
+    <style>
+        /* RESET & BASE */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: linear-gradient(145deg, #e9f5e6 0%, #c8e6c9 100%);
+            color: #1f3b2c;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Preloader */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a3b2b;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .loader-text {
+            color: #d9f0b7;
+            font-size: 1.6rem;
+            letter-spacing: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(210, 245, 160, 0.3);
+            border-top: 5px solid #b9f46b;
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Parallax layers */
+        .parallax-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .parallax-leaf {
+            position: absolute;
+            background: radial-gradient(circle, rgba(150, 210, 80, 0.25), transparent);
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.6;
+        }
+
+        .leaf1 { top: 15%; left: -5%; background: #a8e66b; }
+        .leaf2 { bottom: 20%; right: -3%; background: #6fbf4c; width: 250px; height: 250px; opacity: 0.4; }
+        .leaf3 { top: 50%; left: 70%; background: #c2f28c; width: 120px; height: 120px; filter: blur(35px); }
+
+        /* Main container */
+        .main-content {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Hero section */
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2rem 5%;
+            gap: 2rem;
+        }
+
+        .hero-text {
+            flex: 1.2;
+            min-width: 280px;
+            backdrop-filter: blur(4px);
+            background: rgba(255, 255, 245, 0.5);
+            border-radius: 48px;
+            padding: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
+        }
+
+        .hero-text h1 {
+            font-size: 3.8rem;
+            font-weight: 800;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #1f5e3a, #94d62c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .badge-nuevo {
+            display: inline-block;
+            background: #f9b81b;
+            color: #2c4b32;
+            padding: 0.3rem 1rem;
+            border-radius: 60px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .hero-tagline {
+            font-size: 1.4rem;
+            font-weight: 500;
+            margin: 1rem 0;
+        }
+
+        .hero-benefits {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .pill {
+            background: white;
+            padding: 0.4rem 1.2rem;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            color: #1a4a2a;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-primary {
+            background: #2c7840;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 40px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary:hover {
+            background: #4dac66;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #2c7840;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-weight: bold;
+            color: #1e4a2f;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .canvas-container {
+            flex: 1;
+            height: 500px;
+            min-width: 300px;
+            border-radius: 48px;
+            position: relative;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Sections general */
+        section {
+            padding: 5rem 5%;
+            position: relative;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #1f4d2e;
+            position: relative;
+        }
+
+        .ingredients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .ingredient-card {
+            background: rgba(255, 255, 245, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 36px;
+            padding: 1.8rem;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            border: 1px solid rgba(120, 180, 80, 0.3);
+        }
+
+        .ingredient-card:hover {
+            transform: translateY(-8px);
+            background: white;
+            box-shadow: 0 25px 35px -12px rgba(0,0,0,0.2);
+        }
+
+        .ingredient-icon {
+            font-size: 3.2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .ingredient-card h3 {
+            font-size: 1.6rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-btn {
+            background: #e5f5dc;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            margin-top: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #2c6e3c;
+        }
+
+        .info-btn:hover {
+            background: #c0e0ae;
+            transform: scale(0.96);
+        }
+
+        .benefits-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            justify-content: center;
+        }
+
+        .benefit-item {
+            background: white;
+            padding: 1.2rem 1.8rem;
+            border-radius: 90px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+        }
+
+        .steps {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .step {
+            text-align: center;
+            background: #fefce6;
+            padding: 2rem;
+            border-radius: 60px;
+            width: 180px;
+        }
+
+        .step .emoji-big {
+            font-size: 3rem;
+        }
+
+        .pack-options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .pack-card {
+            background: #ffffffcc;
+            backdrop-filter: blur(8px);
+            border-radius: 48px;
+            padding: 1.5rem 2rem;
+            text-align: center;
+            min-width: 160px;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 1px solid #b4e0a0;
+        }
+
+        .pack-card:hover {
+            background: white;
+            transform: scale(1.02);
+        }
+
+        .pack-price {
+            font-weight: 800;
+            font-size: 1.6rem;
+            color: #226633;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background: #1d3a2b;
+            color: #e2f0d3;
+            border-radius: 48px 48px 0 0;
+            margin-top: 2rem;
+        }
+
+        /* Modal info */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            max-width: 380px;
+            padding: 2rem;
+            border-radius: 48px;
+            text-align: center;
+            animation: fadeUp 0.3s ease;
+        }
+
+        .modal-content h4 {
+            font-size: 1.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .close-modal {
+            background: #2f6b3e;
+            color: white;
+            border: none;
+            margin-top: 1rem;
+            padding: 8px 20px;
+            border-radius: 60px;
+            cursor: pointer;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        @media (max-width: 800px) {
+            .hero-text h1 { font-size: 2.5rem; }
+            .canvas-container { height: 350px; }
+            .section-title { font-size: 2rem; }
+        }
+    </style>
+    <!-- Google Fonts (fallback offline: system) -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Preloader -->
+<div id="preloader">
+    <div class="spinner"></div>
+    <div class="loader-text">VERDE LISTO</div>
+    <div style="color:#c0e0b0;">cargando experiencia 3D...</div>
+</div>
+
+<!-- Parallax floating leaves background (scroll effect) -->
+<div class="parallax-bg">
+    <div class="parallax-leaf leaf1" data-speed="0.2"></div>
+    <div class="parallax-leaf leaf2" data-speed="0.35"></div>
+    <div class="parallax-leaf leaf3" data-speed="0.5"></div>
+</div>
+
+<main class="main-content">
+    <!-- Hero -->
+    <div class="hero">
+        <div class="hero-text">
+            <div class="badge-nuevo">✨ NUEVO en ♡ VERDE LISTO SHOT</div>
+            <h1>VERDE<br>LISTO</h1>
+            <p class="hero-tagline">NATURALMENTE PARA TI · ANTINFLAMATORIO</p>
+            <p>Tu dosis diaria de bienestar, hecha con ingredientes reales y amor.</p>
+            <div class="hero-benefits">
+                <span class="pill">🌿 Antiinflamatorio</span>
+                <span class="pill">⚡ Energía natural</span>
+                <span class="pill">🛡️ Defensas</span>
+            </div>
+            <div class="btn-group">
+                <button class="btn-primary" id="scrollToShop">🛒 Elige tu pack</button>
+                <button class="btn-outline" id="infoBenefits">✨ Conoce los beneficios</button>
+            </div>
+        </div>
+        <div class="canvas-container" id="threeCanvas"></div>
+    </div>
+
+    <!-- Ingredientes section con botones info -->
+    <section id="ingredientes">
+        <h2 class="section-title">🍃 HECHO CON 🥕</h2>
+        <div class="ingredients-grid" id="ingredientsGrid"></div>
+    </section>
+
+    <!-- Beneficios destacados -->
+    <section>
+        <h2 class="section-title">Poder en cada sorbo</h2>
+        <div class="benefits-wrap">
+            <div class="benefit-item">🔥 ANTINFLAMATORIO NATURAL</div>
+            <div class="benefit-item">🌱 MEJORA LA DIGESTIÓN</div>
+            <div class="benefit-item">💪 FORTALECE SISTEMA INMUNE</div>
+            <div class="benefit-item">🍊 ANTIOXIDANTE NATURAL</div>
+            <div class="benefit-item">⚡ ENERGÍA PARA TU DÍA</div>
+        </div>
+    </section>
+
+    <!-- Así de fácil -->
+    <section>
+        <h2 class="section-title">Así de fácil</h2>
+        <div class="steps">
+            <div class="step"><div class="emoji-big">🥤</div><h3>AGITA</h3><p>Mezcla bien los activos</p></div>
+            <div class="step"><div class="emoji-big">💚</div><h3>TOMA</h3><p>Disfruta su frescura</p></div>
+            <div class="step"><div class="emoji-big">✨</div><h3>SIÉNTETE BIEN</h3><p>Energía y vitalidad</p></div>
+        </div>
+    </section>
+
+    <!-- Packs interactivos -->
+    <section id="shop">
+        <h2 class="section-title">Disponible por</h2>
+        <div class="pack-options">
+            <div class="pack-card" data-pack="1 SHOT">
+                <h3>1 SHOT</h3>
+                <div class="pack-price">$4.90</div>
+                <button class="info-btn pack-buy">Probar ahora</button>
+            </div>
+            <div class="pack-card" data-pack="PACK 5 SHOTS">
+                <h3>PACK 5 SHOTS</h3>
+                <div class="pack-price">$22.90</div>
+                <button class="info-btn pack-buy">Ahorra 15%</button>
+            </div>
+            <div class="pack-card" data-pack="PACK 10 SHOTS">
+                <h3>PACK 10 SHOTS</h3>
+                <div class="pack-price">$42.90</div>
+                <button class="info-btn pack-buy">Oferta especial</button>
+            </div>
+        </div>
+        <p style="text-align:center; margin-top:1rem;">❤️ Cuidarte es elegirte todos los días</p>
+    </section>
+
+    <footer>
+        <p>💚 VERDE LISTO · Shot Antiinflamatorio Natural · Tu bienestar diario</p>
+        <p style="font-size:0.8rem">Ingredientes 100% naturales | Sin conservantes</p>
+    </footer>
+</main>
+
+<!-- Modal de informacion -->
+<div id="infoModal" class="modal">
+    <div class="modal-content">
+        <h4 id="modalTitle"></h4>
+        <p id="modalDesc"></p>
+        <button class="close-modal" id="closeModalBtn">Cerrar</button>
+    </div>
+</div>
+
+<!-- Three.js CDN (tambien offline si ya cargado, pero con CDN aseguramos) -->
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+
+    // ------------------- Preloader gestion -------------------
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const preloader = document.getElementById('preloader');
+            if (preloader) {
+                preloader.style.opacity = '0';
+                setTimeout(() => {
+                    preloader.style.display = 'none';
+                }, 600);
+            }
+        }, 800);
+    });
+
+    // ------------------- THREE.JS Escena interactiva con efecto 3D y parallax scroll en objeto -------------------
+    const container = document.getElementById('threeCanvas');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x112e1c);
+    scene.fog = new THREE.FogExp2(0x112e1c, 0.025);
+    
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.set(0, 1.2, 4.5);
+    camera.lookAt(0, 0.8, 0);
+    
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
+    
+    // luces
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    scene.add(ambientLight);
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1);
+    mainLight.position.set(3, 5, 2);
+    mainLight.castShadow = true;
+    scene.add(mainLight);
+    const fillLight = new THREE.PointLight(0xa3d977, 0.4);
+    fillLight.position.set(1, 2, 3);
+    scene.add(fillLight);
+    const backLight = new THREE.PointLight(0xffaa66, 0.3);
+    backLight.position.set(-1, 1.5, -2);
+    scene.add(backLight);
+    
+    // grupo principal para animaciones parallax scroll
+    const mainGroup = new THREE.Group();
+    scene.add(mainGroup);
+    
+    // Botella principal (vidrio esmeralda)
+    const bottleGeometry = new THREE.CylinderGeometry(0.68, 0.62, 1.4, 32);
+    const glassMaterial = new THREE.MeshPhysicalMaterial({
+        color: 0x7bc95c,
+        metalness: 0.4,
+        roughness: 0.25,
+        transparent: true,
+        opacity: 0.68,
+        emissive: 0x2a6210,
+        emissiveIntensity: 0.12
+    });
+    const bottle = new THREE.Mesh(bottleGeometry, glassMaterial);
+    bottle.castShadow = true;
+    bottle.receiveShadow = false;
+    bottle.position.y = 0.2;
+    mainGroup.add(bottle);
+    
+    // líquido interior vibrante
+    const liquidGeo = new THREE.CylinderGeometry(0.59, 0.54, 0.9, 32);
+    const liquidMat = new THREE.MeshStandardMaterial({ color: 0xb0f284, emissive: 0x448d34, emissiveIntensity: 0.25, roughness: 0.3 });
+    const liquid = new THREE.Mesh(liquidGeo, liquidMat);
+    liquid.position.y = 0.05;
+    mainGroup.add(liquid);
+    
+    // tapa/corcho
+    const capGeo = new THREE.CylinderGeometry(0.58, 0.62, 0.18, 24);
+    const capMat = new THREE.MeshStandardMaterial({ color: 0xd9b48b, roughness: 0.7, metalness: 0.1 });
+    const cap = new THREE.Mesh(capGeo, capMat);
+    cap.position.y = 0.78;
+    mainGroup.add(cap);
+    
+    // etiqueta decorativa anillo
+    const ringGeo = new THREE.TorusGeometry(0.64, 0.045, 32, 100);
+    const goldMat = new THREE.MeshStandardMaterial({ color: 0xf2c94c, metalness: 0.85 });
+    const ring = new THREE.Mesh(ringGeo, goldMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.15;
+    mainGroup.add(ring);
+    
+    // esferas flotantes (ingredientes) alrededor
+    const floatingItems = [];
+    const colors = [0xffaa44, 0xff6b4a, 0x6ac46e, 0xd96c2b, 0xf7d44a];
+    const positions = [
+        { x: 0.9, y: 0.7, z: 0.5 }, { x: -0.85, y: 0.5, z: 0.6 }, { x: 0.7, y: 0.2, z: -0.9 },
+        { x: -0.75, y: 0.9, z: -0.4 }, { x: 0.5, y: 1.0, z: 0.7 }, { x: -0.6, y: 0.1, z: 0.95 },
+        { x: 0.95, y: 0.45, z: -0.5 }, { x: -0.55, y: 0.75, z: -0.85 }
+    ];
+    positions.forEach((pos, idx) => {
+        const sphereGeo = new THREE.SphereGeometry(0.11, 16, 16);
+        const material = new THREE.MeshStandardMaterial({ color: colors[idx % colors.length], emissive: 0x226622, emissiveIntensity: 0.2 });
+        const sphere = new THREE.Mesh(sphereGeo, material);
+        sphere.position.set(pos.x, pos.y, pos.z);
+        sphere.userData = { speed: 0.005 + Math.random() * 0.01, offsetY: pos.y };
+        mainGroup.add(sphere);
+        floatingItems.push(sphere);
+    });
+    
+    // partículas de polen mágicas
+    const particleCount = 400;
+    const particleGeometry = new THREE.BufferGeometry();
+    const particlePositions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+        particlePositions[i*3] = (Math.random() - 0.5) * 5;
+        particlePositions[i*3+1] = Math.random() * 2.2;
+        particlePositions[i*3+2] = (Math.random() - 0.5) * 4 - 1;
+    }
+    particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    const particleMaterial = new THREE.PointsMaterial({ color: 0xbef27c, size: 0.03, transparent: true, opacity: 0.6 });
+    const particles = new THREE.Points(particleGeometry, particleMaterial);
+    mainGroup.add(particles);
+    
+    // pequeña base suelo reflejo
+    const planeMat = new THREE.MeshStandardMaterial({ color: 0x1b4d2b, roughness: 0.8, metalness: 0.1, transparent: true, opacity: 0.4 });
+    const groundPlane = new THREE.Mesh(new THREE.PlaneGeometry(3.5, 2.5), planeMat);
+    groundPlane.rotation.x = -Math.PI / 2;
+    groundPlane.position.y = -0.45;
+    groundPlane.receiveShadow = true;
+    mainGroup.add(groundPlane);
+    
+    // animaciones rotación grupo base
+    let time = 0;
+    let scrollYoffset = 0;
+    
+    function animate3D() {
+        requestAnimationFrame(animate3D);
+        time += 0.008;
+        
+        // rotación suave + efecto scroll parallax (scroll afecta rotación y pequeña inclinación)
+        const targetRotY = scrollYoffset * 0.005;
+        mainGroup.rotation.y = targetRotY + Math.sin(time * 0.4) * 0.1;
+        mainGroup.rotation.x = Math.sin(time * 0.3) * 0.03 + (scrollYoffset * 0.002);
+        
+        // movimiento individual flotante
+        floatingItems.forEach((item, idx) => {
+            item.position.y += Math.sin(time * 1.5 + idx) * 0.002;
+        });
+        
+        // partículas girar sutilmente
+        particles.rotation.y += 0.002;
+        particles.rotation.x = Math.sin(time * 0.2) * 0.1;
+        
+        // luz dinámica
+        fillLight.intensity = 0.5 + Math.sin(time) * 0.15;
+        
+        renderer.render(scene, camera);
+    }
+    animate3D();
+    
+    // resize observer
+    window.addEventListener('resize', () => {
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+    });
+    
+    // ----- scroll parallax (interacción con 3D y elementos css parallax) -----
+    window.addEventListener('scroll', () => {
+        const scrollPos = window.scrollY;
+        scrollYoffset = scrollPos;
+        // efecto parallax en hojas de fondo
+        const leaves = document.querySelectorAll('.parallax-leaf');
+        leaves.forEach((leaf) => {
+            const speed = parseFloat(leaf.getAttribute('data-speed') || '0.2');
+            const yOffset = scrollPos * speed;
+            leaf.style.transform = `translateY(${yOffset * 0.5}px) translateX(${scrollPos * 0.03}px)`;
+        });
+        
+        // pequeño efecto en la cámara 3D (parallax vertical muy suave)
+        const targetY = 1.2 + scrollPos * 0.0008;
+        camera.position.y += (targetY - camera.position.y) * 0.05;
+        camera.lookAt(0, 0.8 + scrollPos * 0.0005, 0);
+    });
+    
+    // ---------- DATA INGREDIENTES con botones informativos ----------
+    const ingredientsData = [
+        { name: "CÚRCUMA", icon: "🟡", desc: "Antiinflamatoria natural, reduce la inflamación articular y mejora la respuesta inmune." },
+        { name: "JENGIBRE", icon: "🧡", desc: "Mejora la digestión, fortalece el cuerpo y posee propiedades antioxidantes." },
+        { name: "NARANJA", icon: "🍊", desc: "Fuente natural de vitamina C, potencia defensas y revitaliza la piel." },
+        { name: "PIMIENTA NEGRA", icon: "⚫", desc: "Ayuda a absorber mejor los nutrientes, potencia la curcumina hasta 2000%." },
+        { name: "ACEITE DE OLIVA", icon: "🫒", desc: "Mejora la absorción de los activos y nutre tu cuerpo con grasas saludables." }
+    ];
+    
+    const gridContainer = document.getElementById('ingredientsGrid');
+    function buildIngredientCards() {
+        gridContainer.innerHTML = '';
+        ingredientsData.forEach(ing => {
+            const card = document.createElement('div');
+            card.className = 'ingredient-card';
+            card.innerHTML = `
+                <div class="ingredient-icon">${ing.icon}</div>
+                <h3>${ing.name}</h3>
+                <button class="info-btn" data-name="${ing.name}" data-desc="${ing.desc}">➕ Más info</button>
+            `;
+            gridContainer.appendChild(card);
+        });
+        // agregar event listeners a los botones de info
+        document.querySelectorAll('.ingredient-card .info-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const name = btn.getAttribute('data-name');
+                const desc = btn.getAttribute('data-desc');
+                showModal(name, desc);
+            });
+        });
+    }
+    buildIngredientCards();
+    
+    // modal system
+    const modal = document.getElementById('infoModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDesc = document.getElementById('modalDesc');
+    function showModal(title, desc) {
+        modalTitle.innerText = title;
+        modalDesc.innerText = desc;
+        modal.style.display = 'flex';
+    }
+    document.getElementById('closeModalBtn').addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+    });
+    
+    // Botón beneficios extra
+    document.getElementById('infoBenefits').addEventListener('click', () => {
+        showModal('Beneficios VERDE LISTO', '✔️ Antiinflamatorio natural\n✔️ Mejora la digestión\n✔️ Fortalece sistema inmune\n✔️ Antioxidante puro\n✔️ Energía sostenible para tu día.');
+    });
+    
+    // Botones packs interactivos (simular compra)
+    const packBtns = document.querySelectorAll('.pack-buy');
+    packBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const packCard = btn.closest('.pack-card');
+            const packName = packCard.querySelector('h3')?.innerText || 'Shot';
+            showModal(`✨ Pedido: ${packName}`, '¡Gracias por elegir bienestar! Próximamente disponible en tu tienda favorita. ❤️ Cuidarte es elegirte todos los días.');
+        });
+    });
+    
+    // Scroll to shop section
+    document.getElementById('scrollToShop').addEventListener('click', () => {
+        document.getElementById('shop').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    
+    // pequeño trigger inicial para ajuste de camara
+    setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+    }, 100);
+    
+    // añadir efecto parallax extra a cards mientras scroll
+    const cards = document.querySelectorAll('.ingredient-card');
+    window.addEventListener('scroll', () => {
+        const scrolled = window.scrollY;
+        cards.forEach((card, idx) => {
+            const speed = 0.05;
+            const yPos = scrolled * speed * (idx % 2 === 0 ? 0.5 : -0.3);
+            card.style.transform = `translateY(${yPos * 0.2}px)`;
+        });
+    });
+</script>
+</body>
+</html>
