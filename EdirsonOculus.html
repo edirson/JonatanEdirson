@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jonatan E. Casado Avendaño | Portfolio Inmersivo XR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        rajdhani: ['Rajdhani', 'sans-serif'],
+                        space: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        neon: {
+                            cyan: '#00f5ff',
+                            purple: '#b000ff',
+                            pink: '#ff00aa',
+                            green: '#00ff88',
+                            yellow: '#ffe600',
+                            orange: '#ff6600',
+                        },
+                        dark: {
+                            900: '#050510',
+                            800: '#0a0a1a',
+                            700: '#101028',
+                            600: '#181838',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #050510; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #00f5ff, #b000ff); border-radius: 3px; }
+
+        #preloader {
+            position: fixed; inset: 0; z-index: 99999;
+            background: #050510;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.8s, visibility 0.8s;
+        }
+        #preloader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loader-ring {
+            width: 120px; height: 120px;
+            border: 3px solid transparent;
+            border-top-color: #00f5ff;
+            border-radius: 50%;
+            animation: spin 1.2s linear infinite;
+            position: relative;
+        }
+        .loader-ring::before, .loader-ring::after {
+            content: ''; position: absolute; border: 3px solid transparent;
+            border-radius: 50%;
+        }
+        .loader-ring::before {
+            top: 8px; left: 8px; right: 8px; bottom: 8px;
+            border-top-color: #b000ff;
+            animation: spin 0.9s linear infinite reverse;
+        }
+        .loader-ring::after {
+            top: 20px; left: 20px; right: 20px; bottom: 20px;
+            border-top-color: #ff00aa;
+            animation: spin 1.5s linear infinite;
+        }
+        .loader-text {
+            position: absolute;
+            font-family: 'Orbitron', sans-serif;
+            color: #00f5ff;
+            font-size: 0.7rem;
+            letter-spacing: 4px;
+            animation: pulse 1s ease-in-out infinite;
+        }
+        .loader-progress {
+            position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%);
+            width: 180px; height: 2px; background: rgba(0,245,255,0.1);
+            border-radius: 1px; overflow: hidden;
+        }
+        .loader-progress-bar {
+            height: 100%; width: 0%; background: linear-gradient(90deg, #00f5ff, #b000ff);
+            transition: width 0.3s;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(2px, -2px); }
+            60% { transform: translate(-1px, -1px); }
+            80% { transform: translate(1px, 1px); }
+        }
+        @keyframes scanline { 0% { top: -100%; } 100% { top: 100%; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes borderGlow { 0%, 100% { border-color: rgba(0,245,255,0.3); } 50% { border-color: rgba(0,245,255,0.8); } }
+        @keyframes shimmer { to { left: 200%; } }
+
+        .animate-fadeInUp { animation: fadeInUp 0.8s ease forwards; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+
+        .neon-text { text-shadow: 0 0 10px rgba(0,245,255,0.5), 0 0 40px rgba(0,245,255,0.2); }
+        .glass {
+            background: rgba(10,10,26,0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0,245,255,0.15);
+        }
+        .glass-card {
+            background: rgba(16,16,40,0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0,245,255,0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(0,245,255,0.4);
+            box-shadow: 0 0 30px rgba(0,245,255,0.1), 0 20px 60px rgba(0,0,0,0.3);
+            transform: translateY(-8px);
+        }
+
+        .parallax-container { perspective: 1000px; transform-style: preserve-3d; }
+        .parallax-layer { transition: transform 0.1s ease-out; }
+
+        .skill-bar { position: relative; overflow: hidden; }
+        .skill-bar::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        #hero-canvas, #game-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+        .section-reveal { opacity: 0; transform: translateY(60px); transition: all 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .section-reveal.visible { opacity: 1; transform: translateY(0); }
+
+        .vr-headset-icon {
+            width: 80px; height: 50px;
+            border: 3px solid #00f5ff;
+            border-radius: 25px;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .vr-headset-icon::before {
+            content: ''; width: 20px; height: 20px;
+            border-radius: 50%; border: 2px solid #b000ff;
+            position: absolute; left: 15px;
+        }
+        .vr-headset-icon::after {
+            content: ''; width: 20px; height: 20px;
+            border-radius: 50%; border: 2px solid #b000ff;
+            position: absolute; right: 15px;
+        }
+
+        .upload-zone {
+            border: 2px dashed rgba(0,245,255,0.3);
+            transition: all 0.3s;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #00f5ff;
+            background: rgba(0,245,255,0.05);
+        }
+
+        .game-hud {
+            position: absolute; top: 10px; left: 10px; right: 10px;
+            z-index: 10; pointer-events: none;
+        }
+        .game-hud > * { pointer-events: auto; }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(0,245,255,0.2), rgba(176,0,255,0.2));
+            border-color: #00f5ff;
+        }
+
+        .particle-cursor {
+            position: fixed; width: 8px; height: 8px;
+            background: radial-gradient(circle, #00f5ff, transparent);
+            border-radius: 50%; pointer-events: none; z-index: 99998;
+            mix-blend-mode: screen;
+            transition: transform 0.1s;
+        }
+
+        .parallax-section { transform-style: preserve-3d; }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 1.8rem !important; }
+            .particle-cursor { display: none; }
+        }
+    </style>
+</head>
+<body class="bg-dark-900 text-white font-space overflow-x-hidden">
+
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="relative flex items-center justify-center">
+            <div class="loader-ring"></div>
+            <span class="loader-text">CARGANDO XR</span>
+            <div class="loader-progress">
+                <div class="loader-progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Cursor -->
+    <div class="particle-cursor" id="cursor"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 glass transition-all duration-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="flex items-center justify-between h-16">
+                <a href="#hero" class="font-orbitron text-lg font-bold bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent">
+                    JECA-XR
+                </a>
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="#hero" class="nav-link px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan transition-colors">Inicio</a>
+                    <a href="#about" class="nav-link px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan transition-colors">Sobre Mí</a>
+                    <a href="#skills" class="nav-link px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan transition-colors">Skills</a>
+                    <a href="#gallery3d" class="nav-link px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan transition-colors">Galería 3D</a>
+                    <a href="#game" class="nav-link px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan transition-colors">XR Game</a>
+                    <a href="#genart" class="nav-link px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan transition-colors">Arte Gen.</a>
+                    <a href="#webxr" class="nav-link px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan transition-colors">WebXR</a>
+                    <a href="#ai" class="nav-link px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan transition-colors">IA Ética</a>
+                    <a href="#contact" class="nav-link px-3 py-2 text-sm font-rajdhani text-neon-cyan border border-neon-cyan/30 rounded px-4 hover:bg-neon-cyan/10 transition-all">Contacto</a>
+                </div>
+                <button id="menu-btn" class="md:hidden text-neon-cyan">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="md:hidden hidden glass border-t border-neon-cyan/10">
+            <div class="px-4 py-3 space-y-2">
+                <a href="#hero" class="block px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan">Inicio</a>
+                <a href="#about" class="block px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan">Sobre Mí</a>
+                <a href="#skills" class="block px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan">Skills</a>
+                <a href="#gallery3d" class="block px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan">Galería 3D</a>
+                <a href="#game" class="block px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan">XR Game</a>
+                <a href="#genart" class="block px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan">Arte Gen.</a>
+                <a href="#webxr" class="block px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan">WebXR</a>
+                <a href="#ai" class="block px-3 py-2 text-sm font-rajdhani text-gray-300 hover:text-neon-cyan">IA Ética</a>
+                <a href="#contact" class="block px-3 py-2 text-sm font-rajdhani text-neon-cyan">Contacto</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section id="hero" class="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <canvas id="hero-canvas"></canvas>
+        <div class="absolute inset-0 pointer-events-none z-10">
+            <div class="absolute w-full h-[2px] bg-neon-cyan/5" style="animation: scanline 4s linear infinite;"></div>
+        </div>
+        <div class="relative z-20 text-center px-4 parallax-container" id="hero-content">
+            <div class="parallax-layer" data-depth="0.1">
+                <p class="font-rajdhani text-neon-cyan/80 text-sm md:text-base tracking-[0.3em] uppercase mb-4">
+                    &lt; Experiencias Inmersivas &gt;
+                </p>
+            </div>
+            <div class="parallax-layer" data-depth="0.2">
+                <h1 class="hero-title font-orbitron text-3xl sm:text-5xl md:text-7xl font-black leading-tight mb-4">
+                    <span class="bg-gradient-to-r from-neon-cyan via-neon-purple to-neon-pink bg-clip-text text-transparent">
+                        JONATAN EDIRSON
+                    </span>
+                    <br>
+                    <span class="text-white/90">CASADO AVENDAÑO</span>
+                </h1>
+            </div>
+            <div class="parallax-layer" data-depth="0.15">
+                <p class="font-rajdhani text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8">
+                    Creador de mundos digitales • VR | AR | XR • Arte Generativo • Videojuegos • Multimedia Teatral • IA con Propósito
+                </p>
+            </div>
+            <div class="parallax-layer flex flex-wrap gap-4 justify-center" data-depth="0.3">
+                <a href="#gallery3d" class="group relative px-8 py-3 font-rajdhani font-semibold text-dark-900 bg-gradient-to-r from-neon-cyan to-neon-purple rounded overflow-hidden transition-transform hover:scale-105">
+                    <span class="relative z-10">Explorar Portfolio</span>
+                    <div class="absolute inset-0 bg-gradient-to-r from-neon-purple to-neon-pink opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                </a>
+                <a href="#game" class="px-8 py-3 font-rajdhani font-semibold text-neon-cyan border border-neon-cyan/40 rounded hover:bg-neon-cyan/10 transition-all hover:scale-105">
+                    ▶ Jugar XR Demo
+                </a>
+            </div>
+            <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-float">
+                <div class="w-6 h-10 border-2 border-neon-cyan/40 rounded-full flex justify-center">
+                    <div class="w-1 h-3 bg-neon-cyan/60 rounded-full mt-2 animate-pulse"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="relative py-24 overflow-hidden section-reveal parallax-section">
+        <div class="absolute inset-0 bg-gradient-to-b from-dark-900 via-dark-800 to-dark-900"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="relative">
+                    <div class="relative w-72 h-72 md:w-96 md:h-96 mx-auto">
+                        <canvas id="about-3d" class="absolute inset-0 w-full h-full"></canvas>
+                        <div class="absolute inset-0 border-2 border-neon-cyan/20 rounded-2xl" style="animation: borderGlow 3s ease-in-out infinite;"></div>
+                    </div>
+                </div>
+                <div>
+                    <h2 class="font-orbitron text-3xl md:text-4xl font-bold mb-2">
+                        <span class="bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent">Sobre Mí</span>
+                    </h2>
+                    <div class="w-20 h-1 bg-gradient-to-r from-neon-cyan to-neon-purple mb-6"></div>
+                    <p class="text-gray-300 leading-relaxed mb-4 font-rajdhani text-lg">
+                        Soy <strong class="text-neon-cyan">Jonatan Edirson Casado Avendaño</strong>, desarrollador y creador multidisciplinario especializado en experiencias inmersivas que fusionan tecnología, arte y educación.
+                    </p>
+                    <p class="text-gray-400 leading-relaxed mb-6 font-rajdhani">
+                        Mi trabajo atraviesa el desarrollo web interactivo, videojuegos, animación 2D/3D, realidades extendidas (VR/AR/XR/WebXR), arte generativo e interactivo, producciones multimedia para teatro, y el uso ético y educativo de inteligencias artificiales. Creo que la tecnología debe ser un puente hacia experiencias significativas.
+                    </p>
+                    <div class="flex flex-wrap gap-3">
+                        <span class="px-3 py-1 text-xs font-rajdhani font-semibold bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20 rounded-full">WebXR</span>
+                        <span class="px-3 py-1 text-xs font-rajdhani font-semibold bg-neon-purple/10 text-neon-purple border border-neon-purple/20 rounded-full">Three.js</span>
+                        <span class="px-3 py-1 text-xs font-rajdhani font-semibold bg-neon-pink/10 text-neon-pink border border-neon-pink/20 rounded-full">A-Frame</span>
+                        <span class="px-3 py-1 text-xs font-rajdhani font-semibold bg-neon-green/10 text-neon-green border border-neon-green/20 rounded-full">Unity</span>
+                        <span class="px-3 py-1 text-xs font-rajdhani font-semibold bg-neon-yellow/10 text-neon-yellow border border-neon-yellow/20 rounded-full">Canvas</span>
+                        <span class="px-3 py-1 text-xs font-rajdhani font-semibold bg-neon-orange/10 text-neon-orange border border-neon-orange/20 rounded-full">IA Ética</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills" class="relative py-24 overflow-hidden section-reveal parallax-section">
+        <div class="absolute inset-0 bg-dark-900"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+            <div class="text-center mb-16">
+                <h2 class="font-orbitron text-3xl md:text-4xl font-bold mb-2">
+                    <span class="bg-gradient-to-r from-neon-cyan to-neon-green bg-clip-text text-transparent">Dominio Tecnológico</span>
+                </h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-neon-cyan to-neon-green mx-auto mb-4"></div>
+                <p class="text-gray-400 font-rajdhani text-lg">Especializado en tecnologías de vanguardia para experiencias inmersivas</p>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="skills-grid"></div>
+        </div>
+    </section>
+
+    <!-- 3D GALLERY -->
+    <section id="gallery3d" class="relative py-24 overflow-hidden section-reveal parallax-section">
+        <div class="absolute inset-0 bg-gradient-to-b from-dark-900 via-dark-700 to-dark-900"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+            <div class="text-center mb-16">
+                <h2 class="font-orbitron text-3xl md:text-4xl font-bold mb-2">
+                    <span class="bg-gradient-to-r from-neon-purple to-neon-pink bg-clip-text text-transparent">Galería 3D Interactiva</span>
+                </h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-neon-purple to-neon-pink mx-auto mb-4"></div>
+                <p class="text-gray-400 font-rajdhani text-lg">Explora modelos 3D interactivos • Style SketchFab</p>
+            </div>
+            <div class="flex flex-wrap justify-center gap-2 mb-10">
+                <button class="tab-btn active px-4 py-2 text-sm font-rajdhani border border-neon-cyan/20 rounded-lg transition-all hover:border-neon-cyan/50" data-tab="models">Modelos 3D</button>
+                <button class="tab-btn px-4 py-2 text-sm font-rajdhani border border-neon-purple/20 rounded-lg transition-all hover:border-neon-purple/50" data-tab="scenes">Escenas XR</button>
+                <button class="tab-btn px-4 py-2 text-sm font-rajdhani border border-neon-pink/20 rounded-lg transition-all hover:border-neon-pink/50" data-tab="avatars">Avatares</button>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="gallery-grid"></div>
+            <div id="viewer-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-dark-900/95 backdrop-blur-xl">
+                <div class="relative w-full max-w-4xl h-[80vh] glass rounded-2xl overflow-hidden">
+                    <div class="absolute top-4 right-4 z-20">
+                        <button id="close-viewer" class="w-10 h-10 flex items-center justify-center rounded-full bg-dark-800/80 border border-neon-cyan/20 text-neon-cyan hover:bg-neon-cyan/20 transition-all">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <canvas id="viewer-canvas" class="w-full h-full"></canvas>
+                    <div class="absolute bottom-0 left-0 right-0 p-4 glass">
+                        <h3 id="viewer-title" class="font-orbitron text-lg text-neon-cyan"></h3>
+                        <p id="viewer-desc" class="text-gray-400 text-sm font-rajdhani"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3D XR GAME -->
+    <section id="game" class="relative py-24 overflow-hidden section-reveal parallax-section">
+        <div class="absolute inset-0 bg-dark-900"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+            <div class="text-center mb-10">
+                <h2 class="font-orbitron text-3xl md:text-4xl font-bold mb-2">
+                    <span class="bg-gradient-to-r from-neon-green to-neon-cyan bg-clip-text text-transparent">XR Mission: Realidad Virtual</span>
+                </h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-neon-green to-neon-cyan mx-auto mb-4"></div>
+                <p class="text-gray-400 font-rajdhani text-lg">Videojuego 3D sobre el uso de VR • ¡Explora y aprende!</p>
+            </div>
+            <div class="relative glass rounded-2xl overflow-hidden" style="min-height: 500px;">
+                <div class="game-hud">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="glass-card rounded-lg px-4 py-2 flex items-center gap-4">
+                            <div>
+                                <span class="text-xs text-neon-cyan font-rajdhani">SCORE</span>
+                                <p id="game-score" class="font-orbitron text-xl text-white">0</p>
+                            </div>
+                            <div class="w-px h-8 bg-neon-cyan/20"></div>
+                            <div>
+                                <span class="text-xs text-neon-green font-rajdhani">VR DATA</span>
+                                <p id="game-vrdata" class="font-orbitron text-xl text-neon-green">0/5</p>
+                            </div>
+                            <div class="w-px h-8 bg-neon-cyan/20"></div>
+                            <div>
+                                <span class="text-xs text-neon-yellow font-rajdhani">TIME</span>
+                                <p id="game-time" class="font-orbitron text-xl text-neon-yellow">60</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="game-start" class="px-4 py-2 bg-neon-green/20 text-neon-green border border-neon-green/30 rounded-lg font-rajdhani font-semibold hover:bg-neon-green/30 transition-all">▶ Iniciar</button>
+                            <button id="game-reset" class="px-3 py-2 bg-dark-800/60 text-gray-400 border border-gray-600/30 rounded-lg font-rajdhani hover:text-white transition-all">↺ Reset</button>
+                        </div>
+                    </div>
+                </div>
+                <canvas id="game-canvas"></canvas>
+                <div id="game-overlay" class="absolute inset-0 flex items-center justify-center z-20 bg-dark-900/80">
+                    <div class="text-center max-w-md px-6">
+                        <div class="vr-headset-icon mx-auto mb-6"></div>
+                        <h3 class="font-orbitron text-2xl text-neon-cyan mb-4">XR Mission</h3>
+                        <p class="text-gray-300 font-rajdhani mb-4">
+                            Explora el mundo virtual y recoge los nodos de datos VR. Cada nodo contiene información clave sobre las tecnologías de Realidad Virtual y su impacto educativo.
+                        </p>
+                        <div class="text-left bg-dark-800/60 rounded-lg p-4 mb-6 text-sm">
+                            <p class="text-neon-cyan font-rajdhani mb-1">🎮 Controles:</p>
+                            <p class="text-gray-400 font-rajdhani">WASD / Flechas: Mover personaje</p>
+                            <p class="text-gray-400 font-rajdhani">Mouse: Rotar cámara al hacer clic en la escena</p>
+                        </div>
+                        <button id="game-play-btn" class="px-8 py-3 bg-gradient-to-r from-neon-green to-neon-cyan text-dark-900 font-orbitron font-bold rounded-lg hover:scale-105 transition-transform">
+                            JUGAR
+                        </button>
+                    </div>
+                </div>
+                <div id="vr-info" class="absolute bottom-4 left-4 right-4 md:right-auto md:w-96 glass-card rounded-xl p-4 z-20 hidden">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-neon-purple/20 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="glasses" class="w-5 h-5 text-neon-purple"></i>
+                        </div>
+                        <div>
+                            <h4 id="vr-info-title" class="font-orbitron text-sm text-neon-purple"></h4>
+                            <p id="vr-info-text" class="text-gray-400 text-xs font-rajdhani mt-1"></p>
+                        </div>
+                        <button onclick="document.getElementById('vr-info').classList.add('hidden')" class="text-gray-500 hover:text-white ml-auto flex-shrink-0">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GENERATIVE ART -->
+    <section id="genart" class="relative py-24 overflow-hidden section-reveal parallax-section">
+        <div class="absolute inset-0 bg-gradient-to-b from-dark-900 via-dark-800 to-dark-900"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+            <div class="text-center mb-16">
+                <h2 class="font-orbitron text-3xl md:text-4xl font-bold mb-2">
+                    <span class="bg-gradient-to-r from-neon-pink to-neon-yellow bg-clip-text text-transparent">Arte Generativo & Interactivo</span>
+                </h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-neon-pink to-neon-yellow mx-auto mb-4"></div>
+                <p class="text-gray-400 font-rajdhani text-lg">Algoritmos creativos • Canvas 2D • Interacción en tiempo real</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="glass-card rounded-2xl overflow-hidden">
+                    <canvas id="genart-canvas-1" class="w-full" style="height: 350px;"></canvas>
+                    <div class="p-4 flex items-center justify-between">
+                        <div>
+                            <h3 class="font-orbitron text-sm text-neon-pink">Flujo Neural</h3>
+                            <p class="text-gray-500 text-xs font-rajdhani">Interactúa con el mouse</p>
+                        </div>
+                        <button onclick="resetGenArt1()" class="px-3 py-1 text-xs text-neon-pink border border-neon-pink/30 rounded hover:bg-neon-pink/10 transition-all">Regenerar</button>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl overflow-hidden">
+                    <canvas id="genart-canvas-2" class="w-full" style="height: 350px;"></canvas>
+                    <div class="p-4 flex items-center justify-between">
+                        <div>
+                            <h3 class="font-orbitron text-sm text-neon-yellow">Partículas Caóticas</h3>
+                            <p class="text-gray-500 text-xs font-rajdhani">Haz clic para crear explosiones</p>
+                        </div>
+                        <button onclick="resetGenArt2()" class="px-3 py-1 text-xs text-neon-yellow border border-neon-yellow/30 rounded hover:bg-neon-yellow/10 transition-all">Regenerar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- WEBXR & A-FRAME -->
+    <section id="webxr" class="relative py-24 overflow-hidden section-reveal parallax-section">
+        <div class="absolute inset-0 bg-dark-900"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+            <div class="text-center mb-16">
+                <h2 class="font-orbitron text-3xl md:text-4xl font-bold mb-2">
+                    <span class="bg-gradient-to-r from-neon-cyan to-neon-green bg-clip-text text-transparent">WebXR & A-Frame</span>
+                </h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-neon-cyan to-neon-green mx-auto mb-4"></div>
+                <p class="text-gray-400 font-rajdhani text-lg">Sube archivos para experiencias WebXR • A-Frame Integration</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="font-orbitron text-lg text-neon-cyan mb-4 flex items-center gap-2">
+                        <i data-lucide="upload-cloud" class="w-5 h-5"></i>
+                        Subir Archivos XR
+                    </h3>
+                    <div id="upload-zone" class="upload-zone rounded-xl p-10 text-center cursor-pointer mb-4">
+                        <i data-lucide="box" class="w-12 h-12 text-neon-cyan/40 mx-auto mb-3"></i>
+                        <p class="text-gray-400 font-rajdhani mb-1">Arrastra archivos aquí o haz clic para seleccionar</p>
+                        <p class="text-gray-600 text-xs font-rajdhani">.gltf • .glb • .obj • .html (A-Frame) • .js</p>
+                        <input type="file" id="file-input" class="hidden" multiple accept=".gltf,.glb,.obj,.html,.js,.json">
+                    </div>
+                    <div id="upload-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+                    <div class="mt-4 flex gap-2">
+                        <button id="preview-btn" class="flex-1 px-4 py-2 bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20 rounded-lg font-rajdhani font-semibold hover:bg-neon-cyan/20 transition-all disabled:opacity-30" disabled>
+                            <i data-lucide="eye" class="w-4 h-4 inline mr-1"></i>Vista Previa XR
+                        </button>
+                        <button id="deploy-btn" class="flex-1 px-4 py-2 bg-neon-green/10 text-neon-green border border-neon-green/20 rounded-lg font-rajdhani font-semibold hover:bg-neon-green/20 transition-all disabled:opacity-30" disabled>
+                            <i data-lucide="rocket" class="w-4 h-4 inline mr-1"></i>Desplegar
+                        </button>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="font-orbitron text-lg text-neon-purple mb-4 flex items-center gap-2">
+                        <i data-lucide="glasses" class="w-5 h-5"></i>
+                        Escena A-Frame
+                    </h3>
+                    <div id="aframe-preview" class="bg-dark-800 rounded-xl overflow-hidden mb-4" style="height: 300px;">
+                        <canvas id="aframe-canvas" class="w-full h-full"></canvas>
+                    </div>
+                    <div class="bg-dark-800/60 rounded-lg p-3 text-xs font-mono text-gray-500 overflow-x-auto">
+                        <span class="text-neon-cyan">&lt;a-scene&gt;</span><br>
+                        &nbsp;&nbsp;<span class="text-neon-purple">&lt;a-box</span> <span class="text-neon-green">position</span>=<span class="text-neon-yellow">"0 1 -3"</span> <span class="text-neon-green">rotation</span>=<span class="text-neon-yellow">"0 45 0"</span> <span class="text-neon-green">color</span>=<span class="text-neon-yellow">"#00f5ff"</span><span class="text-neon-purple">&gt;&lt;/a-box&gt;</span><br>
+                        &nbsp;&nbsp;<span class="text-neon-purple">&lt;a-sphere</span> <span class="text-neon-green">position</span>=<span class="text-neon-yellow">"2 1 -3"</span> <span class="text-neon-green">color</span>=<span class="text-neon-yellow">"#b000ff"</span><span class="text-neon-purple">&gt;&lt;/a-sphere&gt;</span><br>
+                        &nbsp;&nbsp;<span class="text-neon-purple">&lt;a-plane</span> <span class="text-neon-green">position</span>=<span class="text-neon-yellow">"0 0 -3"</span> <span class="text-neon-green">rotation</span>=<span class="text-neon-yellow">"-90 0 0"</span> <span class="text-neon-green">width</span>=<span class="text-neon-yellow">"8"</span> <span class="text-neon-green">height</span>=<span class="text-neon-yellow">"8"</span> <span class="text-neon-green">color</span>=<span class="text-neon-yellow">"#101028"</span><span class="text-neon-purple">&gt;&lt;/a-plane&gt;</span><br>
+                        &nbsp;&nbsp;<span class="text-neon-purple">&lt;a-sky</span> <span class="text-neon-green">color</span>=<span class="text-neon-yellow">"#050510"</span><span class="text-neon-purple">&gt;&lt;/a-sky&gt;</span><br>
+                        <span class="text-neon-cyan">&lt;/a-scene&gt;</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <span class="px-2 py-1 text-[10px] bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20 rounded">WebXR API</span>
+                        <span class="px-2 py-1 text-[10px] bg-neon-purple/10 text-neon-purple border border-neon-purple/20 rounded">A-Frame 1.5</span>
+                        <span class="px-2 py-1 text-[10px] bg-neon-green/10 text-neon-green border border-neon-green/20 rounded">Immersive VR</span>
+                        <span class="px-2 py-1 text-[10px] bg-neon-pink/10 text-neon-pink border border-neon-pink/20 rounded">Hand Tracking</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI ETHICS -->
+    <section id="ai" class="relative py-24 overflow-hidden section-reveal parallax-section">
+        <div class="absolute inset-0 bg-gradient-to-b from-dark-900 via-dark-700 to-dark-900"></div>
+        <canvas id="ai-particles" class="absolute inset-0 w-full h-full opacity-30"></canvas>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+            <div class="text-center mb-16">
+                <h2 class="font-orbitron text-3xl md:text-4xl font-bold mb-2">
+                    <span class="bg-gradient-to-r from-neon-yellow to-neon-orange bg-clip-text text-transparent">IA con Propósito</span>
+                </h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-neon-yellow to-neon-orange mx-auto mb-4"></div>
+                <p class="text-gray-400 font-rajdhani text-lg">Uso ético y educativo de las inteligencias artificiales</p>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="glass-card rounded-2xl p-6 group">
+                    <div class="w-14 h-14 rounded-xl bg-neon-yellow/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i data-lucide="brain" class="w-7 h-7 text-neon-yellow"></i>
+                    </div>
+                    <h3 class="font-orbitron text-lg text-white mb-2">IA Educacional</h3>
+                    <p class="text-gray-400 text-sm font-rajdhani">Uso de modelos de lenguaje y generación de contenido para potenciar el aprendizaje significativo y personalizado.</p>
+                </div>
+                <div class="glass-card rounded-2xl p-6 group">
+                    <div class="w-14 h-14 rounded-xl bg-neon-orange/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i data-lucide="shield-check" class="w-7 h-7 text-neon-orange"></i>
+                    </div>
+                    <h3 class="font-orbitron text-lg text-white mb-2">Ética Digital</h3>
+                    <p class="text-gray-400 text-sm font-rajdhani">Implementación responsable de IA: transparencia, sesgo mitigado, privacidad y consentimiento informado como pilares.</p>
+                </div>
+                <div class="glass-card rounded-2xl p-6 group">
+                    <div class="w-14 h-14 rounded-xl bg-neon-green/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i data-lucide="accessibility" class="w-7 h-7 text-neon-green"></i>
+                    </div>
+                    <h3 class="font-orbitron text-lg text-white mb-2">Accesibilidad XR+IA</h3>
+                    <p class="text-gray-400 text-sm font-rajdhani">Combinando IA con WebXR para crear experiencias inmersivas accesibles para todas las personas.</p>
+                </div>
+                <div class="glass-card rounded-2xl p-6 group">
+                    <div class="w-14 h-14 rounded-xl bg-neon-cyan/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i data-lucide="sparkles" class="w-7 h-7 text-neon-cyan"></i>
+                    </div>
+                    <h3 class="font-orbitron text-lg text-white mb-2">Arte Generativo IA</h3>
+                    <p class="text-gray-400 text-sm font-rajdhani">Creación de obras artísticas con IA como herramienta co-creativa, manteniendo la autenticidad del artista.</p>
+                </div>
+                <div class="glass-card rounded-2xl p-6 group">
+                    <div class="w-14 h-14 rounded-xl bg-neon-purple/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i data-lucide="gavel" class="w-7 h-7 text-neon-purple"></i>
+                    </div>
+                    <h3 class="font-orbitron text-lg text-white mb-2">Gobernanza de IA</h3>
+                    <p class="text-gray-400 text-sm font-rajdhani">Promoción de marcos regulatorios y autorregulación en el desarrollo de sistemas de IA para XR.</p>
+                </div>
+                <div class="glass-card rounded-2xl p-6 group">
+                    <div class="w-14 h-14 rounded-xl bg-neon-pink/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <i data-lucide="users" class="w-7 h-7 text-neon-pink"></i>
+                    </div>
+                    <h3 class="font-orbitron text-lg text-white mb-2">IA Comunitaria</h3>
+                    <p class="text-gray-400 text-sm font-rajdhani">Proyectos de IA de código abierto que empoweran comunidades educativas y culturales.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- THEATER & MULTIMEDIA -->
+    <section id="theater" class="relative py-24 overflow-hidden section-reveal parallax-section">
+        <div class="absolute inset-0 bg-dark-900"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+            <div class="text-center mb-16">
+                <h2 class="font-orbitron text-3xl md:text-4xl font-bold mb-2">
+                    <span class="bg-gradient-to-r from-neon-orange to-neon-pink bg-clip-text text-transparent">Teatro & Multimedia</span>
+                </h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-neon-orange to-neon-pink mx-auto mb-4"></div>
+                <p class="text-gray-400 font-rajdhani text-lg">Producciones de video y multimedia para artes escénicas</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="glass-card rounded-2xl overflow-hidden group">
+                    <div class="relative overflow-hidden" style="height: 250px;">
+                        <img src="http://static.photos/vintage/640x360/77" alt="Teatro Multimedia" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-transparent"></div>
+                        <div class="absolute top-3 right-3 px-2 py-1 bg-neon-orange/20 text-neon-orange text-xs rounded border border-neon-orange/30 font-rajdhani">TEATRO</div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="font-orbitron text-lg text-white mb-2">Escenas Digitales</h3>
+                        <p class="text-gray-400 text-sm font-rajdhani">Diseño de proyecciones y visuales inmersivos para montajes teatrales, integrando mapping, XR y narrativa digital en tiempo real.</p>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl overflow-hidden group">
+                    <div class="relative overflow-hidden" style="height: 250px;">
+                        <img src="http://static.photos/education/640x360/55" alt="Producción Multimedia" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-transparent"></div>
+                        <div class="absolute top-3 right-3 px-2 py-1 bg-neon-pink/20 text-neon-pink text-xs rounded border border-neon-pink/30 font-rajdhani">MULTIMEDIA</div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="font-orbitron text-lg text-white mb-2">Narrativa Interactiva</h3>
+                        <p class="text-gray-400 text-sm font-rajdhani">Creación de experiencias multimedia donde el espectador se convierte en participante activo mediante interfaces XR y controles gestuales.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="relative py-24 overflow-hidden section-reveal parallax-section">
+        <div class="absolute inset-0 bg-gradient-to-b from-dark-900 via-dark-800 to-dark-900"></div>
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
+            <div class="text-center mb-16">
+                <h2 class="font-orbitron text-3xl md:text-4xl font-bold mb-2">
+                    <span class="bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent">Conectemos</span>
+                </h2>
+                <div class="w-20 h-1 bg-gradient-to-r from-neon-cyan to-neon-purple mx-auto mb-4"></div>
+            </div>
+            <div class="glass-card rounded-2xl p-8">
+                <form id="contact-form" class="space-y-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="text-xs font-rajdhani text-gray-400 mb-1 block">Nombre</label>
+                            <input type="text" class="w-full bg-dark-800/60 border border-neon-cyan/10 rounded-lg px-4 py-3 text-white font-rajdhani focus:border-neon-cyan/50 focus:outline-none focus:ring-1 focus:ring-neon-cyan/30 transition-all" placeholder="Tu nombre">
+                        </div>
+                        <div>
+                            <label class="text-xs font-rajdhani text-gray-400 mb-1 block">Email</label>
+                            <input type="email" class="w-full bg-dark-800/60 border border-neon-cyan/10 rounded-lg px-4 py-3 text-white font-rajdhani focus:border-neon-cyan/50 focus:outline-none focus:ring-1 focus:ring-neon-cyan/30 transition-all" placeholder="tu@email.com">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-rajdhani text-gray-400 mb-1 block">Asunto</label>
+                        <select class="w-full bg-dark-800/60 border border-neon-cyan/10 rounded-lg px-4 py-3 text-white font-rajdhani focus:border-neon-cyan/50 focus:outline-none transition-all">
+                            <option>Proyecto WebXR</option>
+                            <option>Videojuego</option>
+                            <option>Arte Generativo</option>
+                            <option>Producción Teatral</option>
+                            <option>Consultoría IA</option>
+                            <option>Otro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-rajdhani text-gray-400 mb-1 block">Mensaje</label>
+                        <textarea rows="4" class="w-full bg-dark-800/60 border border-neon-cyan/10 rounded-lg px-4 py-3 text-white font-rajdhani focus:border-neon-cyan/50 focus:outline-none focus:ring-1 focus:ring-neon-cyan/30 transition-all resize-none" placeholder="Cuéntame sobre tu proyecto..."></textarea>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-gradient-to-r from-neon-cyan to-neon-purple text-dark-900 font-orbitron font-bold rounded-lg hover:scale-[1.02] transition-transform">
+                        Enviar Mensaje →
+                    </button>
+                </form>
+                <div id="form-success" class="hidden text-center py-8">
+                    <div class="w-16 h-16 rounded-full bg-neon-green/20 flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="check-circle" class="w-8 h-8 text-neon-green"></i>
+                    </div>
+                    <h3 class="font-orbitron text-xl text-neon-green mb-2">¡Mensaje Enviado!</h3>
+                    <p class="text-gray-400 font-rajdhani">Te responderé lo antes posible. ¡Gracias por conectar!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="relative py-12 border-t border-neon-cyan/10">
+        <div class="absolute inset-0 bg-dark-900"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="font-orbitron text-lg font-bold bg-gradient-to-r from-neon-cyan to-neon-purple bg-clip-text text-transparent">
+                    JECA-XR
+                </div>
+                <p class="text-gray-500 text-sm font-rajdhani">© 2024 Jonatan Edirson Casado Avendaño • Experiencias Inmersivas con Propósito</p>
+                <div class="flex gap-4">
+                    <a href="#" class="w-9 h-9 flex items-center justify-center rounded-full border border-neon-cyan/20 text-neon-cyan/50 hover:text-neon-cyan hover:border-neon-cyan/50 transition-all">
+                        <i data-lucide="github" class="w-4 h-4"></i>
+                    </a>
+                    <a href="#" class="w-9 h-9 flex items-center justify-center rounded-full border border-neon-purple/20 text-neon-purple/50 hover:text-neon-purple hover:border-neon-purple/50 transition-all">
+                        <i data-lucide="linkedin" class="w-4 h-4"></i>
+                    </a>
+                    <a href="#" class="w-9 h-9 flex items-center justify-center rounded-full border border-neon-pink/20 text-neon-pink/50 hover:text-neon-pink hover:border-neon-pink/50 transition-all">
+                        <i data-lucide="twitter" class="w-4 h-4"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+    // ==================== PRELOADER ====================
+    const preloader = document.getElementById('preloader');
+    const progressBar = document.getElementById('progress-bar');
+    let loadProgress = 0;
+    const loadInterval = setInterval(() => {
+        loadProgress += Math.random() * 15;
+        if (loadProgress >= 100) {
+            loadProgress = 100;
+            clearInterval(loadInterval);
+            setTimeout(() => preloader.classList.add('hidden'), 400);
+        }
+        progressBar.style.width = loadProgress + '%';
+    }, 200);
+
+    // ==================== LUCIDE ====================
+    lucide.createIcons();
+
+    // ==================== CUSTOM CURSOR ====================
+    const cursor = document.getElementById('cursor');
+    let cursorX = 0, cursorY = 0, currentX = 0, currentY = 0;
+    document.addEventListener('mousemove', e => { cursorX = e.clientX; cursorY = e.clientY; });
+    function animateCursor() {
+        currentX += (cursorX - currentX) * 0.15;
+        currentY += (cursorY - currentY) * 0.15;
+        cursor.style.left = currentX - 4 + 'px';
+        cursor.style.top = currentY - 4 + 'px';
+        requestAnimationFrame(animateCursor);
+    }
+    if (window.innerWidth > 768) animateCursor();
+
+    // ==================== MOBILE MENU ====================
+    document.getElementById('menu-btn').addEventListener('click', () => {
+        document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+    document.querySelectorAll('#mobile-menu a').forEach(a => {
+        a.addEventListener('click', () => document.getElementById('mobile-menu').classList.add('hidden'));
+    });
+
+    // ==================== SCROLL REVEAL ====================
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.classList.add('visible');
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.section-reveal').forEach(el => revealObserver.observe(el));
+
+    // ==================== PARALLAX 3D SCROLL ====================
+    let scrollYPos = 0;
+    window.addEventListener('scroll', () => { scrollYPos = window.pageYOffset; });
+
+    function updateParallax() {
+        // Hero parallax layers
+        const heroContent = document.getElementById('hero-content');
+        if (heroContent) {
+            const layers = heroContent.querySelectorAll('.parallax-layer');
+            layers.forEach(layer => {
+                const depth = parseFloat(layer.dataset.depth) || 0.1;
+                const move = scrollYPos * depth;
+                layer.style.transform = `translateY(${move}px) translateZ(0)`;
+            });
+        }
+
+        // Section-level parallax for 3D effect
+        document.querySelectorAll('.parallax-section').forEach(section => {
+            const rect = section.getBoundingClientRect();
+            const visible = rect.top < window.innerHeight && rect.bottom > 0;
+            if (visible) {
+                const progress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
+                const rotateX = (progress - 0.5) * 4;
+                section.style.transform = `perspective(1000px) rotateX(${rotateX}deg)`;
+                section.style.opacity = Math.min(1, 0.3 + progress * 1.4);
+            }
+        });
+
+        requestAnimationFrame(updateParallax);
+    }
+    updateParallax();
+
+    // ==================== NAVBAR SCROLL ====================
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('navbar');
+        nav.style.background = window.pageYOffset > 100 ? 'rgba(5,5,16,0.95)' : 'rgba(10,10,26,0.7)';
+    });
+
+    // ==================== HERO 3D SCENE ====================
+    (function initHeroScene() {
+        const canvas = document.getElementById('hero-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        const particleCount = 2000;
+        const particleGeo = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+        const neonColors = [[0,0.96,1],[0.69,0,1],[1,0,0.67],[0,1,0.53]];
+        for (let i = 0; i < particleCount; i++) {
+            positions[i*3] = (Math.random()-0.5)*30;
+            positions[i*3+1] = (Math.random()-0.5)*30;
+            positions[i*3+2] = (Math.random()-0.5)*30;
+            const c = neonColors[Math.floor(Math.random()*neonColors.length)];
+            colors[i*3] = c[0]; colors[i*3+1] = c[1]; colors[i*3+2] = c[2];
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        particleGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        const particleMat = new THREE.PointsMaterial({ size: 0.04, vertexColors: true, transparent: true, opacity: 0.8 });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        const geoTypes = [
+            new THREE.IcosahedronGeometry(1.5,1),
+            new THREE.OctahedronGeometry(1.2,0),
+            new THREE.TorusGeometry(1.5,0.4,8,20),
+            new THREE.TorusKnotGeometry(1,0.3,64,8),
+        ];
+        const meshes = [];
+        geoTypes.forEach((geo, i) => {
+            const mat = new THREE.MeshBasicMaterial({ color: neonColors[i], wireframe: true, transparent: true, opacity: 0.3 });
+            const mesh = new THREE.Mesh(geo, mat);
+            const angle = (i / geoTypes.length) * Math.PI * 2;
+            mesh.position.set(Math.cos(angle)*6, Math.sin(angle)*3, -5+Math.sin(angle)*3);
+            scene.add(mesh);
+            meshes.push(mesh);
+        });
+
+        camera.position.z = 8;
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', e => {
+            mouseX = (e.clientX / window.innerWidth - 0.5)*2;
+            mouseY = (e.clientY / window.innerHeight - 0.5)*2;
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const t = Date.now() * 0.001;
+            particles.rotation.y += 0.0003;
+            particles.rotation.x += 0.0001;
+            meshes.forEach((mesh, i) => {
+                mesh.rotation.x += 0.003*(i%2===0?1:-1);
+                mesh.rotation.y += 0.005*(i%2===0?-1:1);
+                mesh.position.y += Math.sin(t+i)*0.002;
+            });
+            camera.position.x += (mouseX*1.5 - camera.position.x)*0.03;
+            camera.position.y += (-mouseY*1 - camera.position.y)*0.03;
+            camera.lookAt(scene.position);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    })();
+
+    // ==================== ABOUT 3D ====================
+    (function initAbout3D() {
+        const container = document.getElementById('about-3d').parentElement;
+        const canvas = document.getElementById('about-3d');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        function setSize() {
+            const w = container.clientWidth, h = container.clientHeight;
+            renderer.setSize(w, h);
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+        }
+        setSize();
+
+        const torusKnotGeo = new THREE.TorusKnotGeometry(1.2, 0.35, 128, 16, 2, 3);
+        const torusKnotMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff, wireframe: true, transparent: true, opacity: 0.5 });
+        const torusKnot = new THREE.Mesh(torusKnotGeo, torusKnotMat);
+        scene.add(torusKnot);
+        const sphereGeo = new THREE.IcosahedronGeometry(1.8, 2);
+        const sphereMat = new THREE.MeshBasicMaterial({ color: 0xb000ff, wireframe: true, transparent: true, opacity: 0.2 });
+        const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+        scene.add(sphere);
+        camera.position.z = 4;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            torusKnot.rotation.x += 0.005;
+            torusKnot.rotation.y += 0.008;
+            sphere.rotation.y -= 0.003;
+            renderer.render(scene, camera);
+        }
+        animate();
+        window.addEventListener('resize', setSize);
+    })();
+
+    // ==================== SKILLS ====================
+    const skills = [
+        { icon: 'globe', title: 'Web Interactivo', desc: 'HTML5, CSS3, JavaScript, Tailwind, React — Experiencias web que cobran vida.', color: 'cyan', level: 95 },
+        { icon: 'gamepad-2', title: 'Videojuegos', desc: 'Unity, Godot, Canvas — Diseño y desarrollo de mecánicas lúdicas inmersivas.', color: 'purple', level: 88 },
+        { icon: 'box', title: '3D & WebGL', desc: 'Three.js, WebGL, Blender — Modelado y renderizado 3D en tiempo real.', color: 'pink', level: 90 },
+        { icon: 'glasses', title: 'VR / AR / XR', desc: 'WebXR, A-Frame, Oculus SDK — Desarrollo para realidades extendidas.', color: 'green', level: 92 },
+        { icon: 'palette', title: 'Arte Generativo', desc: 'Canvas 2D, p5.js, GLSL — Creación algorítmica de obras visuales.', color: 'yellow', level: 85 },
+        { icon: 'clapperboard', title: 'Video & Teatro', desc: 'Producción audiovisual, mapping, visuales para artes escénicas.', color: 'orange', level: 80 },
+        { icon: 'brain', title: 'IA con Propósito', desc: 'Prompt engineering, ML5.js, tensorflow.js — Aplicaciones éticas y educativas.', color: 'cyan', level: 82 },
+        { icon: 'monitor-smartphone', title: 'Responsive Design', desc: 'Mobile-first, PWA, Accesibilidad — Diseño universal y adaptativo.', color: 'purple', level: 93 },
+        { icon: 'sparkles', title: 'Animación 2D/3D', desc: 'GSAP, Lottie, Spine, CSS animations — Movimiento con significado.', color: 'pink', level: 87 },
+    ];
+
+    const skillsGrid = document.getElementById('skills-grid');
+    skills.forEach((skill, i) => {
+        const card = document.createElement('div');
+        card.className = 'glass-card rounded-2xl p-6 group';
+        card.innerHTML = `
+            <div class="flex items-start justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl bg-neon-${skill.color}/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i data-lucide="${skill.icon}" class="w-6 h-6 text-neon-${skill.color}"></i>
+                </div>
+                <span class="text-xs font-orbitron text-neon-${skill.color}">${skill.level}%</span>
+            </div>
+            <h3 class="font-orbitron text-base text-white mb-2">${skill.title}</h3>
+            <p class="text-gray-400 text-sm font-rajdhani mb-4">${skill.desc}</p>
+            <div class="skill-bar w-full h-1.5 bg-dark-800 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-neon-${skill.color} to-neon-${skill.color}/50 rounded-full transition-all duration-1000" style="width: 0%" data-width="${skill.level}%"></div>
+            </div>
+        `;
+        skillsGrid.appendChild(card);
+    });
+    lucide.createIcons();
+
+    const skillBarObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const bars = entry.target.querySelectorAll('[data-width]');
+                bars.forEach((bar, i) => {
+                    setTimeout(() => { bar.style.width = bar.dataset.width; }, i * 100);
+                });
+            }
+        });
+    }, { threshold: 0.2 });
+    skillBarObserver.observe(skillsGrid);
+
+    // ==================== 3D GALLERY ====================
+    const galleryData = {
+        models: [
+            { title: 'Nodo Neural XR', desc: 'Estructura generativa inspirada en redes neuronales', color: 0x00f5ff, geo: 'torusKnot' },
+            { title: 'Cristal VR', desc: 'Forma cristalina para exploración en realidad virtual', color: 0xb000ff, geo: 'icosahedron' },
+            { title: 'Portal AR', desc: 'Geometría de portal para experiencias aumentadas', color: 0xff00aa, geo: 'torus' },
+            { title: 'Matriz Digital', desc: 'Estructura data-driven para visualizaciones 3D', color: 0x00ff88, geo: 'octahedron' },
+            { title: 'Esfera Inmersiva', desc: 'Domo experimental para proyecciones 360°', color: 0xffe600, geo: 'sphere' },
+            { title: 'Cuarto Dimensional', desc: 'Hipercubo representando dimensiones superiores', color: 0xff6600, geo: 'dodecahedron' },
+        ],
+        scenes: [
+            { title: 'Sala de Exhibición VR', desc: 'Espacio virtual para galerías de arte', color: 0x00f5ff, geo: 'box' },
+            { title: 'Auditorio Holográfico', desc: 'Escenario para presentaciones inmersivas', color: 0xb000ff, geo: 'cylinder' },
+            { title: 'Jardín Generativo', desc: 'Paisaje procedural con flora algorítmica', color: 0x00ff88, geo: 'cone' },
+        ],
+        avatars: [
+            { title: 'Avatar Metaverso', desc: 'Representación digital para espacios XR', color: 0xff00aa, geo: 'sphere' },
+            { title: 'Máscara Digital', desc: 'Identidad visual para experiencias AR', color: 0xffe600, geo: 'icosahedron' },
+            { title: 'Cuerpo Glitch', desc: 'Estética glitch para avatares experimentales', color: 0x00f5ff, geo: 'torusKnot' },
+        ]
+    };
+
+    function renderGallery(tab) {
+        const grid = document.getElementById('gallery-grid');
+        grid.innerHTML = '';
+        galleryData[tab].forEach((item, i) => {
+            const card = document.createElement('div');
+            card.className = 'glass-card rounded-2xl overflow-hidden cursor-pointer group gallery-item';
+            card.innerHTML = `
+                <div class="relative overflow-hidden" style="height: 220px;">
+                    <canvas class="gallery-item-canvas w-full h-full" data-color="${item.color}" data-geo="${item.geo}" data-index="${i}"></canvas>
+                    <div class="absolute inset-0 bg-gradient-to-t from-dark-900/80 via-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                        <span class="text-neon-cyan text-xs font-rajdhani"><i data-lucide="rotate-3d" class="w-3 h-3 inline mr-1"></i>Click para explorar</span>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <h3 class="font-orbitron text-sm text-white mb-1">${item.title}</h3>
+                    <p class="text-gray-500 text-xs font-rajdhani">${item.desc}</p>
+                </div>
+            `;
+            card.addEventListener('click', () => openViewer(item));
+            grid.appendChild(card);
+        });
+        lucide.createIcons();
+        initGalleryCanvases();
+    }
+
+    function initGalleryCanvases() {
+        document.querySelectorAll('.gallery-item-canvas').forEach(canvas => {
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight || 1, 0.1, 100);
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            const color = parseInt(canvas.dataset.color);
+            let geo;
+            switch(canvas.dataset.geo) {
+                case 'torusKnot': geo = new THREE.TorusKnotGeometry(1,0.3,64,8); break;
+                case 'icosahedron': geo = new THREE.IcosahedronGeometry(1.2,1); break;
+                case 'torus': geo = new THREE.TorusGeometry(1,0.35,16,32); break;
+                case 'octahedron': geo = new THREE.OctahedronGeometry(1.2,0); break;
+                case 'sphere': geo = new THREE.SphereGeometry(1.2,16,16); break;
+                case 'dodecahedron': geo = new THREE.DodecahedronGeometry(1.2,0); break;
+                case 'box': geo = new THREE.BoxGeometry(1.5,1.5,1.5); break;
+                case 'cylinder': geo = new THREE.CylinderGeometry(1,1,2,16); break;
+                case 'cone': geo = new THREE.ConeGeometry(1,2,16); break;
+                default: geo = new THREE.IcosahedronGeometry(1.2,1);
+            }
+            const mat = new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity: 0.6 });
+            const mesh = new THREE.Mesh(geo, mat);
+            scene.add(mesh);
+            const innerMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.1 });
+            const innerMesh = new THREE.Mesh(geo.clone(), innerMat);
+            innerMesh.scale.set(0.95,0.95,0.95);
+            scene.add(innerMesh);
+            camera.position.z = 3.5;
+
+            let hovered = false;
+            canvas.parentElement.addEventListener('mouseenter', () => hovered = true);
+            canvas.parentElement.addEventListener('mouseleave', () => hovered = false);
+
+            function animate() {
+                requestAnimationFrame(animate);
+                const speed = hovered ? 0.02 : 0.005;
+                mesh.rotation.x += speed;
+                mesh.rotation.y += speed * 1.3;
+                innerMesh.rotation.x += speed * 0.5;
+                innerMesh.rotation.y += speed * 0.7;
+                mesh.scale.lerp(new THREE.Vector3(hovered?1.1:1, hovered?1.1:1, hovered?1.1:1), 0.05);
+                renderer.render(scene, camera);
+            }
+            animate();
+        });
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderGallery(btn.dataset.tab);
+        });
+    });
+    renderGallery('models');
+
+    // ==================== 3D VIEWER MODAL ====================
+    let viewerScene, viewerCamera, viewerRenderer, viewerMesh, viewerAnimateId;
+
+    function openViewer(item) {
+        const modal = document.getElementById('viewer-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.getElementById('viewer-title').textContent = item.title;
+        document.getElementById('viewer-desc').textContent = item.desc;
+
+        const canvas = document.getElementById('viewer-canvas');
+        if (viewerRenderer) viewerRenderer.dispose();
+        if (viewerAnimateId) cancelAnimationFrame(viewerAnimateId);
+
+        viewerScene = new THREE.Scene();
+        viewerCamera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+        viewerRenderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        viewerRenderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        viewerRenderer.setClearColor(0x050510);
+
+        const gridHelper = new THREE.GridHelper(20, 20, 0x00f5ff, 0x101028);
+        viewerScene.add(gridHelper);
+
+        let geo;
+        switch(item.geo) {
+            case 'torusKnot': geo = new THREE.TorusKnotGeometry(1.5,0.5,128,16); break;
+            case 'icosahedron': geo = new THREE.IcosahedronGeometry(1.8,2); break;
+            case 'torus': geo = new THREE.TorusGeometry(1.5,0.5,24,48); break;
+            case 'octahedron': geo = new THREE.OctahedronGeometry(1.8,1); break;
+            case 'sphere': geo = new THREE.SphereGeometry(1.8,32,32); break;
+            case 'dodecahedron': geo = new THREE.DodecahedronGeometry(1.8,1); break;
+            case 'box': geo = new THREE.BoxGeometry(2,2,2); break;
+            case 'cylinder': geo = new THREE.CylinderGeometry(1.5,1.5,3,32); break;
+            case 'cone': geo = new THREE.ConeGeometry(1.5,3,32); break;
+            default: geo = new THREE.IcosahedronGeometry(1.8,2);
+        }
+        const wireMat = new THREE.MeshBasicMaterial({ color: item.color, wireframe: true });
+        viewerMesh = new THREE.Mesh(geo, wireMat);
+        viewerMesh.position.y = 1.5;
+        viewerScene.add(viewerMesh);
+
+        const pGeo = new THREE.BufferGeometry();
+        const pPos = new Float32Array(500 * 3);
+        for (let i = 0; i < 500; i++) {
+            pPos[i*3] = (Math.random()-0.5)*20;
+            pPos[i*3+1] = Math.random()*10;
+            pPos[i*3+2] = (Math.random()-0.5)*20;
+        }
+        pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+        const pMat = new THREE.PointsMaterial({ color: item.color, size: 0.05, transparent: true, opacity: 0.5 });
+        viewerScene.add(new THREE.Points(pGeo, pMat));
+
+        viewerCamera.position.set(4, 3, 4);
+        viewerCamera.lookAt(0, 1.5, 0);
+
+        let isDragging = false, prevX = 0, prevY = 0;
+        canvas.onmousedown = e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; };
+        canvas.onmousemove = e => {
+            if (!isDragging) return;
+            viewerMesh.rotation.y += (e.clientX - prevX) * 0.01;
+            viewerMesh.rotation.x += (e.clientY - prevY) * 0.01;
+            prevX = e.clientX; prevY = e.clientY;
+        };
+        canvas.onmouseup = () => isDragging = false;
+        canvas.onwheel = e => {
+            viewerCamera.position.z += e.deltaY * 0.01;
+            viewerCamera.position.z = Math.max(2, Math.min(10, viewerCamera.position.z));
+        };
+
+        function animate() {
+            viewerAnimateId = requestAnimationFrame(animate);
+            viewerMesh.rotation.y += 0.003;
+            viewerRenderer.render(viewerScene, viewerCamera);
+        }
+        animate();
+    }
+
+    document.getElementById('close-viewer').addEventListener('click', () => {
+        document.getElementById('viewer-modal').classList.add('hidden');
+        document.getElementById('viewer-modal').classList.remove('flex');
+        if (viewerAnimateId) cancelAnimationFrame(viewerAnimateId);
+    });
+
+    // ==================== 3D XR GAME ====================
+    (function initGame() {
+        const canvas = document.getElementById('game-canvas');
+        const container = canvas.parentElement;
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050510, 0.04);
+        const camera = new THREE.PerspectiveCamera(70, container.clientWidth / container.clientHeight, 0.1, 100);
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setClearColor(0x050510);
+
+        const ambientLight = new THREE.AmbientLight(0x101028, 0.5);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0x00f5ff, 0.6);
+        dirLight.position.set(5, 10, 5);
+        scene.add(dirLight);
+        const pointLight = new THREE.PointLight(0xb000ff, 1, 30);
+        pointLight.position.set(0, 5, 0);
+        scene.add(pointLight);
+
+        const groundGeo = new THREE.PlaneGeometry(80, 80, 40, 40);
+        const groundMat = new THREE.MeshBasicMaterial({ color: 0x101028, wireframe: true, transparent: true, opacity: 0.5 });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        scene.add(ground);
+        const gridHelper = new THREE.GridHelper(80, 40, 0x00f5ff, 0x0a0a1a);
+        scene.add(gridHelper);
+
+        // Player
+        const playerGeo = new THREE.CapsuleGeometry(0.3, 0.6, 4, 8);
+        const playerMat = new THREE.MeshPhongMaterial({ color: 0x00f5ff, emissive: 0x00f5ff, emissiveIntensity: 0.3 });
+        const player = new THREE.Mesh(playerGeo, playerMat);
+        player.position.set(0, 0.6, 0);
+        scene.add(player);
+        const glowGeo = new THREE.SphereGeometry(0.6, 16, 16);
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff, transparent: true, opacity: 0.1 });
+        player.add(new THREE.Mesh(glowGeo, glowMat));
+
+        // VR Knowledge
+        const vrKnowledge = [
+            { title: '¿Qué es VR?', text: 'La Realidad Virtual sumerge al usuario en un entorno digital completo mediante visores HMD, creando una sensación de presencia inmersiva.' },
+            { title: 'VR en Educación', text: 'La VR permite simulaciones de bajo riesgo para formación médica, técnica y científica, mejorando la retención hasta un 75%.' },
+            { title: 'WebXR API', text: 'WebXR permite acceder a dispositivos VR/AR directamente desde el navegador, democratizando el acceso a experiencias inmersivas.' },
+            { title: 'VR y Empatía', text: 'Proyectos como "Clouds Over Sidra" demuestran que VR puede generar empatía profunda al poner personas en realidades ajenas.' },
+            { title: 'Futuro de VR', text: 'Con haptics avanzados, eye-tracking y neurointerfaces, la VR se dirigirá hacia experiencias multisensoriales completas.' },
+        ];
+
+        const dataNodes = [];
+        const dataNodePositions = [{ x:5,z:5 },{ x:-5,z:7 },{ x:8,z:-3 },{ x:-7,z:-5 },{ x:0,z:10 }];
+        dataNodePositions.forEach((pos, i) => {
+            const nodeGeo = new THREE.OctahedronGeometry(0.5, 0);
+            const nodeMat = new THREE.MeshPhongMaterial({ color: 0xb000ff, emissive: 0xb000ff, emissiveIntensity: 0.5 });
+            const node = new THREE.Mesh(nodeGeo, nodeMat);
+            node.position.set(pos.x, 1.2, pos.z);
+            node.userData = { collected: false, knowledge: vrKnowledge[i] };
+            scene.add(node);
+            dataNodes.push(node);
+            const ringGeo = new THREE.TorusGeometry(0.8, 0.02, 8, 32);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0xb000ff, transparent: true, opacity: 0.3 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI / 2;
+            ring.position.y = 0.01;
+            node.add(ring);
+        });
+
+        // Environment pillars
+        for (let i = 0; i < 20; i++) {
+            const h = 2 + Math.random() * 5;
+            const pillarGeo = new THREE.BoxGeometry(0.3, h, 0.3);
+            const pillarMat = new THREE.MeshBasicMaterial({ color: 0x0a0a1a, transparent: true, opacity: 0.6 });
+            const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+            pillar.position.set((Math.random()-0.5)*30, h/2, (Math.random()-0.5)*30);
+            scene.add(pillar);
+        }
+
+        camera.position.set(0, 5, 8);
+        camera.lookAt(player.position);
+
+        let gameActive = false, score = 0, vrDataCollected = 0, timeLeft = 60, gameTimer;
+        const keys = {};
+        document.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; });
+        document.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+        function startGame() {
+            gameActive = true; score = 0; vrDataCollected = 0; timeLeft = 60;
+            player.position.set(0, 0.6, 0);
+            dataNodes.forEach(n => { n.userData.collected = false; n.visible = true; });
+            updateHUD();
+            document.getElementById('game-overlay').style.display = 'none';
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('game-time').textContent = timeLeft;
+                if (timeLeft <= 0) endGame();
+            }, 1000);
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(gameTimer);
+            const overlay = document.getElementById('game-overlay');
+            overlay.style.display = 'flex';
+            overlay.querySelector('h3').textContent = vrDataCollected >= 5 ? '¡Misión Completa! 🎉' : 'Fin del Tiempo';
+            overlay.querySelector('p').textContent = `Puntuación: ${score} | Nodos VR: ${vrDataCollected}/5`;
+            overlay.querySelector('button').textContent = 'REINTENTAR';
+        }
+
+        function updateHUD() {
+            document.getElementById('game-score').textContent = score;
+            document.getElementById('game-vrdata').textContent = `${vrDataCollected}/5`;
+            document.getElementById('game-time').textContent = timeLeft;
+        }
+
+        function showVRInfo(knowledge) {
+            const panel = document.getElementById('vr-info');
+            document.getElementById('vr-info-title').textContent = knowledge.title;
+            document.getElementById('vr-info-text').textContent = knowledge.text;
+            panel.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        document.getElementById('game-start').addEventListener('click', startGame);
+        document.getElementById('game-play-btn').addEventListener('click', startGame);
+        document.getElementById('game-reset').addEventListener('click', () => {
+            gameActive = false; clearInterval(gameTimer);
+            score = 0; vrDataCollected = 0; timeLeft = 60;
+            player.position.set(0, 0.6, 0);
+            dataNodes.forEach(n => { n.userData.collected = false; n.visible = true; });
+            updateHUD();
+            document.getElementById('game-overlay').style.display = 'flex';
+        });
+
+        // Mouse drag for camera rotation
+        let isDragging = false, dragStartX = 0, cameraAngleY = 0;
+        canvas.addEventListener('mousedown', e => { isDragging = true; dragStartX = e.clientX; });
+        canvas.addEventListener('mousemove', e => {
+            if (!isDragging || !gameActive) return;
+            const dx = e.clientX - dragStartX;
+            cameraAngleY += dx * 0.005;
+            dragStartX = e.clientX;
+        });
+        canvas.addEventListener('mouseup', () => isDragging = false);
+        canvas.addEventListener('mouseleave', () => isDragging = false);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const t = Date.now() * 0.001;
+
+            if (gameActive) {
+                const speed = 0.08;
+                const forward = new THREE.Vector3(-Math.sin(cameraAngleY), 0, -Math.cos(cameraAngleY));
+                const right = new THREE.Vector3(-Math.cos(cameraAngleY), 0, Math.sin(cameraAngleY));
+
+                if (keys['w'] || keys['arrowup']) { player.position.add(forward.clone().multiplyScalar(speed)); }
+                if (keys['s'] || keys['arrowdown']) { player.position.add(forward.clone().multiplyScalar(-speed)); }
+                if (keys['a'] || keys['arrowleft']) { player.position.add(right.clone().multiplyScalar(-speed)); }
+                if (keys['d'] || keys['arrowright']) { player.position.add(right.clone().multiplyScalar(speed)); }
+                player.position.x = Math.max(-30, Math.min(30, player.position.x));
+                player.position.z = Math.max(-30, Math.min(30, player.position.z));
+
+                dataNodes.forEach(node => {
+                    if (!node.userData.collected) {
+                        const dist = player.position.distanceTo(node.position);
+                        if (dist < 1.5) {
+                            node.userData.collected = true;
+                            node.visible = false;
+                            score += 100;
+                            vrDataCollected++;
+                            updateHUD();
+                            showVRInfo(node.userData.knowledge);
+                            if (vrDataCollected >= 5) setTimeout(endGame, 500);
+                        }
+                    }
+                });
+            }
+
+            dataNodes.forEach((node, i) => {
+                if (!node.userData.collected) {
+                    node.rotation.y += 0.02;
+                    node.rotation.x += 0.01;
+                    node.position.y = 1.2 + Math.sin(t + i) * 0.3;
+                }
+            });
+
+            player.rotation.y += 0.01;
+
+            // Camera follow with rotation
+            const camDist = 8;
+            const camX = player.position.x + Math.sin(cameraAngleY) * camDist;
+            const camZ = player.position.z + Math.cos(cameraAngleY) * camDist;
+            const camTarget = new THREE.Vector3(camX, player.position.y + 4, camZ);
+            camera.position.lerp(camTarget, 0.05);
+            camera.lookAt(player.position.x, player.position.y, player.position.z);
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    })();
+
+    // ==================== GENERATIVE ART ====================
+    let genArt1Ctx, genArt1W, genArt1H, genArt1Particles = [], genArt1Mouse = { x: 0, y: 0 };
+
+    function initGenArt1() {
+        const canvas = document.getElementById('genart-canvas-1');
+        genArt1Ctx = canvas.getContext('2d');
+        genArt1W = canvas.clientWidth; genArt1H = canvas.clientHeight;
+        canvas.width = genArt1W * 2; canvas.height = genArt1H * 2;
+        genArt1Ctx.scale(2, 2);
+        genArt1Particles = [];
+        for (let i = 0; i < 150; i++) {
+            genArt1Particles.push({
+                x: Math.random() * genArt1W,
+                y: Math.random() * genArt1H,
+                vx: (Math.random() - 0.5) * 1.5,
+                vy: (Math.random() - 0.5) * 1.5,
+                size: Math.random() * 3 + 1,
+                color: `hsl(${320 + Math.random() * 60}, 100%, ${60 + Math.random() * 30}%)`,
+            });
+        }
+        canvas.addEventListener('mousemove', e => {
+            const rect = canvas.getBoundingClientRect();
+            genArt1Mouse.x = e.clientX - rect.left;
+            genArt1Mouse.y = e.clientY - rect.top;
+        });
+    }
+
+    function animateGenArt1() {
+        requestAnimationFrame(animateGenArt1);
+        if (!genArt1Ctx) return;
+        genArt1Ctx.fillStyle = 'rgba(5,5,16,0.08)';
+        genArt1Ctx.fillRect(0, 0, genArt1W, genArt1H);
+        genArt1Particles.forEach((p, i) => {
+            const dx = genArt1Mouse.x - p.x, dy = genArt1Mouse.y - p.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < 150) { p.vx += dx * 0.0003; p.vy += dy * 0.0003; }
+            p.x += p.vx; p.y += p.vy;
+            p.vx *= 0.99; p.vy *= 0.99;
+            if (p.x < 0) p.x = genArt1W; if (p.x > genArt1W) p.x = 0;
+            if (p.y < 0) p.y = genArt1H; if (p.y > genArt1H) p.y = 0;
+            genArt1Ctx.beginPath();
+            genArt1Ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            genArt1Ctx.fillStyle = p.color;
+            genArt1Ctx.fill();
+            for (let j = i + 1; j < genArt1Particles.length; j++) {
+                const p2 = genArt1Particles[j];
+                const d = Math.sqrt((p.x-p2.x)**2 + (p.y-p2.y)**2);
+                if (d < 80) {
+                    genArt1Ctx.beginPath();
+                    genArt1Ctx.moveTo(p.x, p.y);
+                    genArt1Ctx.lineTo(p2.x, p2.y);
+                    genArt1Ctx.strokeStyle = `rgba(176,0,255,${1-d/80})`;
+                    genArt1Ctx.lineWidth = 0.5;
+                    genArt1Ctx.stroke();
+                }
+            }
+        });
+    }
+
+    function resetGenArt1() {
+        const canvas = document.getElementById('genart-canvas-1');
+        if (genArt1Ctx) genArt1Ctx.clearRect(0, 0, genArt1W * 2, genArt1H * 2);
+        initGenArt1();
+    }
+
+    let genArt2Ctx, genArt2W, genArt2H, genArt2Particles = [];
+
+    function initGenArt2() {
+        const canvas = document.getElementById('genart-canvas-2');
+        genArt2Ctx = canvas.getContext('2d');
+        genArt2W = canvas.clientWidth; genArt2H = canvas.clientHeight;
+        canvas.width = genArt2W * 2; canvas.height = genArt2H * 2;
+        genArt2Ctx.scale(2, 2);
+        genArt2Particles = [];
+        for (let i = 0; i < 200; i++) {
+            genArt2Particles.push({
+                x: genArt2W/2, y: genArt2H/2,
+                vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2,
+                life: Math.random()*100+50, maxLife: 150,
+                hue: 40 + Math.random()*40,
+            });
+        }
+        canvas.addEventListener('click', e => {
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+            for (let i = 0; i < 30; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 1;
+                genArt2Particles.push({
+                    x: mx, y: my,
+                    vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed,
+                    life: 80+Math.random()*60, maxLife: 140,
+                    hue: Math.random()*60+20,
+                });
+            }
+        });
+    }
+
+    function animateGenArt2() {
+        requestAnimationFrame(animateGenArt2);
+        if (!genArt2Ctx) return;
+        genArt2Ctx.fillStyle = 'rgba(5,5,16,0.05)';
+        genArt2Ctx.fillRect(0, 0, genArt2W, genArt2H);
+        genArt2Particles = genArt2Particles.filter(p => p.life > 0);
+        genArt2Particles.forEach(p => {
+            p.x += p.vx; p.y += p.vy;
+            p.vy += 0.02;
+            p.vx *= 0.99; p.life--;
+            const alpha = p.life / p.maxLife;
+            const size = (p.life / p.maxLife) * 4;
+            genArt2Ctx.beginPath();
+            genArt2Ctx.arc(p.x, p.y, Math.max(0.5, size), 0, Math.PI * 2);
+            genArt2Ctx.fillStyle = `hsla(${p.hue}, 100%, 60%, ${alpha})`;
+            genArt2Ctx.fill();
+        });
+        while (genArt2Particles.length < 150) {
+            genArt2Particles.push({
+                x: genArt2W/2+(Math.random()-0.5)*100, y: genArt2H/2,
+                vx: (Math.random()-0.5)*2, vy: -Math.random()*2,
+                life: 80+Math.random()*60, maxLife: 140,
+                hue: Math.random()*60+20,
+            });
+        }
+    }
+
+    function resetGenArt2() {
+        const canvas = document.getElementById('genart-canvas-2');
+        if (genArt2Ctx) genArt2Ctx.clearRect(0, 0, genArt2W * 2, genArt2H * 2);
+        genArt2Particles = [];
+        initGenArt2();
+    }
+
+    const genArtObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                initGenArt1(); animateGenArt1();
+                initGenArt2(); animateGenArt2();
+                genArtObserver.disconnect();
+            }
+        });
+    }, { threshold: 0.1 });
+    genArtObserver.observe(document.getElementById('genart'));
+
+    // ==================== AI PARTICLES ====================
+    (function initAIParticles() {
+        const canvas = document.getElementById('ai-particles');
+        const ctx = canvas.getContext('2d');
+        let w, h;
+        const particles = [];
+        function setSize() {
+            w = canvas.parentElement.clientWidth;
+            h = canvas.parentElement.clientHeight;
+            canvas.width = w; canvas.height = h;
+        }
+        setSize();
+        for (let i = 0; i < 60; i++) {
+            particles.push({
+                x: Math.random()*w, y: Math.random()*h,
+                vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5,
+                size: Math.random()*2+1,
+            });
+        }
+        function animate() {
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, w, h);
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+                if (p.x < 0 || p.x > w) p.vx *= -1;
+                if (p.y < 0 || p.y > h) p.vy *= -1;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,230,0,0.5)';
+                ctx.fill();
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const d = Math.sqrt((p.x-p2.x)**2 + (p.y-p2.y)**2);
+                    if (d < 120) {
+                        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = `rgba(255,102,0,${0.15*(1-d/120)})`;
+                        ctx.lineWidth = 0.5; ctx.stroke();
+                    }
+                }
+            });
+        }
+        animate();
+        window.addEventListener('resize', setSize);
+    })();
+
+    // ==================== A-FRAME PREVIEW CANVAS ====================
+    (function initAFramePreview() {
+        const canvas = document.getElementById('aframe-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        renderer.setClearColor(0x050510);
+
+        // Floor
+        const floorGeo = new THREE.PlaneGeometry(10, 10);
+        const floorMat = new THREE.MeshBasicMaterial({ color: 0x101028, side: THREE.DoubleSide });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        scene.add(floor);
+
+        // Box
+        const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+        const boxMat = new THREE.MeshPhongMaterial({ color: 0x00f5ff, emissive: 0x00f5ff, emissiveIntensity: 0.2 });
+        const box = new THREE.Mesh(boxGeo, boxMat);
+        box.position.set(0, 0.5, -3);
+        scene.add(box);
+
+        // Sphere
+        const sphereGeo = new THREE.SphereGeometry(0.5, 16, 16);
+        const sphereMat = new THREE.MeshPhongMaterial({ color: 0xb000ff, emissive: 0xb000ff, emissiveIntensity: 0.2 });
+        const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+        sphere.position.set(2, 0.5, -3);
+        scene.add(sphere);
+
+        // Ambient light
+        scene.add(new THREE.AmbientLight(0x404040, 1));
+        const dLight = new THREE.DirectionalLight(0x00f5ff, 0.8);
+        dLight.position.set(5, 5, 5);
+        scene.add(dLight);
+
+        // Grid
+        const gridHelper = new THREE.GridHelper(10, 10, 0x00f5ff, 0x0a0a1a);
+        scene.add(gridHelper);
+
+        camera.position.set(0, 3, 5);
+        camera.lookAt(0, 0.5, -3);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            box.rotation.y += 0.01;
+            sphere.position.y = 0.5 + Math.sin(Date.now() * 0.002) * 0.3;
+            renderer.render(scene, camera);
+        }
+        animate();
+    })();
+
+    // ==================== FILE UPLOAD / WebXR ====================
+    (function initUpload() {
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('file-input');
+        const uploadList = document.getElementById('upload-list');
+        const previewBtn = document.getElementById('preview-btn');
+        const deployBtn = document.getElementById('deploy-btn');
+        let uploadedFiles = [];
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+        uploadZone.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                uploadedFiles.push(file);
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between bg-dark-800/60 rounded-lg px-3 py-2';
+                const ext = file.name.split('.').pop().toLowerCase();
+                const iconColor = ext === 'html' ? 'text-neon-purple' : 'text-neon-cyan';
+                item.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="file-code" class="w-4 h-4 ${iconColor}"></i>
+                        <span class="text-sm text-gray-300 font-rajdhani truncate max-w-[180px]">${file.name}</span>
+                        <span class="text-[10px] text-gray-600">${(file.size / 1024).toFixed(1)} KB</span>
+                    </div>
+                    <button class="text-gray-500 hover:text-red-400 transition-colors remove-file">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                    </button>
+                `;
+                item.querySelector('.remove-file').addEventListener('click', () => {
+                    uploadedFiles = uploadedFiles.filter(f => f !== file);
+                    item.remove();
+                    previewBtn.disabled = uploadedFiles.length === 0;
+                    deployBtn.disabled = uploadedFiles.length === 0;
+                });
+                uploadList.appendChild(item);
+            });
+            lucide.createIcons();
+            previewBtn.disabled = uploadedFiles.length === 0;
+            deployBtn.disabled = uploadedFiles.length === 0;
+        }
+
+        previewBtn.addEventListener('click', () => {
+            if (uploadedFiles.length === 0) return;
+            // Show notification
+            showToast('Vista previa XR generada. Los archivos se procesarán en la escena WebXR.', 'cyan');
+        });
+
+        deployBtn.addEventListener('click', () => {
+            if (uploadedFiles.length === 0) return;
+            showToast('Desplegando escena WebXR... ¡Los archivos están listos para A-Frame!', 'green');
+        });
+    })();
+
+    // ==================== TOAST NOTIFICATION ====================
+    function showToast(message, color = 'cyan') {
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-6 right-6 z-[99999] px-6 py-3 glass rounded-xl border border-neon-${color}/30 text-neon-${color} font-rajdhani text-sm max-w-sm animate-fadeInUp`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px)';
+            toast.style.transition = 'all 0.4s';
+            setTimeout(() => toast.remove(), 400);
+        }, 3000);
+    }
+
+    // ==================== CONTACT FORM ====================
+    document.getElementById('contact-form').addEventListener('submit', e => {
+        e.preventDefault();
+        const form = e.target;
+        form.style.display = 'none';
+        document.getElementById('form-success').classList.remove('hidden');
+        lucide.createIcons();
+        setTimeout(() => {
+            form.style.display = '';
+            document.getElementById('form-success').classList.add('hidden');
+            form.reset();
+        }, 4000);
+    });
+
+    // ==================== SMOOTH SCROLL ====================
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+    </script>
+<script src="https://deepsite.hf.co/deepsite-badge.js"></script>
+</body>
+</html>
