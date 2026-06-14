@@ -1,0 +1,458 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Julio César Evangelista | CV Interactivo</title>
+<!-- Tailwind CSS CDN (se cargará con internet, pero la estructura y estilos base son sólidos) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Three.js CDN -->
+<script type="importmap">
+{
+"imports": {
+"three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+}
+}
+</script>
+<!-- Fuentes e íconos (opcionales, no críticos) -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<!-- jsPDF y html2canvas para generar PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+body {
+font-family: 'Inter', sans-serif;
+overflow-x: hidden;
+background: #0a0c10;
+}
+/* Canvas 3D: fondo interactivo */
+#three-canvas {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+z-index: 0;
+display: block;
+pointer-events: none;
+}
+/* Contenido por encima del canvas */
+.content {
+position: relative;
+z-index: 10;
+}
+/* Efecto glassmorphism en tarjetas */
+.glass-card {
+background: rgba(10, 15, 25, 0.65);
+backdrop-filter: blur(12px);
+border: 1px solid rgba(255, 255, 255, 0.12);
+border-radius: 1.5rem;
+transition: all 0.3s ease;
+}
+.glass-card:hover {
+transform: translateY(-5px);
+background: rgba(20, 30, 45, 0.75);
+border-color: rgba(210, 180, 140, 0.4);
+box-shadow: 0 20px 35px -12px rgba(0,0,0,0.5);
+}
+.badge-gold {
+background: linear-gradient(135deg, #d4af37 0%, #b88a1a 100%);
+color: #0a0c10;
+font-weight: 600;
+}
+.title-gradient {
+background: linear-gradient(120deg, #F3E7C9, #D4AF37, #C49A6C);
+background-clip: text;
+-webkit-background-clip: text;
+color: transparent;
+}
+.btn-pdf {
+transition: all 0.2s ease;
+box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.btn-pdf:hover {
+transform: scale(1.02);
+background: #b8860b;
+border-color: #ffd966;
+}
+/* Scroll personalizado */
+::-webkit-scrollbar {
+width: 6px;
+}
+::-webkit-scrollbar-track {
+background: #1e1f2a;
+}
+::-webkit-scrollbar-thumb {
+background: #d4af37;
+border-radius: 8px;
+}
+@media print {
+.no-print, #three-canvas, .btn-pdf {
+display: none;
+}
+body {
+background: white;
+}
+.glass-card {
+background: white;
+color: black;
+border: 1px solid #ccc;
+}
+}
+</style>
+</head>
+<body>
+
+<!-- Canvas para Three.js -->
+<canvas id="three-canvas"></canvas>
+
+<div class="content relative z-10 px-4 py-6 md:py-10 max-w-7xl mx-auto">
+<!-- Encabezado principal con datos clave -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+<div>
+<h1 class="text-5xl md:text-7xl font-extrabold tracking-tight title-gradient">Julio César Evangelista</h1>
+<p class="text-gray-300 text-lg mt-2 border-l-4 border-amber-500 pl-4">Músico · Investigador · Facilitador de medicina ancestral · Gestor cultural</p>
+<div class="flex flex-wrap gap-2 mt-3">
+<span class="px-3 py-1 rounded-full bg-amber-900/40 text-amber-200 text-xs font-semibold backdrop-blur-sm"><i class="fas fa-graduation-cap mr-1"></i> Ing. Mecánica (UNAM) · Mat. 91/99</span>
+<span class="px-3 py-1 rounded-full bg-purple-900/40 text-purple-200 text-xs font-semibold backdrop-blur-sm"><i class="fas fa-music mr-1"></i> Vive Latino · Cumbre Tajín · Jazz Polanco</span>
+<span class="px-3 py-1 rounded-full bg-emerald-900/40 text-emerald-200 text-xs font-semibold backdrop-blur-sm"><i class="fas fa-leaf mr-1"></i> Medicina Ancestral · Bufo Alvarius</span>
+</div>
+</div>
+<div class="flex gap-3 no-print">
+<button id="downloadPDFBtn" class="btn-pdf bg-black/60 backdrop-blur border border-amber-500/60 text-amber-300 font-bold py-3 px-6 rounded-2xl flex items-center gap-2 transition-all hover:bg-amber-700 hover:text-white">
+<i class="fas fa-download"></i> Descargar CV (PDF)
+</button>
+</div>
+</div>
+
+<!-- Contenedor principal del CV (se capturará para el PDF) -->
+<div id="cv-capture-area" class="space-y-8">
+<!-- Perfil y Resumen -->
+<div class="glass-card p-6 md:p-8">
+<div class="flex flex-wrap gap-6 items-start">
+<div class="flex-1">
+<h2 class="text-2xl font-bold text-amber-400 flex items-center gap-2"><i class="fas fa-user-astronaut"></i> Esencia & Trayectoria</h2>
+<p class="text-gray-200 leading-relaxed mt-3">Estudiante de Ingeniería Mecánica en la <span class="text-amber-300 font-semibold">Universidad Autónoma de México (UNAM)</span> —matrícula 91/99 (no graduado)—, músico con más de dos décadas en escenarios nacionales e internacionales. Complemento mi formación con estudios en <strong>Historia del Arte</strong> en la Pinacoteca Stuard (Parma, Italia) y lengua italiana en el Instituto Italiano de Cultura. Practicante de disciplinas internas orientales y occidentales (Yug Do Yoga, artes marciales, Kinam) desde 2010 hasta la actualidad, y facilitador certificado de medicina ancestral 5-MeO-DMT, miembro del World Bufo Alvarius Congress.</p>
+</div>
+</div>
+</div>
+
+<!-- Cuadrícula de experiencias y estudios -->
+<div class="grid md:grid-cols-2 gap-6">
+<!-- Columna izquierda -->
+<div class="space-y-6">
+<!-- Trayectoria musical -->
+<div class="glass-card p-6">
+<h3 class="text-xl font-bold text-amber-400 flex items-center gap-2"><i class="fas fa-guitar"></i> Trayectoria Musical</h3>
+<div class="mt-3 space-y-2">
+<p class="text-gray-200"><span class="font-semibold text-amber-300">Festivales destacados:</span> Vive Latino, Cumbre Tajín, Festival de Jazz Polanco, Festival Ollinkan, Festival de Jazz Mazunte, Rock para los dioses.</p>
+<p class="text-gray-200"><span class="font-semibold text-amber-300">Foros públicos emblemáticos:</span> Centro Histórico (CDMX), Monumento a la Revolución, Ángel de la Independencia, entre otros.</p>
+<p class="text-gray-200 italic text-sm">Más de 100 presentaciones en vivo fusionando músicas tradicionales, experimentación y sonidos de raíz.</p>
+</div>
+</div>
+
+<!-- Formación académica y estudios -->
+<div class="glass-card p-6">
+<h3 class="text-xl font-bold text-amber-400 flex items-center gap-2"><i class="fas fa-university"></i> Formación Académica</h3>
+<ul class="mt-3 space-y-3 text-gray-200">
+<li><i class="fas fa-microphone-alt text-amber-400 w-5"></i> <strong>Ingeniería Mecánica</strong> – UNAM (matrícula 91/99, no graduado)</li>
+<li><i class="fas fa-palette text-amber-400 w-5"></i> <strong>Historia del Arte</strong> – Pinacoteca Stuard, Parma, Italia (1999-2000)</li>
+<li><i class="fas fa-language text-amber-400 w-5"></i> <strong>Lengua Italiana</strong> – Instituto Italiano de Cultura (2000-2001)</li>
+</ul>
+</div>
+
+<!-- Disciplinas internas y tradiciones -->
+<div class="glass-card p-6">
+<h3 class="text-xl font-bold text-amber-400 flex items-center gap-2"><i class="fas fa-spa"></i> Disciplinas Internas</h3>
+<p class="text-gray-200 mt-2">Formación integral por parte de la <strong>GFU (2010 - 2026)</strong> en prácticas que abarcan tradición occidental y oriental: Yug Do Yoga, artes marciales tradicionales, sistema Kinam. Integración cuerpo-mente-espíritu para el autoconocimiento y sanación.</p>
+</div>
+</div>
+
+<!-- Columna derecha -->
+<div class="space-y-6">
+<!-- Medicina ancestral e investigación -->
+<div class="glass-card p-6">
+<h3 class="text-xl font-bold text-amber-400 flex items-center gap-2"><i class="fas fa-hand-holding-heart"></i> Medicina Ancestral & Ciencia</h3>
+<div class="mt-3 space-y-2">
+<p><span class="font-semibold text-amber-300">5-MeO-DMT:</span> <span class="text-gray-200">Practicante y facilitador certificado. Miembro activo del <strong>World Bufo Alvarius Congress</strong>.</span></p>
+<p><span class="font-semibold text-amber-300">Investigación independiente:</span> <span class="text-gray-200">Anatomía del sistema endocannabinoide y su deficiencia (Cannabis endógeno).</span></p>
+<p><span class="font-semibold text-amber-300">Civilizaciones antiguas:</span> <span class="text-gray-200">Estudio autodidacta sobre grandes culturas ancestrales, arqueoastronomía y cosmovisión tolteca.</span></p>
+</div>
+</div>
+
+<!-- Casa Tepantitla Temazcalli (20 años) -->
+<div class="glass-card p-6">
+<h3 class="text-xl font-bold text-amber-400 flex items-center gap-2"><i class="fas fa-hot-tub"></i> Casa Tepantitla Temazcalli</h3>
+<p class="text-gray-200 mt-2"><span class="font-bold">Administrador durante 20 años</span> de este espacio dedicado a la salud a través de las Artes y la nutrición, recuperando las tradiciones de la <strong class="text-amber-300">cultura Toltecáyotl</strong>. Ceremonias de temazcal, plantas sagradas y procesos de desintoxicación física y espiritual.</p>
+</div>
+
+<!-- Fundador de asociaciones -->
+<div class="glass-card p-6">
+<h3 class="text-xl font-bold text-amber-400 flex items-center gap-2"><i class="fas fa-seedling"></i> Proyectos & Fundaciones</h3>
+<div class="mt-3 space-y-3">
+<div>
+<p class="font-bold text-amber-300"><i class="fas fa-hand-peace"></i> Anandavida A.C.</p>
+<p class="text-gray-200 text-sm">Grupo multidisciplinario enfocado en investigación y nutrición cannabica, promoviendo alternativas naturales y educación sobre el cannabis.</p>
+</div>
+<div>
+<p class="font-bold text-amber-300"><i class="fas fa-industry"></i> Hemphta A.C.</p>
+<p class="text-gray-200 text-sm">Organización multidisciplinaria dedicada a tecnologías ambientales, desarrollo sustentable e innovación en materiales a base de cáñamo.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Sección especial: logros y datos adicionales -->
+<div class="glass-card p-6">
+<h3 class="text-2xl font-bold text-amber-400 mb-4 flex items-center gap-2"><i class="fas fa-globe-americas"></i> Investigación & Compromiso Global</h3>
+<div class="grid sm:grid-cols-2 gap-4">
+<div class="border-l-2 border-amber-500/50 pl-4">
+<p class="text-amber-200 font-semibold">Endocannabinoid System</p>
+<p class="text-gray-300 text-sm">Investigador independiente sobre la deficiencia del sistema endocannabinoide y su influencia en enfermedades crónicas. Conferencista en foros especializados.</p>
+</div>
+<div class="border-l-2 border-amber-500/50 pl-4">
+<p class="text-amber-200 font-semibold">World Bufo Alvarius Congress</p>
+<p class="text-gray-300 text-sm">Miembro activo, contribuyendo al intercambio de conocimientos sobre la medicina del sapo bufo y terapias asistidas con 5-MeO-DMT.</p>
+</div>
+<div class="border-l-2 border-amber-500/50 pl-4">
+<p class="text-amber-200 font-semibold">Cultura Toltecáyotl</p>
+<p class="text-gray-300 text-sm">Recuperación de tradiciones, herbolaria, cosmovisión y prácticas curativas ancestrales desde el Temazcalli y talleres vivenciales.</p>
+</div>
+<div class="border-l-2 border-amber-500/50 pl-4">
+<p class="text-amber-200 font-semibold">Música como sanación</p>
+<p class="text-gray-300 text-sm">Presentaciones en contexto ritual y conciertos benéficos, fusionando instrumentos prehispánicos y contemporáneos.</p>
+</div>
+</div>
+</div>
+
+<!-- Footer / contacto simbólico -->
+<div class="text-center text-gray-400 text-sm py-4 border-t border-white/10">
+<p><i class="fas fa-envelope mr-1"></i> contacto@anandavida.mx · <i class="fab fa-instagram"></i> @julio_evangelista_oficial · <i class="fas fa-map-marker-alt"></i> CDMX / Temazcalli Tepantitla</p>
+<p class="mt-1">"Un puente entre la tradición ancestral, la ciencia y el arte para regenerar la conciencia"</p>
+</div>
+</div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+// Configuración de la escena Three.js (fondo dinámico y simbólico)
+const canvas = document.getElementById('three-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setClearColor(0x05070a, 0.85); // semi oscuro con blend
+
+const scene = new THREE.Scene();
+// Cámara con perspectiva suave
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 2, 8);
+camera.lookAt(0, 0, 0);
+
+// Luces
+const ambientLight = new THREE.AmbientLight(0x222222);
+scene.add(ambientLight);
+const dirLight = new THREE.DirectionalLight(0xd4af37, 1.2);
+dirLight.position.set(2, 5, 3);
+scene.add(dirLight);
+const backLight = new THREE.PointLight(0x5a3e1a, 0.6);
+backLight.position.set(-2, 1, -4);
+scene.add(backLight);
+
+// Objeto central: una estructura geométrica que refleja arte, ciencia y tradición (Toroide anudado + esfera interior)
+const knotGeometry = new THREE.TorusKnotGeometry(1.2, 0.32, 200, 32, 3, 4);
+const knotMaterial = new THREE.MeshStandardMaterial({
+color: 0xc9a03d,
+emissive: 0x2a1e0c,
+roughness: 0.3,
+metalness: 0.75,
+emissiveIntensity: 0.6
+});
+const torusKnot = new THREE.Mesh(knotGeometry, knotMaterial);
+scene.add(torusKnot);
+
+// Esfera interior semi-transparente que representa unidad
+const innerSphere = new THREE.Mesh(
+new THREE.SphereGeometry(0.68, 48, 48),
+new THREE.MeshStandardMaterial({
+color: 0xbf8f30,
+emissive: 0x442a0a,
+transparent: true,
+opacity: 0.25,
+wireframe: false
+})
+);
+scene.add(innerSphere);
+
+// Partículas brillantes alrededor (sistema endocannabinoide simbólico)
+const particleCount = 1200;
+const particlesGeometry = new THREE.BufferGeometry();
+const positions = new Float32Array(particleCount * 3);
+const colors = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount; i++) {
+// Distribución en forma de nube esférica
+const radius = 2.2 + Math.random() * 1.5;
+const theta = Math.random() * Math.PI * 2;
+const phi = Math.acos(2 * Math.random() - 1);
+positions[i*3] = radius * Math.sin(phi) * Math.cos(theta);
+positions[i*3+1] = radius * Math.sin(phi) * Math.sin(theta) * 0.8; // achatamiento
+positions[i*3+2] = radius * Math.cos(phi);
+// Colores cálidos dorado/ámbar/verde
+const colorChoice = Math.random();
+if (colorChoice < 0.6) {
+colors[i*3] = 0.9 + Math.random()*0.1; // R dorado
+colors[i*3+1] = 0.6 + Math.random()*0.3;
+colors[i*3+2] = 0.2 + Math.random()*0.2;
+} else {
+colors[i*3] = 0.4 + Math.random()*0.3;
+colors[i*3+1] = 0.7 + Math.random()*0.3;
+colors[i*3+2] = 0.3 + Math.random()*0.3;
+}
+}
+particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+const particleMaterial = new THREE.PointsMaterial({ size: 0.05, vertexColors: true, blending: THREE.AdditiveBlending });
+const particles = new THREE.Points(particlesGeometry, particleMaterial);
+scene.add(particles);
+
+// Añadir un anillo giratorio externo (representación de ciclos)
+const ringGeometry = new THREE.TorusGeometry(1.65, 0.05, 128, 400);
+const ringMaterial = new THREE.MeshStandardMaterial({ color: 0xd4af37, emissive: 0x543a0a, emissiveIntensity: 0.4 });
+const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+scene.add(ring);
+
+// Segunda nebulosa de partículas más pequeñas estilo galaxia
+const smallParticleCount = 800;
+const smallParticleGeo = new THREE.BufferGeometry();
+const smallPos = [];
+for (let i = 0; i < smallParticleCount; i++) {
+const rad = 2.8 + Math.random() * 1.2;
+const angX = Math.random() * Math.PI * 2;
+const angY = Math.random() * Math.PI * 2;
+const x = rad * Math.sin(angX) * Math.cos(angY);
+const y = rad * Math.sin(angX) * Math.sin(angY) * 0.6;
+const z = rad * Math.cos(angX);
+smallPos.push(x, y, z);
+}
+smallParticleGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(smallPos), 3));
+const smallParticleMat = new THREE.PointsMaterial({ color: 0xe6b450, size: 0.025, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending });
+const smallParticles = new THREE.Points(smallParticleGeo, smallParticleMat);
+scene.add(smallParticles);
+
+// Animación suave
+let time = 0;
+function animate() {
+requestAnimationFrame(animate);
+time += 0.008;
+// Rotación de objetos principales
+torusKnot.rotation.x = Math.sin(time * 0.3) * 0.2;
+torusKnot.rotation.y = time * 0.5;
+torusKnot.rotation.z = Math.sin(time * 0.7) * 0.1;
+innerSphere.rotation.x = time * 0.2;
+innerSphere.rotation.y = time * 0.3;
+ring.rotation.x = Math.sin(time * 0.5) * 0.2;
+ring.rotation.z = time * 0.4;
+ring.rotation.y = time * 0.2;
+particles.rotation.y = time * 0.08;
+particles.rotation.x = Math.sin(time * 0.2) * 0.1;
+smallParticles.rotation.y = time * -0.05;
+smallParticles.rotation.x = time * 0.05;
+
+// Movimiento de cámara muy leve
+camera.position.x += (0 - camera.position.x) * 0.02;
+camera.position.y += (Math.sin(time * 0.5) * 0.1 - camera.position.y) * 0.03;
+camera.lookAt(0, 0.5, 0);
+
+renderer.render(scene, camera);
+}
+animate();
+
+// Ajuste al redimensionar ventana
+window.addEventListener('resize', onWindowResize, false);
+function onWindowResize() {
+camera.aspect = window.innerWidth / window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth, window.innerHeight);
+}
+</script>
+
+<!-- Lógica para descargar PDF (html2canvas + jsPDF) -->
+<script>
+(function() {
+const downloadBtn = document.getElementById('downloadPDFBtn');
+
+async function generatePDF() {
+const element = document.getElementById('cv-capture-area');
+if (!element) return;
+
+// Mostrar estado opcional (podríamos poner un loader)
+const originalBtnText = downloadBtn.innerHTML;
+downloadBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Generando PDF...';
+downloadBtn.disabled = true;
+
+try {
+// Capturar la sección principal, asegurando estilos y fondo temporal
+// Forzamos un fondo semi-sólido para el PDF (mejor legibilidad)
+const originalBg = element.style.backgroundColor;
+const originalBackdrop = element.style.backdropFilter;
+element.style.backgroundColor = '#0a0c10';
+element.style.backdropFilter = 'none';
+
+const canvas = await html2canvas(element, {
+scale: 2,
+backgroundColor: '#0a0c10',
+logging: false,
+useCORS: false
+});
+
+// Restaurar estilos originales
+element.style.backgroundColor = originalBg;
+element.style.backdropFilter = originalBackdrop;
+
+const imgData = canvas.toDataURL('image/png');
+const { jsPDF } = window.jspdf;
+const pdf = new jsPDF({
+orientation: 'portrait',
+unit: 'mm',
+format: 'a4'
+});
+
+const imgWidth = 210; // A4 ancho en mm
+const pageHeight = 297;
+const imgHeight = (canvas.height * imgWidth) / canvas.width;
+let position = 0;
+
+pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+let heightLeft = imgHeight - pageHeight;
+while (heightLeft > 0) {
+position = heightLeft - imgHeight;
+pdf.addPage();
+pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+heightLeft -= pageHeight;
+}
+
+pdf.save('CV_Julio_Cesar_Evangelista.pdf');
+} catch (error) {
+console.error('Error al generar PDF:', error);
+alert('Hubo un error al generar el PDF. Intenta nuevamente o revisa la consola.');
+} finally {
+downloadBtn.innerHTML = originalBtnText;
+downloadBtn.disabled = false;
+}
+}
+
+downloadBtn.addEventListener('click', generatePDF);
+})();
+</script>
+<!-- Ajuste de estilo adicional para mejorar visibilidad en algunos navegadores -->
+</body>
+</html>
