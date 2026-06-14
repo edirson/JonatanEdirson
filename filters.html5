@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Spark AR Studio - Filtros AR + Detección Facial</title>
+    <!-- Material Icons + Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0,1" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0c12;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+            touch-action: none;
+        }
+
+        #ar-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #video-element {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            z-index: 1;
+        }
+
+        #three-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            display: block;
+        }
+
+        .ui-overlay {
+            position: absolute;
+            bottom: 24px;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            pointer-events: none;
+        }
+
+        .effects-tray {
+            pointer-events: auto;
+            background: rgba(20, 22, 32, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 48px;
+            padding: 8px 16px;
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            max-width: 90vw;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .effect-chip {
+            background: rgba(30, 32, 44, 0.9);
+            border-radius: 40px;
+            padding: 8px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(4px);
+            white-space: nowrap;
+        }
+
+        .effect-chip span { font-size: 18px; }
+        .effect-chip.active {
+            background: #6366f1;
+            color: white;
+            border-color: #818cf8;
+            box-shadow: 0 4px 12px rgba(99,102,241,0.4);
+        }
+
+        .action-buttons {
+            pointer-events: auto;
+            display: flex;
+            gap: 14px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+            padding: 10px 20px;
+            border-radius: 60px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .fab {
+            background: #1e1f2c;
+            border: none;
+            border-radius: 40px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .fab:hover { background: #2d2f3f; transform: scale(0.97); }
+        .status-msg {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 40px;
+            padding: 8px 16px;
+            font-size: 12px;
+            color: #ddd;
+            z-index: 12;
+            pointer-events: none;
+            font-weight: 500;
+        }
+
+        @media (max-width: 600px) {
+            .effect-chip { padding: 6px 14px; font-size: 12px; }
+            .fab { padding: 8px 14px; font-size: 12px; }
+            .effects-tray { padding: 6px 12px; gap: 8px; }
+        }
+        .effects-tray::-webkit-scrollbar { height: 3px; }
+        .effects-tray::-webkit-scrollbar-track { background: transparent; }
+        .effects-tray::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 10px; }
+    </style>
+</head>
+<body>
+<div id="ar-container">
+    <video id="video-element" autoplay playsinline muted></video>
+    <canvas id="three-canvas"></canvas>
+</div>
+<div class="ui-overlay">
+    <div class="effects-tray" id="effects-tray">
+        <div class="effect-chip active" data-effect="glasses"><span class="material-symbols-rounded">glasses</span> Gafas AR</div>
+        <div class="effect-chip" data-effect="particles"><span class="material-symbols-rounded">sparkle</span> Partículas</div>
+        <div class="effect-chip" data-effect="shader"><span class="material-symbols-rounded">auto_awesome</span> Shader GLSL</div>
+        <div class="effect-chip" data-effect="fbx_demo"><span class="material-symbols-rounded">cube</span> Modelo 3D</div>
+        <div class="effect-chip" data-effect="glowmask"><span class="material-symbols-rounded">palette</span> Máscara Brillo</div>
+    </div>
+    <div class="action-buttons">
+        <button id="upload-fbx-btn" class="fab"><span class="material-symbols-rounded">upload_file</span> FBX + Textura</button>
+        <button id="upload-alembic-btn" class="fab"><span class="material-symbols-rounded">animation</span> Alembic Demo</button>
+        <input type="file" id="fbx-file-input" accept=".fbx" style="display:none">
+        <input type="file" id="texture-file-input" accept=".jpg,.jpeg,.png" style="display:none">
+    </div>
+</div>
+<div id="status-message" class="status-msg">✨ Iniciando cámara y detección facial...</div>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+    
+    // --- Elementos DOM ---
+    const videoEl = document.getElementById('video-element');
+    const canvasEl = document.getElementById('three-canvas');
+    const statusDiv = document.getElementById('status-message');
+    
+    // --- Configuración Three.js ---
+    const renderer = new THREE.WebGLRenderer({ canvas: canvasEl, alpha: false, antialias: true });
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050510);
+    const camera3D = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera3D.position.set(0, 0, 3);
+    
+    // Grupo que sigue la cara detectada
+    const faceAnchor = new THREE.Group();
+    scene.add(faceAnchor);
+    
+    // Video textura de fondo
+    let videoTexture = null;
+    function initVideoBackground() {
+        videoTexture = new THREE.VideoTexture(videoEl);
+        videoTexture.minFilter = THREE.LinearFilter;
+        const planeGeo = new THREE.PlaneGeometry(2, 2.4);
+        const material = new THREE.MeshBasicMaterial({ map: videoTexture, depthTest: false, depthWrite: false });
+        const bgMesh = new THREE.Mesh(planeGeo, material);
+        bgMesh.position.z = -1;
+        scene.add(bgMesh);
+    }
+    
+    // --- Luces para modelos 3D ---
+    const ambientLight = new THREE.AmbientLight(0x404060);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    dirLight.position.set(1, 2, 1);
+    scene.add(dirLight);
+    const fillLight = new THREE.PointLight(0x88aaff, 0.5);
+    fillLight.position.set(0, 1, 1.5);
+    scene.add(fillLight);
+    
+    // --- Variables de efectos ---
+    let currentEffectObject = null;
+    let activeEffect = "glasses";
+    let particleSys = null;
+    let shaderObj = null;
+    let customModel = null;
+    let alembicAnimGroup = null;
+    
+    // --- Funciones de efectos visuales ---
+    function createGlasses() {
+        const group = new THREE.Group();
+        const lensMat = new THREE.MeshStandardMaterial({ color: 0x88aaff, emissive: 0x224466, metalness: 0.7, roughness: 0.3, transparent: true, opacity: 0.8 });
+        const lensGeo = new THREE.SphereGeometry(0.18, 32, 32);
+        const leftLens = new THREE.Mesh(lensGeo, lensMat);
+        leftLens.position.set(-0.28, 0.05, 0.12);
+        const rightLens = new THREE.Mesh(lensGeo, lensMat);
+        rightLens.position.set(0.28, 0.05, 0.12);
+        const bridgeGeo = new THREE.BoxGeometry(0.2, 0.05, 0.05);
+        const bridgeMat = new THREE.MeshStandardMaterial({ color: 0xddccaa, metalness: 0.8 });
+        const bridge = new THREE.Mesh(bridgeGeo, bridgeMat);
+        bridge.position.set(0, 0.06, 0.1);
+        const armGeo = new THREE.BoxGeometry(0.05, 0.05, 0.3);
+        const armMat = new THREE.MeshStandardMaterial({ color: 0xbbaa88 });
+        const leftArm = new THREE.Mesh(armGeo, armMat);
+        leftArm.position.set(-0.45, 0.04, -0.1);
+        const rightArm = new THREE.Mesh(armGeo, armMat);
+        rightArm.position.set(0.45, 0.04, -0.1);
+        group.add(leftLens, rightLens, bridge, leftArm, rightArm);
+        return group;
+    }
+    
+    function createParticleSystem() {
+        const count = 1500;
+        const geom = new THREE.BufferGeometry();
+        const positions = new Float32Array(count * 3);
+        for (let i = 0; i < count; i++) {
+            positions[i*3] = (Math.random() - 0.5) * 1.6;
+            positions[i*3+1] = (Math.random() - 0.5) * 1.2 - 0.1;
+            positions[i*3+2] = (Math.random() - 0.5) * 1.2;
+        }
+        geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const mat = new THREE.PointsMaterial({ color: 0x6c5ce7, size: 0.018, transparent: true, blending: THREE.AdditiveBlending });
+        return new THREE.Points(geom, mat);
+    }
+    
+    function createShaderEffect() {
+        const geometry = new THREE.SphereGeometry(0.55, 48, 48);
+        const vertexShader = `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                gl_PointSize = 10.0;
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        `;
+        const fragmentShader = `
+            uniform float uTime;
+            varying vec2 vUv;
+            void main() {
+                vec2 uv = vUv;
+                float wave = sin(uv.x * 15.0 + uTime) * cos(uv.y * 15.0 - uTime);
+                vec3 colorA = vec3(0.2, 0.4, 0.9);
+                vec3 colorB = vec3(0.9, 0.2, 0.6);
+                vec3 finalColor = mix(colorA, colorB, sin(uv.x * 3.14159 + uTime) * 0.5 + 0.5);
+                finalColor += wave * 0.4;
+                gl_FragColor = vec4(finalColor, 0.9);
+            }
+        `;
+        const material = new THREE.ShaderMaterial({
+            uniforms: { uTime: { value: 0 } },
+            vertexShader: vertexShader,
+            fragmentShader: fragmentShader,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            side: THREE.DoubleSide
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.scale.set(1.1, 1.1, 0.6);
+        return mesh;
+    }
+    
+    function createGlowMask() {
+        const ringGeo = new THREE.TorusGeometry(0.52, 0.045, 64, 120);
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x1e3a8a, emissiveIntensity: 1.3 });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = Math.PI / 2;
+        // partículas orbitantes
+        const particleCount = 200;
+        const particleGeom = new THREE.BufferGeometry();
+        const posArray = [];
+        for (let i = 0; i < particleCount; i++) {
+            const angle = (i / particleCount) * Math.PI * 2;
+            const rad = 0.62;
+            posArray.push(Math.cos(angle) * rad, Math.sin(angle) * rad + 0.05, 0);
+        }
+        particleGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(posArray), 3));
+        const ptsMat = new THREE.PointsMaterial({ color: 0x60a5fa, size: 0.02, transparent: true, blending: THREE.AdditiveBlending });
+        const orbits = new THREE.Points(particleGeom, ptsMat);
+        ring.add(orbits);
+        return ring;
+    }
+    
+    function createDemoModel() {
+        const geo = new THREE.IcosahedronGeometry(0.32, 0);
+        const mat = new THREE.MeshStandardMaterial({ color: 0xff66cc, emissive: 0x331133, metalness: 0.6, roughness: 0.2 });
+        const mesh = new THREE.Mesh(geo, mat);
+        const wire = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: 0xffaaff }));
+        mesh.add(wire);
+        return mesh;
+    }
+    
+    function clearEffect() {
+        if (currentEffectObject && currentEffectObject.parent) currentEffectObject.parent.remove(currentEffectObject);
+        if (particleSys && particleSys.parent) faceAnchor.remove(particleSys);
+        if (shaderObj && shaderObj.parent) faceAnchor.remove(shaderObj);
+        if (customModel && customModel.parent) faceAnchor.remove(customModel);
+        if (alembicAnimGroup && alembicAnimGroup.parent) faceAnchor.remove(alembicAnimGroup);
+        particleSys = null; shaderObj = null; customModel = null; alembicAnimGroup = null;
+        currentEffectObject = null;
+    }
+    
+    function setEffect(effectId) {
+        activeEffect = effectId;
+        clearEffect();
+        switch(effectId) {
+            case "glasses":
+                currentEffectObject = createGlasses();
+                faceAnchor.add(currentEffectObject);
+                break;
+            case "particles":
+                particleSys = createParticleSystem();
+                faceAnchor.add(particleSys);
+                currentEffectObject = particleSys;
+                break;
+            case "shader":
+                shaderObj = createShaderEffect();
+                faceAnchor.add(shaderObj);
+                currentEffectObject = shaderObj;
+                break;
+            case "fbx_demo":
+                currentEffectObject = createDemoModel();
+                faceAnchor.add(currentEffectObject);
+                break;
+            case "glowmask":
+                currentEffectObject = createGlowMask();
+                faceAnchor.add(currentEffectObject);
+                break;
+            default: break;
+        }
+        updateStatus(`Efecto: ${effectId} activado`);
+    }
+    
+    // --- Subir FBX con textura ---
+    const fbxInput = document.getElementById('fbx-file-input');
+    const texInput = document.getElementById('texture-file-input');
+    document.getElementById('upload-fbx-btn').addEventListener('click', () => fbxInput.click());
+    
+    fbxInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        updateStatus("Cargando modelo FBX...");
+        const url = URL.createObjectURL(file);
+        const loader = new FBXLoader();
+        loader.load(url, (fbx) => {
+            URL.revokeObjectURL(url);
+            fbx.scale.set(0.023, 0.023, 0.023);
+            fbx.position.set(0, -0.12, 0.12);
+            fbx.traverse(child => { if(child.isMesh) { child.castShadow = true; child.receiveShadow = false; } });
+            clearEffect();
+            customModel = fbx;
+            faceAnchor.add(customModel);
+            activeEffect = "custom_fbx";
+            updateStatus("Modelo FBX cargado ✅. Ahora puedes subir una textura.");
+            // Ofrecer subir textura después
+            setTimeout(() => {
+                texInput.onchange = (texEv) => {
+                    const texFile = texEv.target.files[0];
+                    if (texFile && customModel) {
+                        const img = new Image();
+                        img.onload = () => {
+                            const texture = new THREE.Texture(img);
+                            texture.needsUpdate = true;
+                            customModel.traverse(child => {
+                                if(child.isMesh && child.material) {
+                                    child.material.map = texture;
+                                    child.material.needsUpdate = true;
+                                }
+                            });
+                            updateStatus("Textura aplicada al modelo FBX");
+                        };
+                        img.src = URL.createObjectURL(texFile);
+                    }
+                };
+                texInput.click();
+            }, 200);
+        }, undefined, (err) => {
+            updateStatus("Error FBX: " + err.message);
+        });
+    });
+    
+    // --- Alembic Demo (simulación de carga animada) ---
+    document.getElementById('upload-alembic-btn').addEventListener('click', () => {
+        updateStatus("Cargando estilo Alembic: malla animada + partículas fluidas");
+        clearEffect();
+        const group = new THREE.Group();
+        const knotGeo = new THREE.TorusKnotGeometry(0.38, 0.08, 120, 12);
+        const knotMat = new THREE.MeshStandardMaterial({ color: 0xaa66ff, emissive: 0x442266, metalness: 0.7 });
+        const knot = new THREE.Mesh(knotGeo, knotMat);
+        group.add(knot);
+        const particleCount = 1200;
+        const partGeo = new THREE.BufferGeometry();
+        const positions = [];
+        for (let i = 0; i < particleCount; i++) {
+            positions.push((Math.random() - 0.5) * 1.4);
+            positions.push((Math.random() - 0.5) * 1.2);
+            positions.push((Math.random() - 0.5) * 1.2);
+        }
+        partGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+        const pointsMat = new THREE.PointsMaterial({ color: 0xbb88ff, size: 0.014, blending: THREE.AdditiveBlending });
+        const pointsSys = new THREE.Points(partGeo, pointsMat);
+        group.add(pointsSys);
+        faceAnchor.add(group);
+        alembicAnimGroup = group;
+        currentEffectObject = group;
+        activeEffect = "alembic_demo";
+        let time = 0;
+        function animateAlembic() {
+            if (activeEffect === "alembic_demo" && alembicAnimGroup === group) {
+                knot.rotation.x += 0.02;
+                knot.rotation.y += 0.025;
+                pointsSys.rotation.z += 0.01;
+                pointsSys.rotation.y += 0.005;
+                requestAnimationFrame(animateAlembic);
+            }
+        }
+        animateAlembic();
+        updateStatus("Alembic Demo activo: malla animada + sistema de partículas");
+    });
+    
+    // --- MediaPipe FaceMesh (detección facial robusta) ---
+    import { FaceMesh } from 'https://cdn.skypack.dev/@mediapipe/face_mesh';
+    import { Camera } from 'https://cdn.skypack.dev/@mediapipe/camera_utils';
+    
+    const faceMesh = new FaceMesh({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
+    faceMesh.setOptions({
+        maxNumFaces: 1,
+        refineLandmarks: true,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+    });
+    
+    let lastLandmarks = null;
+    faceMesh.onResults((results) => {
+        if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+            const landmarks = results.multiFaceLandmarks[0];
+            lastLandmarks = landmarks;
+            // puntos clave: nariz (1), ojo izquierdo (33), derecho (263)
+            const nose = landmarks[1];
+            const leftEye = landmarks[33];
+            const rightEye = landmarks[263];
+            if (nose && leftEye && rightEye) {
+                // Convertir coordenadas normalizadas a posición 3D
+                const x = (nose.x - 0.5) * 1.9;
+                const y = -(nose.y - 0.5) * 1.7;
+                const eyeDist = Math.abs(leftEye.x - rightEye.x) * 1.4;
+                const scale = 0.85 + eyeDist * 0.6;
+                faceAnchor.position.set(x, y, 0.15);
+                faceAnchor.scale.set(scale, scale, scale);
+                // rotación sencilla
+                const roll = (leftEye.y - rightEye.y) * 0.8;
+                faceAnchor.rotation.z = roll;
+                faceAnchor.rotation.x = (nose.y - 0.45) * 0.6;
+            }
+            // Actualizar partículas si está activo
+            if (particleSys && activeEffect === "particles" && lastLandmarks) {
+                const nosePos = lastLandmarks[1];
+                if (nosePos) {
+                    particleSys.position.set((nosePos.x-0.5)*1.6, -(nosePos.y-0.5)*1.5, 0.2);
+                    particleSys.rotation.y += 0.03;
+                }
+            }
+            // Actualizar shader time
+            if (shaderObj && activeEffect === "shader" && shaderObj.material && shaderObj.material.uniforms) {
+                shaderObj.material.uniforms.uTime.value = performance.now() / 400;
+            }
+            // Rotar modelo custom o demo
+            if (currentEffectObject && (activeEffect === "fbx_demo" || activeEffect === "custom_fbx") && currentEffectObject !== particleSys) {
+                currentEffectObject.rotation.y += 0.02;
+                currentEffectObject.rotation.x = Math.sin(Date.now() * 0.003) * 0.2;
+            }
+            if (currentEffectObject && activeEffect === "glowmask") {
+                currentEffectObject.rotation.z = Math.sin(Date.now() * 0.005) * 0.2;
+                currentEffectObject.scale.setScalar(0.92 + Math.sin(Date.now() * 0.008) * 0.05);
+            }
+        } else {
+            // fallback: posición por defecto
+            faceAnchor.position.set(0, 0, 0.4);
+            faceAnchor.scale.set(0.9, 0.9, 0.9);
+        }
+    });
+    
+    // --- Inicializar cámara y video ---
+    async function initCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } });
+            videoEl.srcObject = stream;
+            await videoEl.play();
+            initVideoBackground();
+            // Iniciar MediaPipe Camera
+            const cameraPipe = new Camera(videoEl, {
+                onFrame: async () => {
+                    await faceMesh.send({ image: videoEl });
+                },
+                width: 640,
+                height: 480
+            });
+            cameraPipe.start();
+            updateStatus("✅ Cámara activa | Detección facial funcionando");
+        } catch (err) {
+            console.error(err);
+            updateStatus("❌ Error de cámara: " + err.message + " - Verifica permisos y HTTPS");
+            // Mostrar un mensaje de fallback pero permitir interacción sin cámara
+            const dummyDiv = document.createElement('div');
+            dummyDiv.style.position = 'absolute';
+            dummyDiv.style.bottom = '50%';
+            dummyDiv.style.left = '20px';
+            dummyDiv.style.background = 'red';
+            dummyDiv.style.color = 'white';
+            dummyDiv.style.padding = '8px';
+            dummyDiv.style.borderRadius = '20px';
+            dummyDiv.innerText = 'Permiso de cámara denegado. Los efectos se muestran sin seguimiento facial.';
+            document.body.appendChild(dummyDiv);
+            setTimeout(() => dummyDiv.remove(), 4000);
+            // Aún así mostrar fondo negro y efectos estáticos
+            const fallbackGeo = new THREE.PlaneGeometry(2, 2.4);
+            const fallbackMat = new THREE.MeshBasicMaterial({ color: 0x111122 });
+            scene.add(new THREE.Mesh(fallbackGeo, fallbackMat));
+        }
+    }
+    
+    // --- UI Events para efectos ---
+    document.querySelectorAll('.effect-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            document.querySelectorAll('.effect-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            const effect = chip.getAttribute('data-effect');
+            setEffect(effect);
+        });
+    });
+    
+    function updateStatus(msg) {
+        statusDiv.textContent = msg;
+        setTimeout(() => {
+            if (statusDiv.textContent === msg) statusDiv.textContent = "✨ AR activo — Mueve tu rostro para aplicar efectos";
+        }, 3000);
+    }
+    
+    // --- Loop de renderizado ---
+    function animate() {
+        requestAnimationFrame(animate);
+        if (videoTexture) videoTexture.needsUpdate = true;
+        renderer.render(scene, camera3D);
+    }
+    animate();
+    
+    function onWindowResize() {
+        camera3D.aspect = window.innerWidth / window.innerHeight;
+        camera3D.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    window.addEventListener('resize', onWindowResize);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    
+    // Inicio
+    initCamera();
+    setEffect("glasses");
+    
+    // Mensaje de bienvenida offline: si no hay internet los CDNs no cargarán, pero al menos intentamos
+    window.addEventListener('load', () => {
+        if (!navigator.onLine) updateStatus("⚠️ Sin conexión a internet - algunos recursos externos pueden fallar");
+    });
+</script>
+</body>
+</html>
