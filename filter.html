@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Face Capture + GLSL Shaders</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; }
+    canvas { display: block; }
+    #video { display: none; }
+    #info {
+      position: absolute; top: 20px; left: 20px;
+      color: white; font-family: monospace; background: rgba(0,0,0,0.6); padding: 8px;
+    }
+  </style>
+</head>
+<body>
+  <video id="video" autoplay playsinline></video>
+  <div id="info">Efecto: <span id="effectName"></span></div>
+
+  <!-- Librerías -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module">
+    // -------------------- IMPORTS --------------------
+    import * as THREE from 'three';
+    import { FaceLandmarker, FilesetResolver } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.9/vision_bundle.mjs';
+    
+    // -------------------- CONFIGURACIÓN --------------------
+    const VIDEO = document.getElementById('video');
+    const EFFECT_SPAN = document.getElementById('effectName');
+    
+    // Parámetros de detección facial
+    const NUM_FACE_LANDMARKS = 478;
+    const NOSE_TIP = 1;           // índice del punto de la punta de la nariz
+    const UPPER_LIP = 13;         // punto central del labio superior
+    const LOWER_LIP = 14;         // punto central del labio inferior
+    const LEFT_EYE_INNER = 33;    // lagrimal ojo izquierdo
+    const RIGHT_EYE_INNER = 263;  // lagrimal ojo derecho
+    
+    // Variables de estado
+    let faceLandmarker = null;
+    let lastVideoTime = -1;
+    let faceData = {
+      noseTip: new THREE.Vector2(0.5, 0.5),
+      mouthOpen: 0.0,
+      leftEye: new THREE.Vector2(0.3, 0.4),
+      rightEye: new THREE.Vector2(0.7, 0.4),
+      detected: false
+    };
+    
+    // -------------------- TRES.JS ESCENA --------------------
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    
+    const scene = new THREE.Scene();
+    // Cámara ortográfica para un quad a pantalla completa
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+    camera.position.z = 1;
+    
+    // Textura de la cámara
+    const videoTexture = new THREE.VideoTexture(VIDEO);
+    videoTexture.minFilter = THREE.LinearFilter;
+    videoTexture.magFilter = THREE.LinearFilter;
+    
+    // Shader personalizado (lo definiremos en breve)
+    const shaderMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        u_camera: { value: videoTexture },
+        u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+        u_nose: { value: faceData.noseTip },
+        u_mouthOpen: { value: faceData.mouthOpen },
+        u_leftEye: { value: faceData.leftEye },
+        u_rightEye: { value: faceData.rightEye },
+        u_effectIndex: { value: 0 }   // 0, 1, 2... según gesto
+      },
+      vertexShader: /* glsl */ `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: '' // se define después
+    });
+    
+    const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), shaderMaterial);
+    scene.add(quad);
+    
+    // Redimensionar
+    window.addEventListener('resize', () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      shaderMaterial.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+    });
+    
+    // -------------------- INICIALIZAR MEDIAPIPE --------------------
+    async function initMediaPipe() {
+      const vision = await FilesetResolver.forVisionTasks(
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.9/wasm'
+      );
+      faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+          delegate: 'GPU'
+        },
+        outputFaceBlendshapes: false,
+        outputFacialTransformationMatrixes: false,
+        runningMode: 'VIDEO',
+        numFaces: 1
+      });
+      console.log('MediaPipe FaceLandmarker listo');
+    }
+    
+    // -------------------- DETECCIÓN POR FRAME --------------------
+    function updateFaceData(results) {
+      if (results.faceLandmarks && results.faceLandmarks.length > 0) {
+        const landmarks = results.faceLandmarks[0];
+        // Coordenadas normalizadas (0-1) donde (0,0) es esquina superior izquierda de la imagen.
+        // Las convertiremos al espacio UV de la textura (y invertimos Y porque en vídeo/textura la Y está al revés)
+        const getUV = (lm) => new THREE.Vector2(lm.x, 1.0 - lm.y);  // para calzar con textura
+        
+        faceData.noseTip.copy(getUV(landmarks[NOSE_TIP]));
+        
+        // Distancia labio superior - inferior (apertura boca)
+        const upperLip = landmarks[UPPER_LIP];
+        const lowerLip = landmarks[LOWER_LIP];
+        // Como están en espacio imagen, la distancia en Y es significativa
+        faceData.mouthOpen = Math.max(0, (upperLip.y - lowerLip.y) * 2.5); // factor de escala
+        
+        faceData.leftEye.copy(getUV(landmarks[LEFT_EYE_INNER]));
+        faceData.rightEye.copy(getUV(landmarks[RIGHT_EYE_INNER]));
+        
+        faceData.detected = true;
+      } else {
+        faceData.detected = false;
+        // Valores por defecto cuando no hay cara
+        faceData.noseTip.set(0.5, 0.5);
+        faceData.mouthOpen = 0.0;
+        faceData.leftEye.set(0.3, 0.4);
+        faceData.rightEye.set(0.7, 0.4);
+      }
+      
+      // Actualizar uniforms del shader
+      shaderMaterial.uniforms.u_nose.value.copy(faceData.noseTip);
+      shaderMaterial.uniforms.u_mouthOpen.value = faceData.mouthOpen;
+      shaderMaterial.uniforms.u_leftEye.value.copy(faceData.leftEye);
+      shaderMaterial.uniforms.u_rightEye.value.copy(faceData.rightEye);
+      
+      // Cambiar efecto según apertura de boca (ejemplo simple)
+      const prevEffect = shaderMaterial.uniforms.u_effectIndex.value;
+      if (faceData.mouthOpen > 0.35) {
+        shaderMaterial.uniforms.u_effectIndex.value = 1;  // Efecto 1 cuando boca abierta
+      } else {
+        shaderMaterial.uniforms.u_effectIndex.value = 0;  // Efecto 0 por defecto
+      }
+      if (prevEffect !== shaderMaterial.uniforms.u_effectIndex.value) {
+        EFFECT_SPAN.textContent = shaderMaterial.uniforms.u_effectIndex.value === 1 ? 'Boca abierta - Distorsión' : 'Normal - Warp sutil';
+      }
+    }
+    
+    async function detectFrame() {
+      if (!faceLandmarker || VIDEO.readyState < 2) return;
+      if (VIDEO.currentTime === lastVideoTime) return;
+      lastVideoTime = VIDEO.currentTime;
+      const results = faceLandmarker.detectForVideo(VIDEO, performance.now());
+      updateFaceData(results);
+    }
+    
+    // -------------------- CICLO DE RENDER --------------------
+    function animate() {
+      requestAnimationFrame(animate);
+      detectFrame();
+      renderer.render(scene, camera);
+    }
+    
+    // -------------------- INICIAR CÁMARA Y APP --------------------
+    async function startCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+      });
+      VIDEO.srcObject = stream;
+      await VIDEO.play();
+      console.log('Cámara iniciada');
+    }
+    
+    // -------------------- DEFINIR EL FRAGMENT SHADER (EFECTOS) --------------------
+    // Este shader combina varios efectos según u_effectIndex
+    shaderMaterial.fragmentShader = /* glsl */ `
+      varying vec2 vUv;
+      uniform sampler2D u_camera;
+      uniform vec2 u_resolution;
+      uniform vec2 u_nose;
+      uniform float u_mouthOpen;
+      uniform vec2 u_leftEye;
+      uniform vec2 u_rightEye;
+      uniform int u_effectIndex;
+      
+      // Función de distorsión de lente (abombamiento)
+      vec2 bulge(vec2 uv, vec2 center, float radius, float strength) {
+        vec2 delta = uv - center;
+        float dist = length(delta);
+        if (dist < radius) {
+          float percent = 1.0 - dist / radius;
+          percent = percent * percent; // suavizado
+          delta = normalize(delta);
+          uv += delta * percent * strength;
+        }
+        return uv;
+      }
+      
+      void main() {
+        vec2 uv = vUv;
+        vec4 color;
+        
+        if (u_effectIndex == 0) {
+          // EFECTO 0: imagen normal + distorsión sutil alrededor de la nariz
+          vec2 warpedUV = bulge(uv, u_nose, 0.15, 0.03);
+          color = texture2D(u_camera, warpedUV);
+          
+          // Pequeño brillo alrededor de los ojos (resplandor fantasma)
+          float glowLeft = 0.02 / length(uv - u_leftEye);
+          float glowRight = 0.02 / length(uv - u_rightEye);
+          color.rgb += vec3(0.2, 0.4, 0.8) * (glowLeft + glowRight) * 0.3;
+          
+        } else if (u_effectIndex == 1) {
+          // EFECTO 1: deformación "boca de remolino" activada por apertura boca
+          // Distorsión radial centrada en la boca (promedio de labios)
+          vec2 mouthCenter = (u_leftEye + u_rightEye) * 0.5; // aproximación centro boca
+          mouthCenter = mix(mouthCenter, u_nose, 0.7); // bajar hacia la boca real
+          float radius = 0.2 + u_mouthOpen * 0.3;
+          float strength = u_mouthOpen * 0.4;
+          vec2 warpedUV = bulge(uv, mouthCenter, radius, strength);
+          color = texture2D(u_camera, warpedUV);
+          
+          // Cambio de tono hacia rojo en la zona de la boca
+          float distToMouth = length(uv - mouthCenter);
+          if (distToMouth < radius) {
+            color.rgb = mix(color.rgb, vec3(1.0, 0.3, 0.2), (1.0 - distToMouth/radius) * 0.7);
+          }
+          
+          // Las cejas lanzan partículas (simulado: brillos puntuales)
+          // Usaremos los ojos como referencia para las cejas (un poco más arriba)
+          vec2 leftBrow = u_leftEye + vec2(0.0, 0.04);
+          vec2 rightBrow = u_rightEye + vec2(0.0, 0.04);
+          float browGlow = 0.008 / length(uv - leftBrow) + 0.008 / length(uv - rightBrow);
+          color.rgb += vec3(0.9, 0.7, 0.1) * browGlow;
+        }
+        
+        gl_FragColor = color;
+      }
+    `;
+    
+    // -------------------- ARRANQUE --------------------
+    async function main() {
+      await initMediaPipe();
+      await startCamera();
+      animate();
+      EFFECT_SPAN.textContent = 'Normal - Warp sutil';
+    }
+    
+    main().catch(console.error);
+  </script>
+</body>
+</html>
