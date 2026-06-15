@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>CARRERA EN EL BOSQUE 3D</title>
+    <link rel="stylesheet" href="./style.css">
+
+
+    <style>
+
+
+    </style>
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>CARRERA EN EL BOSQUE 3D</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <div id="game">
+
+    <div id="hud">
+      <div id="topbar">
+        <div id="score">0</div>
+        <div id="best">Record : 0</div>
+      </div>
+      <div id="speedometer">
+        <span id="speedValue">0</span>
+        <span id="speedUnit">km/h</span>
+      </div>
+      <div id="nitroWrap">
+        <div id="nitroBar"></div>
+      </div>
+    </div>
+
+    <div id="speedLines"></div>
+
+    <div id="menu" class="overlay">
+      <h1>CARRERA EN<br>EL BOSQUE 3D</h1>
+      <p>Conduce tu nave a través del bosque.<br>Inclina tu teléfono o toca los lados de la pantalla. (Hemptha te invita a manejar sobre la carretera boscosa, y libra los obstáculos)<br>Toca el botón NITRO para el impulso!</p>
+      <button id="playBtn">COMENZAMOS</button>
+      <button id="tiltBtn">Activer el giroscopio</button>
+    </div>
+
+    <div id="gameover" class="overlay hidden">
+      <h2>ACCIDENTE !</h2>
+      <p id="finalScore">Score : 0</p>
+      <p id="bestScore">Record : 0</p>
+      <button id="retryBtn">RECOMENDAR</button>
+    </div>
+
+    <div id="touchControls">
+      <div id="leftZone"></div>
+      <div id="rightZone"></div>
+    </div>
+
+    <div id="nitroBtn">NITRO</div>
+  </div>
+
+  <script src="app.js"></script>
+  <script src="Gradient.js"></script>
+</body>
+</html>
+    <script  src="./script.js"></script>
+
+  </body>
+  
+</html>
