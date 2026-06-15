@@ -106,7 +106,8 @@
                 <span class="px-3 py-1 bg-white/10 rounded-full text-sm"><i class="fas fa-code mr-1"></i> Frontend/3D</span>
                 <span class="px-3 py-1 bg-white/10 rounded-full text-sm"><i class="fas fa-vr-cardboard mr-1"></i> VR/AR/XR</span>
                 <span class="px-3 py-1 bg-white/10 rounded-full text-sm"><i class="fas fa-robot mr-1"></i> IA Científica</span>
-                <span class="px-3 py-1 bg-white/10 rounded-full text-sm"><i class="fas fa-linkedin mr-1"></i><a rel:"https://www.linkedin.com/in/edirson-casado-28979a1a3/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BfAIDj3mCSkGCsUqIIcJrtA%3D%3D"> LinkedIn</a></span>
+                <span class="px-3 py-1 bg-white/10 rounded-full text-sm">  <a rel:"https://www.linkedin.com/in/edirson-casado-28979a1a3/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BfAIDj3mCSkGCsUqIIcJrtA%3D%3D">
+                <i class="fas fa-linkedin mr-1"></i>LinkedIn</a></span>
             </div>
         </div>
 
@@ -116,7 +117,9 @@
             <div class="space-y-6">
                 <div class="bg-black/40 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-xl">
                     <h2 class="text-2xl font-bold border-l-4 border-orange-500 pl-3 mb-4"><i class="fas fa-user-astronaut mr-2"></i> Perfil Creativo</h2>
-                    <p class="text-gray-200 leading-relaxed">Egresado de la UAQ (Bellas Artes, 2010). Especialista en diseño gráfico, web, animación 2D/3D y arte generativo con Processing. He trabajado en agencias de Cancún, CDMX y Querétaro para empresas como Grupo Educare y UNAM Juriquilla. Actualmente cursando Maestría en Diseño y Desarrollo de Videojuegos (UDEM). Apasionado por fusionar arte, ciencia y nuevas tecnologías para crear experiencias inmersivas.</p>
+                    <p class="text-gray-200 leading-relaxed">Egresado de la UAQ (Bellas Artes, 2010). Especialista en diseño gráfico, web, animación 2D/3D y arte generativo con Processing. 
+                        He trabajado en agencias de Cancún, CDMX y Querétaro para empresas como Grupo Educare y UNAM Juriquilla. Actualmente cursando Maestría en Diseño y Desarrollo de Videojuegos (UDEM).
+                        Apasionado por fusionar arte, ciencia y nuevas tecnologías para crear experiencias inmersivas.</p>
                 </div>
                 <div class="bg-black/40 backdrop-blur-md rounded-2xl p-6 border border-white/20">
                     <h2 class="text-2xl font-bold border-l-4 border-orange-500 pl-3 mb-4"><i class="fas fa-briefcase"></i> Trayectoria</h2>
@@ -151,7 +154,8 @@
                     </div>
                     <div class="flex gap-3 items-center">
                         <span id="membrane-timer" class="font-mono text-2xl font-bold text-orange-300">18.0s</span>
-                        <button id="reset-membrane-btn" class="bg-orange-600 hover:bg-orange-500 px-4 py-2 rounded-xl text-sm font-semibold shadow-lg transition"><i class="fas fa-sync-alt mr-1"></i> Reiniciar</button>
+                        <button id="reset-membrane-btn" class="bg-orange-600 hover:bg-orange-500 px-4 py-2 rounded-xl text-sm font-semibold shadow-lg transition"><i class="fas fa-sync-alt mr-1">
+                        </i> Reiniciar</button>
                     </div>
                 </div>
 
@@ -167,7 +171,8 @@
 
                 <!-- Botón PDF -->
                 <div class="bg-black/40 backdrop-blur-md rounded-2xl p-5 border border-white/20">
-                    <button id="download-pdf-btn" class="bg-gradient-to-r from-orange-500 to-pink-600 w-full px-6 py-3 rounded-xl font-bold shadow-xl hover:shadow-2xl transition flex items-center justify-center gap-2"><i class="fas fa-file-pdf"></i> Descargar Resumen CV (PDF)</button>
+                    <button id="download-pdf-btn" class="bg-gradient-to-r from-orange-500 to-pink-600 w-full px-6 py-3 rounded-xl font-bold shadow-xl hover:shadow-2xl 
+                        transition flex items-center justify-center gap-2"><i class="fas fa-file-pdf"></i> Descargar Resumen CV (PDF)</button>
                 </div>
             </div>
         </div>
@@ -175,7 +180,7 @@
         <!-- ACORDEÓN MINIMALISTA (Información adicional DeepSeek) -->
         <div class="mt-10 bg-black/40 backdrop-blur-md rounded-2xl border border-white/20 overflow-hidden">
             <div class="p-5 border-b border-white/10">
-                <h2 class="text-2xl font-bold flex items-center gap-2"><i class="fab fa-searchengin text-orange-400"></i> Información adicional · DeepSeek Insights</h2>
+                <h2 class="text-2xl font-bold flex items-center gap-2"><i class="fab fa-searchengin text-orange-400"></i> Información adicional · Insights</h2>
                 <p class="text-sm text-gray-300 mt-1">Proyectos destacados, investigación, tecnologías de vanguardia y contribuciones especializadas</p>
             </div>
             
@@ -468,7 +473,8 @@
             }
         }
         function resetTurn() { firstCard = null; secondCard = null; lockBoard = false; }
-        function resetGame() { gameCards = shuffleArray([...cardsData]); firstCard = null; secondCard = null; lockBoard = false; matchesFound = 0; gameCards.forEach(c => { c.flipped = false; c.matched = false; }); renderGame(); gameMessageDiv.innerHTML = "Juego reiniciado"; setTimeout(() => gameMessageDiv.innerHTML = "", 1500); }
+        function resetGame() { gameCards = shuffleArray([...cardsData]); firstCard = null; secondCard = null; lockBoard = false; matchesFound = 0; gameCards.forEach(c =>
+            { c.flipped = false; c.matched = false; }); renderGame(); gameMessageDiv.innerHTML = "Juego reiniciado"; setTimeout(() => gameMessageDiv.innerHTML = "", 1500); }
         document.getElementById('reset-game-btn').addEventListener('click', resetGame);
         renderGame();
         
@@ -482,7 +488,8 @@
             doc.text("Especialidades: VR/AR/XR, IA Científica, Videojuegos, Fotogrametría",20,45);
             doc.setFontSize(14); doc.setTextColor(255,160,80); doc.text("Resumen profesional ampliado",20,65);
             doc.setFontSize(10); doc.setTextColor(200,200,200);
-            const texto = `Experiencia en campañas políticas, apps de gobierno (Guanajuato, Querétaro), proyecciones escénicas para danza, publicaciones científicas UAQ, investigación en IA aplicada a gráfica médica y tecnologías inmersivas. Colaboración con Hemphta A.C. y consultoría en ética de IA para ciencias y medicina.`;
+            const texto = `Experiencia en campañas políticas, apps de gobierno (Guanajuato, Querétaro), proyecciones escénicas para danza, publicaciones científicas UAQ, investigación en
+            IA aplicada a gráfica médica y tecnologías inmersivas. Colaboración con Hemphta A.C. y consultoría en ética de IA para ciencias y medicina.`;
             doc.text(doc.splitTextToSize(texto,170),20,75);
             doc.setFontSize(10); doc.text("Más información interactiva en el CV digital.",20,130);
             doc.setFontSize(8); doc.setTextColor(150,150,200); doc.text("CV Interactivo - DeepSeek Insights | 2025",20,270);
