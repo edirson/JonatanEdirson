@@ -178,7 +178,7 @@ player.body.material.envMap = cubeRenderTarget.texture;
 function createVehicle(type, color) {
     const vehicle = new THREE.Group();
     const bodyMat = new THREE.MeshStandardMaterial({
-        color: color, metalness: 0.85, roughness: 0.1,
+        color: color, metalness: 10.85, roughness: 0.1,
     });
     const cabinMat = new THREE.MeshStandardMaterial({ color: 0x0c0c0d, roughness: 0.1 });
     const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
@@ -497,7 +497,7 @@ tiltBtn.addEventListener('click', async () => {
     if (permission === 'granted') {
       window.addEventListener('deviceorientation', handleOrientation);
       tiltEnabled = true;
-      tiltBtn.textContent = '✓ Gyroscope activé';
+      tiltBtn.textContent = '✓ Gyroscopio activado';  //Gyroscope activé'
     }
   } else {
     window.addEventListener('deviceorientation', handleOrientation);
