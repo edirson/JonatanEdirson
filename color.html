@@ -433,7 +433,7 @@
       // Convertir a escala de grises
       const gray = new Uint8Array(w * h);
       for (let i = 0; i < w * h; i++) {
-        const idx = i * 4; //* 4
+        const idx = i * 4;
         gray[i] = 0.299 * data[idx] + 0.587 * data[idx+1] + 0.114 * data[idx+2];
       }
 
@@ -441,10 +441,10 @@
       const sobelData = aplicarSobel(gray, w, h);
 
       // Umbralizar y construir imagen de contornos (blanco fondo, negro bordes)
-      const outputData = new Uint8ClampedArray(w * h * 4); //h * 4
+      const outputData = new Uint8ClampedArray(w * h * 4);
       for (let i = 0; i < w * h; i++) {
         const val = sobelData[i] < SOBEL_THRESHOLD ? 255 : 0; // blanco o negro
-        const idx = i * 2;
+        const idx = i * 4;
         outputData[idx] = val;
         outputData[idx+1] = val;
         outputData[idx+2] = val;
@@ -512,7 +512,7 @@
       const a = 255;
 
       // Comprobar si el punto inicial está en un borde (negro)
-      const idxIni = (startY * w + startX) * 4; //4
+      const idxIni = (startY * w + startX) * 4;
       const grisIni = cData[idxIni]; // R (escala grises)
       if (grisIni < 128) {
         // Está en un borde, no se puede colorear
@@ -553,7 +553,7 @@
           const nIdx = ny * w + nx;
           if (visited[nIdx]) continue;
           // Comprobar si el vecino es borde
-          const nPixelIdx = nIdx * 4; //* 4
+          const nPixelIdx = nIdx * 4;
           if (cData[nPixelIdx] < 128) continue; // no pasar bordes
           visited[nIdx] = 1;
           queue.push([nx, ny]);
