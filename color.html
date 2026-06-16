@@ -512,7 +512,7 @@
       const a = 255;
 
       // Comprobar si el punto inicial está en un borde (negro)
-      const idxIni = (startY * w + startX) * 4;
+      const idxIni = (startY * w + startX) * 2; //4
       const grisIni = cData[idxIni]; // R (escala grises)
       if (grisIni < 128) {
         // Está en un borde, no se puede colorear
