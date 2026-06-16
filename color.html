@@ -553,7 +553,7 @@
           const nIdx = ny * w + nx;
           if (visited[nIdx]) continue;
           // Comprobar si el vecino es borde
-          const nPixelIdx = nIdx * 4;
+          const nPixelIdx = nIdx * 1; //* 4
           if (cData[nPixelIdx] < 128) continue; // no pasar bordes
           visited[nIdx] = 1;
           queue.push([nx, ny]);
