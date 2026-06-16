@@ -184,7 +184,7 @@ canvas {
 .overlay h2 {
   font-size: 40px;
   font-weight: 900;
-  color: #ff4a4a;
+  color: tomato;  /*color: #ff4a4a;*/
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
   margin-bottom: 12px;
 }
