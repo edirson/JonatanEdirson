@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Body Synth</title>
+
+    <!-- Google Fonts (Material Design) -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+
+    <!-- Import Map for ES modules -->
+    <script type="importmap">
+        {
+            "imports": {
+                "@tensorflow/tfjs": "https://esm.sh/@tensorflow/tfjs@4.10.0",
+                "@tensorflow/tfjs-core": "https://esm.sh/@tensorflow/tfjs-core@4.10.0",
+                "@tensorflow/tfjs-converter": "https://esm.sh/@tensorflow/tfjs-converter@4.10.0",
+                "@tensorflow-models/pose-detection": "https://esm.sh/@tensorflow-models/pose-detection@2.0.0",
+                "tone": "https://esm.sh/tone@14.7.77"
+            }
+        }
+    </script>
+
+    <style>
+        /* ─── Reset & Base ─── */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #fafafa;
+            color: #1e1e1e;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        /* ─── App Container ─── */
+        .app {
+            max-width: 800px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.03);
+            padding: 24px 24px 32px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .app-title {
+            font-weight: 400;
+            font-size: 20px;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .app-title .material-icons-round {
+            font-size: 28px;
+            color: #3b3b3b;
+        }
+        .app-title strong {
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+        .app-title .badge {
+            font-size: 11px;
+            font-weight: 400;
+            background: #f0f0f0;
+            color: #555;
+            padding: 2px 12px;
+            border-radius: 40px;
+            letter-spacing: 0.2px;
+            margin-left: 4px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 400;
+            color: #555;
+            background: #f5f5f5;
+            padding: 6px 16px 6px 12px;
+            border-radius: 40px;
+            transition: all 0.3s ease;
+        }
+        .status-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #bdbdbd;
+            transition: background 0.4s ease;
+        }
+        .status-badge .dot.active {
+            background: #43a047;
+            box-shadow: 0 0 8px rgba(67, 160, 71, 0.35);
+        }
+        .status-badge .dot.ready {
+            background: #fdd835;
+            box-shadow: 0 0 8px rgba(253, 216, 53, 0.35);
+        }
+
+        /* ─── Camera / Video ─── */
+        .camera-wrapper {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #e8e8e8;
+            aspect-ratio: 4 / 3;
+            width: 100%;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .camera-wrapper video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+            /* mirror for natural feel */
+        }
+
+        .camera-wrapper canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            transform: scaleX(-1);
+            /* mirror to match video */
+        }
+
+        .camera-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+            gap: 12px;
+            background: #f0f0f0;
+            backdrop-filter: blur(2px);
+            transition: opacity 0.6s ease;
+        }
+        .camera-placeholder .material-icons-round {
+            font-size: 48px;
+            color: #bbb;
+        }
+        .camera-placeholder.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* ─── Controls Grid ─── */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .control-card {
+            background: #f8f8f8;
+            border-radius: 16px;
+            padding: 14px 16px 16px;
+            transition: background 0.2s ease, transform 0.15s ease;
+            border: 1px solid #f0f0f0;
+        }
+        .control-card:hover {
+            background: #f5f5f5;
+        }
+
+        .control-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #888;
+            margin-bottom: 6px;
+        }
+        .control-label .material-icons-round {
+            font-size: 16px;
+            color: #aaa;
+        }
+
+        .control-value {
+            font-size: 22px;
+            font-weight: 300;
+            color: #1a1a1a;
+            letter-spacing: -0.2px;
+            line-height: 1.2;
+        }
+        .control-value .unit {
+            font-size: 13px;
+            font-weight: 400;
+            color: #999;
+            margin-left: 4px;
+        }
+
+        .control-bar {
+            margin-top: 8px;
+            height: 3px;
+            border-radius: 4px;
+            background: #e0e0e0;
+            overflow: hidden;
+            position: relative;
+        }
+        .control-bar .fill {
+            height: 100%;
+            border-radius: 4px;
+            background: #3b3b3b;
+            width: 0%;
+            transition: width 0.08s linear;
+        }
+
+        /* ─── Action Buttons ─── */
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border-radius: 40px;
+            border: none;
+            background: #f0f0f0;
+            color: #333;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            letter-spacing: 0.2px;
+        }
+        .btn:hover {
+            background: #e8e8e8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .btn-primary {
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #2a2a2a;
+        }
+        .btn-primary:active {
+            background: #0a0a0a;
+        }
+        .btn-primary.active {
+            background: #43a047;
+        }
+        .btn-primary.active:hover {
+            background: #388e3c;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #d0d0d0;
+        }
+        .btn-outline:hover {
+            background: #f5f5f5;
+            border-color: #bbb;
+        }
+        .btn .material-icons-round {
+            font-size: 20px;
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* ─── Voice & Status ─── */
+        .voice-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding-top: 12px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .voice-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #777;
+        }
+        .voice-indicator .wave {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            height: 20px;
+        }
+        .voice-indicator .wave span {
+            display: block;
+            width: 3px;
+            border-radius: 2px;
+            background: #ccc;
+            transition: height 0.1s ease, background 0.2s;
+            height: 6px;
+        }
+        .voice-indicator .wave span.active {
+            background: #43a047;
+        }
+        .voice-indicator .wave span:nth-child(1) {
+            height: 8px;
+        }
+        .voice-indicator .wave span:nth-child(2) {
+            height: 14px;
+        }
+        .voice-indicator .wave span:nth-child(3) {
+            height: 20px;
+        }
+        .voice-indicator .wave span:nth-child(4) {
+            height: 14px;
+        }
+        .voice-indicator .wave span:nth-child(5) {
+            height: 8px;
+        }
+
+        .voice-text {
+            font-size: 13px;
+            color: #999;
+            font-style: italic;
+            min-height: 1.4em;
+            flex: 1;
+            min-width: 120px;
+        }
+        .voice-text strong {
+            color: #333;
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 600px) {
+            .app {
+                padding: 16px;
+                border-radius: 20px;
+            }
+            .app-title {
+                font-size: 17px;
+            }
+            .app-title .badge {
+                font-size: 10px;
+                padding: 1px 10px;
+            }
+            .controls-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .control-card {
+                padding: 12px 12px 14px;
+            }
+            .control-value {
+                font-size: 18px;
+            }
+            .btn {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+            .status-badge {
+                font-size: 11px;
+                padding: 4px 12px 4px 10px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .controls-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .app-title .badge {
+                display: none;
+            }
+            .actions .btn span {
+                display: none;
+            }
+            .actions .btn .material-icons-round {
+                margin: 0;
+            }
+        }
+
+        /* ─── Scrollbar ─── */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d0d0d0;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app" id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="app-title">
+                <span class="material-icons-round">graphic_eq</span>
+                <strong>Body</strong>Synth
+                <span class="badge">v1</span>
+            </div>
+            <div class="status-badge" id="statusBadge">
+                <span class="dot" id="statusDot"></span>
+                <span id="statusLabel">Inicializando…</span>
+            </div>
+        </header>
+
+        <!-- Camera -->
+        <div class="camera-wrapper">
+            <video id="video" playsinline></video>
+            <canvas id="canvas"></canvas>
+            <div class="camera-placeholder" id="cameraPlaceholder">
+                <span class="material-icons-round">videocam_off</span>
+                <span>Conectando cámara…</span>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-grid" id="controlsGrid">
+            <div class="control-card">
+                <div class="control-label">
+                    <span class="material-icons-round">tune</span> Pitch
+                </div>
+                <div class="control-value" id="pitchValue">440 <span class="unit">Hz</span></div>
+                <div class="control-bar"><div class="fill" id="pitchFill" style="width:50%"></div></div>
+            </div>
+            <div class="control-card">
+                <div class="control-label">
+                    <span class="material-icons-round">volume_up</span> Volume
+                </div>
+                <div class="control-value" id="volumeValue">0.5 <span class="unit">dB</span></div>
+                <div class="control-bar"><div class="fill" id="volumeFill" style="width:50%"></div></div>
+            </div>
+            <div class="control-card">
+                <div class="control-label">
+                    <span class="material-icons-round">filter_tilt_shift</span> Filter
+                </div>
+                <div class="control-value" id="filterValue">2.0 <span class="unit">kHz</span></div>
+                <div class="control-bar"><div class="fill" id="filterFill" style="width:50%"></div></div>
+            </div>
+            <div class="control-card">
+                <div class="control-label">
+                    <span class="material-icons-round">speed</span> Tempo
+                </div>
+                <div class="control-value" id="tempoValue">90 <span class="unit">BPM</span></div>
+                <div class="control-bar"><div class="fill" id="tempoFill" style="width:50%"></div></div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn btn-primary" id="btnStart">
+                <span class="material-icons-round">play_arrow</span>
+                <span>Iniciar</span>
+            </button>
+            <button class="btn btn-outline" id="btnVoice">
+                <span class="material-icons-round">mic</span>
+                <span>Voice</span>
+            </button>
+            <button class="btn btn-outline" id="btnInstrument">
+                <span class="material-icons-round">music_note</span>
+                <span>Instrumento</span>
+            </button>
+            <button class="btn btn-outline" id="btnReset">
+                <span class="material-icons-round">refresh</span>
+                <span>Reset</span>
+            </button>
+        </div>
+
+        <!-- Voice & Status -->
+        <div class="voice-row">
+            <div class="voice-indicator">
+                <span class="material-icons-round" style="font-size:20px;color:#aaa">record_voice_over</span>
+                <div class="wave" id="voiceWave">
+                    <span></span><span></span><span></span><span></span><span></span>
+                </div>
+            </div>
+            <div class="voice-text" id="voiceText">🎤 <strong>Escuchando</strong> — di "iniciar", "parar", "más alto", "más bajo"...</div>
+        </div>
+    </div>
+
+    <!-- ─── MAIN APPLICATION ─── -->
+    <script type="module">
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  IMPORTS
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        import * as tf from '@tensorflow/tfjs';
+        import * as poseDetection from '@tensorflow-models/pose-detection';
+        import * as Tone from 'tone';
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  DOM REFS
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const placeholder = document.getElementById('cameraPlaceholder');
+
+        const statusDot = document.getElementById('statusDot');
+        const statusLabel = document.getElementById('statusLabel');
+
+        const pitchValue = document.getElementById('pitchValue');
+        const volumeValue = document.getElementById('volumeValue');
+        const filterValue = document.getElementById('filterValue');
+        const tempoValue = document.getElementById('tempoValue');
+
+        const pitchFill = document.getElementById('pitchFill');
+        const volumeFill = document.getElementById('volumeFill');
+        const filterFill = document.getElementById('filterFill');
+        const tempoFill = document.getElementById('tempoFill');
+
+        const btnStart = document.getElementById('btnStart');
+        const btnVoice = document.getElementById('btnVoice');
+        const btnInstrument = document.getElementById('btnInstrument');
+        const btnReset = document.getElementById('btnReset');
+
+        const voiceText = document.getElementById('voiceText');
+        const voiceWave = document.getElementById('voiceWave');
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  STATE
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        const STATE = {
+            isRunning: false,
+            isVoiceEnabled: false,
+            instrumentIndex: 0,
+            // mapped pose values (normalized 0–1)
+            pitch: 0.5, // right hand Y → frequency
+            volume: 0.5, // left hand Y → gain
+            filter: 0.5, // hand distance → cutoff
+            tempo: 0.5, // movement speed → tempo
+            // smoothed values
+            smoothPitch: 0.5,
+            smoothVolume: 0.5,
+            smoothFilter: 0.5,
+            smoothTempo: 0.5,
+            // movement history for tempo
+            prevKeypoints: null,
+            movementAccum: 0,
+            movementFrames: 0,
+            // audio
+            synth: null,
+            filterNode: null,
+            gainNode: null,
+            lfo: null,
+            isAudioReady: false,
+            // voice
+            recognition: null,
+            listening: false,
+        };
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  INSTRUMENTS (Tone.js patches)
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        const INSTRUMENTS = [
+            { name: 'Drone', desc: 'Sustained sine' },
+            { name: 'Pulse', desc: 'Soft pluck' },
+            { name: 'Bass', desc: 'Deep sub' },
+            { name: 'Lead', desc: 'Bright saw' },
+        ];
+
+        function createInstrument(index) {
+            const gain = new Tone.Gain(0.15).toDestination();
+            const filter = new Tone.Filter(1200, 'lowpass').connect(gain);
+
+            let synth;
+            switch (index) {
+                case 0: // Drone
+                    synth = new Tone.PolySynth(Tone.FMSynth, {
+                        harmonicity: 1.0,
+                        modulationIndex: 0.2,
+                        carrier: { type: 'sine' },
+                        modulation: { type: 'sine' },
+                        volume: -12,
+                    }).connect(filter);
+                    break;
+                case 1: // Pulse
+                    synth = new Tone.PolySynth(Tone.AMSynth, {
+                        harmonicity: 1.0,
+                        modulationType: 'sine',
+                        carrier: { type: 'sawtooth' },
+                        modulation: { type: 'sine' },
+                        volume: -10,
+                    }).connect(filter);
+                    break;
+                case 2: // Bass
+                    synth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'sawtooth' },
+                        envelope: { attack: 0.02, decay: 0.1, sustain: 0.6, release: 0.3 },
+                        volume: -8,
+                    }).connect(filter);
+                    break;
+                case 3: // Lead
+                default:
+                    synth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'square' },
+                        envelope: { attack: 0.01, decay: 0.05, sustain: 0.4, release: 0.2 },
+                        volume: -10,
+                    }).connect(filter);
+                    break;
+            }
+
+            return { synth, filter, gain };
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  AUDIO ENGINE
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        async function initAudio() {
+            if (STATE.isAudioReady) return;
+            await Tone.start();
+            // Start the audio context if suspended
+            if (Tone.context.state === 'suspended') {
+                await Tone.context.resume();
+            }
+            // Create initial instrument
+            const { synth, filter, gain } = createInstrument(STATE.instrumentIndex);
+            STATE.synth = synth;
+            STATE.filterNode = filter;
+            STATE.gainNode = gain;
+            STATE.isAudioReady = true;
+
+            // Set initial values
+            updateSynthParams(0.5, 0.5, 0.5);
+            // Start a soft drone
+            playNote(55); // A3
+        }
+
+        function updateSynthParams(pitch, volume, filter) {
+            if (!STATE.synth) return;
+            // Pitch: 55Hz – 880Hz (A3 – A5)
+            const freq = 55 + pitch * 825;
+            STATE.synth.setNote(freq, 0);
+
+            // Volume: -30dB to 0dB
+            const volDb = -30 + volume * 30;
+            if (STATE.gainNode) {
+                STATE.gainNode.gain.rampTo(0.15 * (0.2 + volume * 0.8), 0.05);
+            }
+
+            // Filter: 100Hz – 6000Hz
+            const cutoff = 100 + filter * 5900;
+            if (STATE.filterNode) {
+                STATE.filterNode.frequency.rampTo(cutoff, 0.05);
+            }
+        }
+
+        function playNote(freq) {
+            if (!STATE.synth) return;
+            try {
+                STATE.synth.triggerAttackRelease(freq, '1n');
+            } catch (_) { /* ignore */ }
+        }
+
+        function setInstrument(index) {
+            if (!STATE.isAudioReady) return;
+            // Clean up old
+            if (STATE.synth) {
+                try { STATE.synth.dispose(); } catch (_) {}
+            }
+            if (STATE.filterNode) {
+                try { STATE.filterNode.dispose(); } catch (_) {}
+            }
+            if (STATE.gainNode) {
+                try { STATE.gainNode.dispose(); } catch (_) {}
+            }
+            const { synth, filter, gain } = createInstrument(index);
+            STATE.synth = synth;
+            STATE.filterNode = filter;
+            STATE.gainNode = gain;
+            STATE.instrumentIndex = index;
+            // Re-apply current params
+            updateSynthParams(STATE.smoothPitch, STATE.smoothVolume, STATE.smoothFilter);
+            playNote(55 + STATE.smoothPitch * 440);
+        }
+
+        function toggleAudio(enable) {
+            if (enable) {
+                if (!STATE.isAudioReady) initAudio();
+                else if (Tone.context.state === 'suspended') Tone.context.resume();
+                STATE.isRunning = true;
+                btnStart.innerHTML =
+                    `<span class="material-icons-round">stop</span><span>Detener</span>`;
+                btnStart.classList.add('active');
+                setStatus('active', 'Sonando');
+            } else {
+                STATE.isRunning = false;
+                if (STATE.synth) {
+                    try { STATE.synth.triggerRelease(); } catch (_) {}
+                }
+                btnStart.innerHTML =
+                    `<span class="material-icons-round">play_arrow</span><span>Iniciar</span>`;
+                btnStart.classList.remove('active');
+                setStatus('ready', 'En pausa');
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  POSE DETECTION
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        let detector = null;
+        let detectionRunning = false;
+        let lastTimestamp = performance.now();
+
+        // Keypoint indices for MoveNet
+        const KEYPOINTS = {
+            nose: 0,
+            leftEye: 1,
+            rightEye: 2,
+            leftEar: 3,
+            rightEar: 4,
+            leftShoulder: 5,
+            rightShoulder: 6,
+            leftElbow: 7,
+            rightElbow: 8,
+            leftWrist: 9,
+            rightWrist: 10,
+            leftHip: 11,
+            rightHip: 12,
+            leftKnee: 13,
+            rightKnee: 14,
+            leftAnkle: 15,
+            rightAnkle: 16,
+        };
+
+        async function initPoseDetection() {
+            try {
+                setStatus('ready', 'Cargando modelo…');
+
+                // Load the MoveNet model
+                detector = await poseDetection.createDetector(
+                    poseDetection.SupportedModels.MoveNet, {
+                        modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
+                        enableSmoothing: true,
+                        minPoseScore: 0.3,
+                    }
+                );
+
+                setStatus('ready', 'Modelo listo');
+                return true;
+            } catch (err) {
+                console.error('Pose detection init error:', err);
+                setStatus('inactive', 'Error: ' + err.message);
+                return false;
+            }
+        }
+
+        function getKeypoint(pose, name) {
+            const idx = KEYPOINTS[name];
+            if (!pose || !pose.keypoints || idx === undefined) return null;
+            const kp = pose.keypoints[idx];
+            if (!kp || kp.score < 0.3) return null;
+            return kp;
+        }
+
+        function distance(p1, p2) {
+            if (!p1 || !p2) return 0;
+            const dx = p1.x - p2.x;
+            const dy = p1.y - p2.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function mapRange(val, inMin, inMax, outMin, outMax) {
+            if (inMax === inMin) return (outMin + outMax) / 2;
+            const t = (val - inMin) / (inMax - inMin);
+            return Math.max(outMin, Math.min(outMax, outMin + t * (outMax - outMin)));
+        }
+
+        function processPose(pose, timestamp) {
+            if (!pose || !pose.keypoints) return;
+
+            // Get keypoints
+            const rightWrist = getKeypoint(pose, 'rightWrist');
+            const leftWrist = getKeypoint(pose, 'leftWrist');
+            const rightShoulder = getKeypoint(pose, 'rightShoulder');
+            const leftShoulder = getKeypoint(pose, 'leftShoulder');
+            const rightHip = getKeypoint(pose, 'rightHip');
+            const leftHip = getKeypoint(pose, 'leftHip');
+            const nose = getKeypoint(pose, 'nose');
+
+            // ── Pitch: right wrist Y (relative to shoulder–hip) ──
+            let pitchVal = 0.5;
+            if (rightWrist && rightShoulder && rightHip) {
+                const shoulderY = rightShoulder.y;
+                const hipY = rightHip.y;
+                const range = hipY - shoulderY;
+                if (range > 0) {
+                    pitchVal = mapRange(rightWrist.y, shoulderY, hipY, 0.05, 0.95);
+                }
+            } else if (rightWrist && nose) {
+                // fallback: relative to nose
+                pitchVal = mapRange(rightWrist.y, nose.y - 0.2, nose.y + 0.3, 0.95, 0.05);
+            }
+            pitchVal = Math.max(0.0, Math.min(1.0, pitchVal));
+
+            // ── Volume: left wrist Y ──
+            let volVal = 0.5;
+            if (leftWrist && leftShoulder && leftHip) {
+                const shoulderY = leftShoulder.y;
+                const hipY = leftHip.y;
+                const range = hipY - shoulderY;
+                if (range > 0) {
+                    volVal = mapRange(leftWrist.y, shoulderY, hipY, 0.95, 0.05);
+                }
+            } else if (leftWrist && nose) {
+                volVal = mapRange(leftWrist.y, nose.y - 0.2, nose.y + 0.3, 0.95, 0.05);
+            }
+            volVal = Math.max(0.0, Math.min(1.0, volVal));
+
+            // ── Filter: distance between wrists ──
+            let filterVal = 0.5;
+            if (rightWrist && leftWrist) {
+                const d = distance(rightWrist, leftWrist);
+                // normalize by shoulder width
+                let shoulderWidth = 0.3;
+                if (rightShoulder && leftShoulder) {
+                    shoulderWidth = distance(rightShoulder, leftShoulder) || 0.3;
+                }
+                filterVal = mapRange(d, 0, shoulderWidth * 1.8, 0.0, 1.0);
+            }
+            filterVal = Math.max(0.0, Math.min(1.0, filterVal));
+
+            // ── Tempo: movement speed ──
+            let tempoVal = 0.5;
+            const currentKeypoints = pose.keypoints.map(kp => ({ x: kp.x, y: kp.y }));
+            if (STATE.prevKeypoints) {
+                let totalMovement = 0;
+                let count = 0;
+                for (let i = 0; i < Math.min(currentKeypoints.length, STATE.prevKeypoints.length); i++) {
+                    if (currentKeypoints[i] && STATE.prevKeypoints[i]) {
+                        const d = distance(currentKeypoints[i], STATE.prevKeypoints[i]);
+                        totalMovement += d;
+                        count++;
+                    }
+                }
+                if (count > 0) {
+                    const avgMovement = totalMovement / count;
+                    const dt = (timestamp - lastTimestamp) / 1000;
+                    const speed = avgMovement / Math.max(dt, 0.05);
+                    // Map speed to 0–1 (empirical)
+                    tempoVal = mapRange(speed, 0.002, 0.06, 0.0, 1.0);
+                    tempoVal = Math.max(0.0, Math.min(1.0, tempoVal));
+                }
+            }
+            STATE.prevKeypoints = currentKeypoints;
+            lastTimestamp = timestamp;
+
+            // ── Smoothing (exponential) ──
+            const alpha = 0.35;
+            STATE.smoothPitch = STATE.smoothPitch + alpha * (pitchVal - STATE.smoothPitch);
+            STATE.smoothVolume = STATE.smoothVolume + alpha * (volVal - STATE.smoothVolume);
+            STATE.smoothFilter = STATE.smoothFilter + alpha * (filterVal - STATE.smoothFilter);
+            STATE.smoothTempo = STATE.smoothTempo + alpha * (tempoVal - STATE.smoothTempo);
+
+            // Clamp
+            STATE.smoothPitch = Math.max(0, Math.min(1, STATE.smoothPitch));
+            STATE.smoothVolume = Math.max(0, Math.min(1, STATE.smoothVolume));
+            STATE.smoothFilter = Math.max(0, Math.min(1, STATE.smoothFilter));
+            STATE.smoothTempo = Math.max(0, Math.min(1, STATE.smoothTempo));
+
+            // ── Update UI ──
+            updateControls();
+
+            // ── Update audio ──
+            if (STATE.isRunning && STATE.isAudioReady) {
+                updateSynthParams(STATE.smoothPitch, STATE.smoothVolume, STATE.smoothFilter);
+                // Trigger a note based on tempo
+                const bpm = 60 + STATE.smoothTempo * 120;
+                const interval = 60 / bpm;
+                // We'll trigger notes in the animation loop with a simple gate
+            }
+
+            // ── Draw skeleton ──
+            drawSkeleton(pose);
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  DRAWING
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function drawSkeleton(pose) {
+            const rect = canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            ctx.scale(dpr, dpr);
+
+            // Clear with transparent
+            ctx.clearRect(0, 0, rect.width, rect.height);
+
+            if (!pose || !pose.keypoints) return;
+
+            const w = rect.width;
+            const h = rect.height;
+
+            // Draw connections
+            const connections = [
+                ['nose', 'leftEye'],
+                ['nose', 'rightEye'],
+                ['leftEye', 'leftEar'],
+                ['rightEye', 'rightEar'],
+                ['leftShoulder', 'rightShoulder'],
+                ['leftShoulder', 'leftElbow'],
+                ['leftElbow', 'leftWrist'],
+                ['rightShoulder', 'rightElbow'],
+                ['rightElbow', 'rightWrist'],
+                ['leftShoulder', 'leftHip'],
+                ['rightShoulder', 'rightHip'],
+                ['leftHip', 'rightHip'],
+                ['leftHip', 'leftKnee'],
+                ['leftKnee', 'leftAnkle'],
+                ['rightHip', 'rightKnee'],
+                ['rightKnee', 'rightAnkle'],
+            ];
+
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+            ctx.shadowColor = 'rgba(0,0,0,0.2)';
+            ctx.shadowBlur = 6;
+
+            for (const [a, b] of connections) {
+                const p1 = getKeypoint(pose, a);
+                const p2 = getKeypoint(pose, b);
+                if (p1 && p2) {
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x * w, p1.y * h);
+                    ctx.lineTo(p2.x * w, p2.y * h);
+                    ctx.stroke();
+                }
+            }
+
+            // Draw keypoints
+            ctx.shadowBlur = 8;
+            for (const kp of pose.keypoints) {
+                if (kp.score < 0.3) continue;
+                const x = kp.x * w;
+                const y = kp.y * h;
+
+                // Glow
+                const grad = ctx.createRadialGradient(x, y, 0, x, y, 14);
+                grad.addColorStop(0, 'rgba(67, 160, 71, 0.7)');
+                grad.addColorStop(0.5, 'rgba(67, 160, 71, 0.2)');
+                grad.addColorStop(1, 'rgba(67, 160, 71, 0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(x, y, 14, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Dot
+                ctx.shadowBlur = 4;
+                ctx.fillStyle = '#43a047';
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Inner highlight
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.beginPath();
+                ctx.arc(x - 1.5, y - 1.5, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.shadowBlur = 0;
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  UI UPDATES
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function updateControls() {
+            const p = STATE.smoothPitch;
+            const v = STATE.smoothVolume;
+            const f = STATE.smoothFilter;
+            const t = STATE.smoothTempo;
+
+            // Pitch: 55–880 Hz
+            const freq = 55 + p * 825;
+            pitchValue.innerHTML = `${Math.round(freq)} <span class="unit">Hz</span>`;
+            pitchFill.style.width = (p * 100) + '%';
+
+            // Volume: -30–0 dB
+            const volDb = -30 + v * 30;
+            volumeValue.innerHTML = `${Math.round(volDb)} <span class="unit">dB</span>`;
+            volumeFill.style.width = (v * 100) + '%';
+
+            // Filter: 100–6000 Hz
+            const cutoff = 100 + f * 5900;
+            filterValue.innerHTML = `${Math.round(cutoff / 100) * 100} <span class="unit">Hz</span>`;
+            filterFill.style.width = (f * 100) + '%';
+
+            // Tempo: 60–180 BPM
+            const bpm = 60 + t * 120;
+            tempoValue.innerHTML = `${Math.round(bpm)} <span class="unit">BPM</span>`;
+            tempoFill.style.width = (t * 100) + '%';
+        }
+
+        function setStatus(state, label) {
+            statusDot.className = 'dot';
+            if (state === 'active') {
+                statusDot.classList.add('active');
+            } else if (state === 'ready') {
+                statusDot.classList.add('ready');
+            }
+            statusLabel.textContent = label;
+        }
+
+        function setVoiceWave(active) {
+            const bars = voiceWave.querySelectorAll('span');
+            bars.forEach((bar, i) => {
+                if (active) {
+                    const h = 6 + Math.random() * 18;
+                    bar.style.height = h + 'px';
+                    bar.classList.add('active');
+                } else {
+                    bar.style.height = (6 + i * 3) + 'px';
+                    bar.classList.remove('active');
+                }
+            });
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  VOICE COMMANDS (Web Speech API)
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        function initVoice() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                voiceText.textContent = '❌ Web Speech API no soportada';
+                return false;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            STATE.recognition = new SpeechRecognition();
+            STATE.recognition.lang = 'es-ES';
+            STATE.recognition.continuous = true;
+            STATE.recognition.interimResults = true;
+            STATE.recognition.maxAlternatives = 1;
+
+            STATE.recognition.onstart = () => {
+                STATE.listening = true;
+                btnVoice.style.background = '#e8f5e9';
+                btnVoice.style.borderColor = '#43a047';
+                voiceText.innerHTML = '🎤 <strong>Escuchando</strong> …';
+                setVoiceWave(true);
+            };
+
+            STATE.recognition.onend = () => {
+                STATE.listening = false;
+                btnVoice.style.background = '';
+                btnVoice.style.borderColor = '';
+                setVoiceWave(false);
+                if (STATE.isVoiceEnabled) {
+                    // Restart if still enabled
+                    try { STATE.recognition.start(); } catch (_) {}
+                } else {
+                    voiceText.innerHTML = '🎤 <strong>Voice</strong> — di "iniciar", "parar", "más alto"...';
+                }
+            };
+
+            STATE.recognition.onerror = (e) => {
+                console.warn('Voice error:', e.error);
+                if (e.error === 'not-allowed') {
+                    voiceText.textContent = '❌ Permiso de micrófono denegado';
+                    STATE.isVoiceEnabled = false;
+                    btnVoice.style.background = '';
+                    btnVoice.style.borderColor = '';
+                    setVoiceWave(false);
+                }
+            };
+
+            STATE.recognition.onresult = (event) => {
+                let final = '';
+                let interim = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript.toLowerCase().trim();
+                    if (event.results[i].isFinal) {
+                        final = transcript;
+                    } else {
+                        interim = transcript;
+                    }
+                }
+                const text = final || interim;
+                if (text) {
+                    voiceText.innerHTML = `🎤 <strong>Dijiste:</strong> "${text}"`;
+                    processVoiceCommand(text);
+                }
+            };
+
+            return true;
+        }
+
+        function processVoiceCommand(text) {
+            const lower = text.toLowerCase();
+
+            // Start / Stop
+            if (lower.includes('iniciar') || lower.includes('empezar') || lower.includes('play')) {
+                if (!STATE.isRunning) {
+                    toggleAudio(true);
+                    voiceText.innerHTML = '🎤 ✅ <strong>Iniciado</strong>';
+                }
+                return;
+            }
+            if (lower.includes('parar') || lower.includes('detener') || lower.includes('stop') || lower.includes(
+                    'pausa')) {
+                if (STATE.isRunning) {
+                    toggleAudio(false);
+                    voiceText.innerHTML = '🎤 ⏸️ <strong>Detenido</strong>';
+                }
+                return;
+            }
+
+            // Volume
+            if (lower.includes('más alto') || lower.includes('sube') || lower.includes('volumen')) {
+                STATE.smoothVolume = Math.min(1, STATE.smoothVolume + 0.15);
+                updateControls();
+                if (STATE.isRunning && STATE.isAudioReady) {
+                    updateSynthParams(STATE.smoothPitch, STATE.smoothVolume, STATE.smoothFilter);
+                }
+                voiceText.innerHTML = '🎤 🔊 <strong>Volumen +</strong>';
+                return;
+            }
+            if (lower.includes('más bajo') || lower.includes('baja') || lower.includes('bajo')) {
+                STATE.smoothVolume = Math.max(0, STATE.smoothVolume - 0.15);
+                updateControls();
+                if (STATE.isRunning && STATE.isAudioReady) {
+                    updateSynthParams(STATE.smoothPitch, STATE.smoothVolume, STATE.smoothFilter);
+                }
+                voiceText.innerHTML = '🎤 🔉 <strong>Volumen −</strong>';
+                return;
+            }
+
+            // Pitch
+            if (lower.includes('más agudo') || lower.includes('agudo') || lower.includes('subir tono')) {
+                STATE.smoothPitch = Math.min(1, STATE.smoothPitch + 0.15);
+                updateControls();
+                if (STATE.isRunning && STATE.isAudioReady) {
+                    updateSynthParams(STATE.smoothPitch, STATE.smoothVolume, STATE.smoothFilter);
+                }
+                voiceText.innerHTML = '🎤 ⬆️ <strong>Tono +</strong>';
+                return;
+            }
+            if (lower.includes('más grave') || lower.includes('grave') || lower.includes('bajar tono')) {
+                STATE.smoothPitch = Math.max(0, STATE.smoothPitch - 0.15);
+                updateControls();
+                if (STATE.isRunning && STATE.isAudioReady) {
+                    updateSynthParams(STATE.smoothPitch, STATE.smoothVolume, STATE.smoothFilter);
+                }
+                voiceText.innerHTML = '🎤 ⬇️ <strong>Tono −</strong>';
+                return;
+            }
+
+            // Instrument
+            if (lower.includes('instrumento') || lower.includes('cambiar') || lower.includes('sonido')) {
+                const next = (STATE.instrumentIndex + 1) % INSTRUMENTS.length;
+                STATE.instrumentIndex = next;
+                if (STATE.isAudioReady) {
+                    setInstrument(next);
+                }
+                voiceText.innerHTML = `🎤 🎵 <strong>${INSTRUMENTS[next].name}</strong>`;
+                return;
+            }
+
+            // Reset
+            if (lower.includes('reset') || lower.includes('reiniciar') || lower.includes('restaurar')) {
+                STATE.smoothPitch = 0.5;
+                STATE.smoothVolume = 0.5;
+                STATE.smoothFilter = 0.5;
+                STATE.smoothTempo = 0.5;
+                updateControls();
+                if (STATE.isRunning && STATE.isAudioReady) {
+                    updateSynthParams(STATE.smoothPitch, STATE.smoothVolume, STATE.smoothFilter);
+                }
+                voiceText.innerHTML = '🎤 🔄 <strong>Reset</strong>';
+                return;
+            }
+
+            // Help
+            if (lower.includes('ayuda') || lower.includes('help') || lower.includes('qué')) {
+                voiceText.innerHTML =
+                    '🎤 📋 <strong>Comandos:</strong> iniciar, parar, más alto, más bajo, más agudo, más grave, instrumento, reset';
+                return;
+            }
+        }
+
+        function toggleVoice() {
+            if (!STATE.recognition) {
+                const ok = initVoice();
+                if (!ok) return;
+            }
+            STATE.isVoiceEnabled = !STATE.isVoiceEnabled;
+            if (STATE.isVoiceEnabled) {
+                try {
+                    STATE.recognition.start();
+                    btnVoice.innerHTML =
+                        `<span class="material-icons-round">mic</span><span>Voice ON</span>`;
+                    btnVoice.style.borderColor = '#43a047';
+                } catch (e) {
+                    STATE.isVoiceEnabled = false;
+                    btnVoice.innerHTML =
+                        `<span class="material-icons-round">mic_off</span><span>Voice</span>`;
+                    btnVoice.style.borderColor = '';
+                    voiceText.textContent = '❌ Error al activar micrófono';
+                }
+            } else {
+                try { STATE.recognition.stop(); } catch (_) {}
+                btnVoice.innerHTML =
+                    `<span class="material-icons-round">mic</span><span>Voice</span>`;
+                btnVoice.style.borderColor = '';
+                setVoiceWave(false);
+                voiceText.innerHTML = '🎤 <strong>Voice</strong> — di "iniciar", "parar", "más alto"...';
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  MAIN LOOP
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        let animationId = null;
+        let lastPoseTime = 0;
+        const POSE_INTERVAL = 80; // ms between pose detections
+
+        async function mainLoop(timestamp) {
+            animationId = requestAnimationFrame(mainLoop);
+
+            if (!detectionRunning) return;
+            if (!detector) return;
+            if (video.readyState < 2) return;
+
+            if (timestamp - lastPoseTime < POSE_INTERVAL) return;
+            lastPoseTime = timestamp;
+
+            try {
+                const poses = await detector.estimatePoses(video);
+                if (poses && poses.length > 0 && poses[0].keypoints) {
+                    processPose(poses[0], timestamp);
+                } else {
+                    // No pose detected — show placeholder
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            } catch (err) {
+                // Silent fail on detection errors
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  CAMERA SETUP (WebRTC)
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        async function setupCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                    audio: false,
+                });
+                video.srcObject = stream;
+                await video.play();
+
+                // Set canvas size to match video
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+
+                placeholder.classList.add('hidden');
+                setStatus('ready', 'Cámara lista');
+                return true;
+            } catch (err) {
+                console.error('Camera error:', err);
+                placeholder.innerHTML = `
+                    <span class="material-icons-round">error</span>
+                    <span>No se pudo acceder a la cámara</span>
+                    <span style="font-size:12px;color:#bbb;">${err.message}</span>
+                `;
+                setStatus('inactive', 'Error de cámara');
+                return false;
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  BUTTON HANDLERS
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        btnStart.addEventListener('click', async () => {
+            if (!STATE.isAudioReady) {
+                await initAudio();
+            }
+            toggleAudio(!STATE.isRunning);
+        });
+
+        btnVoice.addEventListener('click', toggleVoice);
+
+        btnInstrument.addEventListener('click', () => {
+            const next = (STATE.instrumentIndex + 1) % INSTRUMENTS.length;
+            STATE.instrumentIndex = next;
+            if (STATE.isAudioReady) {
+                setInstrument(next);
+            }
+            voiceText.innerHTML = `🎵 <strong>${INSTRUMENTS[next].name}</strong>`;
+            // Update button with instrument name briefly
+            btnInstrument.innerHTML =
+                `<span class="material-icons-round">music_note</span><span>${INSTRUMENTS[next].name}</span>`;
+            setTimeout(() => {
+                btnInstrument.innerHTML =
+                    `<span class="material-icons-round">music_note</span><span>Instrumento</span>`;
+            }, 1200);
+        });
+
+        btnReset.addEventListener('click', () => {
+            STATE.smoothPitch = 0.5;
+            STATE.smoothVolume = 0.5;
+            STATE.smoothFilter = 0.5;
+            STATE.smoothTempo = 0.5;
+            updateControls();
+            if (STATE.isRunning && STATE.isAudioReady) {
+                updateSynthParams(STATE.smoothPitch, STATE.smoothVolume, STATE.smoothFilter);
+            }
+            voiceText.innerHTML = '🔄 <strong>Reset</strong> — valores por defecto';
+        });
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  INIT
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        async function init() {
+            // 1. Camera
+            const camOk = await setupCamera();
+            if (!camOk) {
+                setStatus('inactive', 'Cámara no disponible');
+                return;
+            }
+
+            // 2. Pose detection
+            const poseOk = await initPoseDetection();
+            if (!poseOk) {
+                setStatus('inactive', 'Error en modelo');
+                return;
+            }
+
+            // 3. Audio (lazy init on first click)
+            // We'll init audio on first interaction
+
+            // 4. Voice (lazy init on button click)
+
+            // 5. Start detection loop
+            detectionRunning = true;
+            lastPoseTime = performance.now();
+            animationId = requestAnimationFrame(mainLoop);
+
+            setStatus('ready', 'Listo — presiona Iniciar');
+            btnStart.disabled = false;
+
+            // Show initial controls
+            updateControls();
+
+            // Auto-start audio on first user interaction via click on the page
+            const startOnInteraction = async () => {
+                if (!STATE.isAudioReady) {
+                    await initAudio();
+                    // Start with a soft sound
+                    if (STATE.synth) {
+                        playNote(55);
+                    }
+                }
+                document.removeEventListener('click', startOnInteraction);
+                document.removeEventListener('touchstart', startOnInteraction);
+            };
+            document.addEventListener('click', startOnInteraction);
+            document.addEventListener('touchstart', startOnInteraction);
+
+            console.log('🎵 Body Synth initialized');
+            console.log(`📷 Camera: ${camOk ? 'OK' : 'FAIL'}`);
+            console.log(`🧠 Pose: ${poseOk ? 'OK' : 'FAIL'}`);
+        }
+
+        // ── Handle resize ──
+        window.addEventListener('resize', () => {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        });
+
+        // ── Start ──
+        init().catch(err => {
+            console.error('Init error:', err);
+            setStatus('inactive', 'Error: ' + err.message);
+        });
+
+        // ── Expose for debugging ──
+        window.__STATE = STATE;
+
+        console.log('%c🎵 Body Synth', 'font-size:24px;font-weight:bold;');
+        console.log('%cMove your body to make music!', 'font-size:14px;color:#666;');
+        console.log('📖 Comandos de voz: iniciar, parar, más alto, más bajo, más agudo, más grave, instrumento, reset');
+    </script>
+</body>
+</html>
