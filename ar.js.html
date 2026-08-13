@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR.js Video Overlay</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        .arjs-loader {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .arjs-loader div {
+            text-align: center;
+            font-size: 1.25rem;
+            color: white;
+        }
+        .arjs-loader img {
+            max-width: 50%;
+            animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body style="margin: 0; overflow: hidden;">
+    <div class="arjs-loader">
+        <div>
+            <img src="https://arjs-cors-proxy.herokuapp.com/https://raw.githubusercontent.com/nicolocarpignoli/nicolocarpignoli.github.io/master/ar-playground/assets/loading.gif" alt="Loading indicator">
+            <p>Initializing AR...<br>Please allow camera access when prompted</p>
+        </div>
+    </div>
+
+    <a-scene
+        vr-mode-ui="enabled: false"
+        arjs="sourceType: webcam; debugUIEnabled: false;"
+        renderer="logarithmicDepthBuffer: true;"
+    >
+        <!-- Marker-based AR -->
+        <a-marker preset="hiro">
+            <a-video 
+                src="https://raw.githack.com/AR-js-org/AR.js/master/data/video.mp4" 
+                width="4" 
+                height="3" 
+                rotation="-90 0 0"
+                position="0 0 0.5"
+            ></a-video>
+        </a-marker>
+        
+        <!-- Alternative marker using custom pattern -->
+        <a-entity visible="false">
+            <a-marker type="pattern" url="https://raw.githack.com/AR-js-org/AR.js/master/data/pattern-marker/pattern-hiro.patt">
+                <a-video 
+                    src="https://raw.githack.com/AR-js-org/AR.js/master/data/video.mp4" 
+                    width="4" 
+                    height="3" 
+                    rotation="-90 0 0"
+                    position="0 0 0.5"
+                ></a-video>
+            </a-marker>
+        </a-entity>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        // Remove loader when scene is loaded
+        document.querySelector('a-scene').addEventListener('loaded', function() {
+            document.querySelector('.arjs-loader').style.display = 'none';
+        });
+
+        // Handle camera permissions
+        navigator.mediaDevices.getUserMedia({video: true})
+            .then(stream => {
+                stream.getTracks().forEach(track => track.stop());
+            })
+            .catch(err => {
+                console.error("Camera error:", err);
+                alert("Camera access is required for AR functionality.");
+            });
+    </script>
+</body>
+</html>
