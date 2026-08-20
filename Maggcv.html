@@ -1,1 +1,411 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Dinámico - Margarita Pérez Martínez</title>
+    
+    <!-- 1. Inclusión de Roboto Flex -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght@8..144,100,100..1000&display=swap" rel="stylesheet">
+    
+    <!-- 2. Librería oficial de Google para Color Dinámico -->
+    <script src="https://cdn.jsdelivr.net/npm/@material/material-color-utilities@0.3.0"></script>
+
+    <style>
+        :root {
+            /* Variables CSS para el Tema MD3 (Serán reemplazadas por JS) */
+            --md-sys-color-primary: #6750A4;
+            --md-sys-color-on-primary: #FFFFFF;
+            --md-sys-color-primary-container: #EADDFF;
+            --md-sys-color-on-primary-container: #21005D;
+            --md-sys-color-secondary: #625B71;
+            --md-sys-color-on-secondary: #FFFFFF;
+            --md-sys-color-secondary-container: #E8DEF8;
+            --md-sys-color-surface: #FFFBFF;
+            --md-sys-color-surface-variant: #E7E0EC;
+            --md-sys-color-outline: #79747E;
+            --md-sys-color-on-surface: #1D1B20;
+            --md-sys-color-background: #FFFBFF;
+            --md-sys-color-shadow: #000000;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Roboto Flex', sans-serif;
+            background-color: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-surface);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+            font-optical-sizing: auto;
+        }
+
+        .cv-container {
+            max-width: 800px;
+            width: 100%;
+            background-color: var(--md-sys-color-surface);
+            border-radius: 24px;
+            box-shadow: 0px 4px 20px var(--md-sys-color-shadow);
+            overflow: hidden;
+            position: relative;
+            padding-bottom: 80px;
+        }
+
+        /* TOP APP BAR & AVATAR */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 32px 32px 24px 32px;
+            background-color: var(--md-sys-color-surface-variant);
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--md-sys-color-surface);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .header-text h1 {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .header-text p {
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--md-sys-color-on-surface-variant);
+            margin-top: 4px;
+        }
+
+        /* INTERFACE: TABS */
+        .tabs {
+            display: flex;
+            padding: 0 16px;
+            border-bottom: 1px solid var(--md-sys-color-outline);
+            overflow-x: auto; /* Para móviles */
+        }
+
+        .tab {
+            padding: 16px 24px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface-variant);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .tab.active {
+            color: var(--md-sys-color-primary);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--md-sys-color-primary);
+        }
+
+        /* INTERFACE: CARDS, LISTS, CHIPS */
+        .content {
+            padding: 24px 32px;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        .section.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card {
+            background-color: var(--md-sys-color-surface-variant);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0px 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card-title {
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .list-item {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .list-item:last-child { border-bottom: none; }
+
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            padding: 6px 16px;
+            border-radius: 20px;
+            background-color: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .card ul {
+            margin-left: 20px;
+            color: var(--md-sys-color-on-surface-variant);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .card ul li {
+            margin-bottom: 4px;
+        }
+
+        /* INTERFACE: FAB (Floating Action Button) */
+        .fab {
+            position: fixed;
+            bottom: 40px;
+            right: calc(50% - 400px); /* Centered relative to max-width container */
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background-color: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            border: none;
+            box-shadow: 0px 4px 12px var(--md-sys-color-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .fab:hover { transform: scale(1.05); }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header { flex-direction: column; text-align: center; }
+            .avatar { width: 80px; height: 80px; }
+            .fab { right: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cv-container">
+        <!-- Header: Avatar + Name -->
+        <div class="header">
+            <!-- CAMBIA EL SRC DE LA IMAGEN POR "profile.jpg" DE TU PC -->
+            <img src="Mag2.png" alt="Avatar" class="avatar" id="avatar-img" crossorigin="anonymous">
+            <div class="header-text">
+                <h1>Margarita Pérez Martínez</h1>
+                <p>Administradora de Condominios y Contadora | 31 años</p>
+            </div>
+        </div>
+
+        <!-- Tabs (Se agregó la pestaña Educación) -->
+        <div class="tabs">
+            <div class="tab active" onclick="showSection('about', this)">Sobre mí</div>
+            <div class="tab" onclick="showSection('experience', this)">Experiencia</div>
+            <div class="tab" onclick="showSection('skills', this)">Habilidades</div>
+            <div class="tab" onclick="showSection('education', this)">Educación</div>
+        </div>
+
+        <!-- Content Cards -->
+        <div class="content">
+            <!-- Section About -->
+            <div class="section active" id="about">
+                <div class="card">
+                    <p>Soy una persona responsable, proactiva y organizada, con gusto por la comunicación organizacional como herramienta para la resolución de conflictos y la creación de estrategias en los procesos administrativos. Disfruto del trabajo en equipo, la supervisión de personal y el aprendizaje continuo. Acepto con facilidad nuevos retos como oportunidad de crecimiento.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Contacto</div>
+                    <div class="list-item">📞 442 447 88 01</div>
+                    <div class="list-item">✉️ maggie.pemtz@gmail.com</div>
+                </div>
+            </div>
+
+            <!-- Section Experience -->
+            <div class="section" id="experience">
+                <div class="card">
+                    <div class="card-title">
+                        <span>Administradora de condominio</span>
+                        <span style="color: var(--md-sys-color-on-surface-variant); font-weight: 400;">2017 - 2024</span>
+                    </div>
+                    <p style="color: var(--md-sys-color-on-surface-variant); font-size: 14px; margin-bottom: 8px;">DESARROLLOS INMOBILIARIOS NOVA</p>
+                    <ul>
+                        <li>Facturación en sistema Enkontrol y cobranza de mantenimiento.</li>
+                        <li>Órdenes de compra en sistema Enkontrol.</li>
+                        <li>Nóminas (actualización de contratos individuales de trabajo) en sistema interno Peoplesoft.</li>
+                        <li>Pagos de servicios públicos, contratación y supervisión de proveedores.</li>
+                        <li>Dirección y supervisión de personal.</li>
+                        <li>Creación del departamento de administración de condominios.</li>
+                        <li>Presupuesto anual de mantenimiento y creación de nuevas asociaciones civiles.</li>
+                        <li>Implementación de sistema Sinergam para administrar propiedades.</li>
+                        <li>Informes financieros mensuales y aplicación de multas y recargos.</li>
+                        <li>Administración de condominios (Villa cañada, Villa del águila, Villa de rueda, etc.) y resolución de conflictos.</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title">
+                        <span>Auxiliar de auditoría</span>
+                        <span style="color: var(--md-sys-color-on-surface-variant); font-weight: 400;">2016 - 2017</span>
+                    </div>
+                    <p style="color: var(--md-sys-color-on-surface-variant); font-size: 14px; margin-bottom: 8px;">DEARONDO ITURRALDE</p>
+                    <ul>
+                        <li>Revisión de documentos, análisis de datos, asistencia en auditorias y elaboración de informes.</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title">
+                        <span>Almacenista</span>
+                        <span style="color: var(--md-sys-color-on-surface-variant); font-weight: 400;">2015 - 2016</span>
+                    </div>
+                    <p style="color: var(--md-sys-color-on-surface-variant); font-size: 14px; margin-bottom: 8px;">SEMINARIO CONCILIAR QUERÉTARO, QRO.</p>
+                    <ul>
+                        <li>Recepción de mercancías, organización del almacén y control de inventario en Excel.</li>
+                        <li>Preparación de pedidos, limpieza y apoyo al área de cocina en eventos.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section Skills -->
+            <div class="section" id="skills">
+                <div class="card">
+                    <div class="card-title">Competencias</div>
+                    <div class="chips-container">
+                        <span class="chip">Atención al cliente</span>
+                        <span class="chip">Liderazgo</span>
+                        <span class="chip">Resolución de problemas</span>
+                        <span class="chip">Gestión del tiempo</span>
+                        <span class="chip">Conocimientos técnicos</span>
+                        <span class="chip">Negociación</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Education (Nueva) -->
+            <div class="section" id="education">
+                <div class="card">
+                    <div class="card-title">
+                        <span>Licenciatura en Contabilidad</span>
+                        <span style="color: var(--md-sys-color-on-surface-variant); font-weight: 400;">2012 - 2017</span>
+                    </div>
+                    <p style="color: var(--md-sys-color-on-surface-variant); font-size: 14px;">CENTRO DE ESTUDIOS SUPERIORES DEL BAJÍO</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">
+                        <span>Diplomado en Planeación estratégica en contabilidad y financiera</span>
+                        <span style="color: var(--md-sys-color-on-surface-variant); font-weight: 400;">2024</span>
+                    </div>
+                    <p style="color: var(--md-sys-color-on-surface-variant); font-size: 14px;">UNIVERSIDAD (CESBA)</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">
+                        <span>Seminario en Grupo y equipo de trabajo</span>
+                        <span style="color: var(--md-sys-color-on-surface-variant); font-weight: 400;">2012</span>
+                    </div>
+                    <p style="color: var(--md-sys-color-on-surface-variant); font-size: 14px;">UNIDAD DE CAPACITACIÓN IECA - ACAMBARO GTO</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAB for Download/Contact 
+        <button class="fab" title="Descargar CV">
+            ⬇️
+        </button>-->
+    </div>
+
+    <script>
+        // Lógica de Tabs
+        function showSection(id, el) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            el.classList.add('active');
+        }
+
+        // Lógica de Color Dinámico MD3 (Extraer color de la imagen)
+        document.addEventListener("DOMContentLoaded", async () => {
+            const img = document.getElementById('avatar-img');
+            
+            // Esperar a que cargue la imagen para leer los pixeles
+            if(img.complete) applyDynamicColor(img);
+            else img.onload = () => applyDynamicColor(img);
+        });
+
+        async function applyDynamicColor(img) {
+            try {
+                // 1. Obtener el color fuente usando la librería de MD3
+                const sourceColor = await materialColorUtilities.sourceFromImage(img);
+                
+                // 2. Generar el Scheme (Esquema de colores) en modo Light (Claro)
+                const scheme = materialColorUtilities.schemeFromSource(sourceColor, 'light');
+                
+                // 3. Mapear el esquema de Google a las variables CSS del DOM
+                const root = document.documentElement;
+                
+                // Roles principales del MD3
+                const colorMap = {
+                    '--md-sys-color-primary': scheme.primary,
+                    '--md-sys-color-on-primary': scheme.onPrimary,
+                    '--md-sys-color-primary-container': scheme.primaryContainer,
+                    '--md-sys-color-on-primary-container': scheme.onPrimaryContainer,
+                    '--md-sys-color-secondary': scheme.secondary,
+                    '--md-sys-color-on-secondary': scheme.onSecondary,
+                    '--md-sys-color-secondary-container': scheme.secondaryContainer,
+                    '--md-sys-color-on-secondary-container': scheme.onSecondaryContainer,
+                    '--md-sys-color-surface': scheme.surface,
+                    '--md-sys-color-surface-variant': scheme.surfaceVariant,
+                    '--md-sys-color-outline': scheme.outline,
+                    '--md-sys-color-on-surface': scheme.onSurface,
+                    '--md-sys-color-on-surface-variant': scheme.onSurfaceVariant,
+                    '--md-sys-color-background': scheme.background,
+                    '--md-sys-color-shadow': scheme.shadow
+                };
+
+                // Función para convertir ARGB de MD3 a HEX puro (#RRGGBB) para CSS
+                const argbToHex = (argb) => {
+                    const r = (argb >> 16) & 0xFF;
+                    const g = (argb >> 8) & 0xFF;
+                    const b = argb & 0xFF;
+                    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+                };
+
+                // Aplicar los colores al DOM
+                for (const [varName, argbColor] of Object.entries(colorMap)) {
+                    root.style.setProperty(varName, argbToHex(argbColor));
+                }
+
+                console.log("¡Tema Dinámico MD3 aplicado correctamente!");
+
+            } catch (error) {
+                console.warn("No se pudo leer el color de la imagen automáticamente (puede ser por CORS). Usando tema por defecto.", error);
+                // Fallback a un tema corporativo si falla el análisis de la imagen
+                const root = document.documentElement;
+                root.style.setProperty('--md-sys-color-primary', '#0057a6');
+                root.style.setProperty('--md-sys-color-on-primary', '#ffffff');
+                root.style.setProperty('--md-sys-color-primary-container', '#d2e4ff');
+                root.style.setProperty('--md-sys-color-surface-variant', '#f2f6f9');
+            }
+        }
+    </script>
+</body>
+</html>
