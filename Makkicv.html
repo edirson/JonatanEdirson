@@ -14,7 +14,144 @@
     <style>
 
 /*BG_Generator*/
+        
+#body {
+            margin: 0;
+            padding: 0;
+            height: 200vh; /* Enable scrolling */
+            overflow-x: hidden;
+            font-family: Arial, sans-serif;
+        }
 
+        .animated-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+
+            /* CSS3 Gradient Animation */
+            background: linear-gradient(45deg, 
+                #FF5772
+, #4CB4BB, #FFC600, 
+                #8B6AE6
+, #2E0EC7, #FF9A9E);
+            background-size: 400% 400%;
+            
+            /* Primary animation */
+            animation: gradientShift 2.5s ease infinite,
+                       waveEffect 4s ease-in-out infinite alternate
+,
+                       flowDistort 6s linear infinite
+;
+        }
+
+        /* Keyframes for gradient shifting */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Wave-like movement effect */
+        @keyframes waveEffect {
+            0% { 
+                background-position: 0% 0%, 0% 0%;
+                transform: translate(0, 0) skew(0deg);
+            }
+            25% { 
+                background-position: 100% 50%, 100% 50%;
+                transform: translate(10px, 5px) skew(2deg);
+            }
+            50% { 
+                background-position: 50% 100%, 50% 100%;
+                transform: translate(-5px, 10px) skew(-1deg);
+            }
+            75% { 
+                background-position: 0% 0%, 0% 0%;
+                transform: translate(5px, -5px) skew(1deg);
+            }
+            100% { 
+                background-position: 100% 100%, 100% 100%;
+                transform: translate(-10px, -10px) skew(-2deg);
+            }
+        }
+
+        /* Flow distortion effect */
+        @keyframes flowDistort {
+            0% { filter: hue-rotate(0deg) saturate(1.7); }
+            25% { filter: hue-rotate(90deg) saturate(2.0); }
+            50% { filter: hue-rotate(180deg) saturate(1.5); }
+            75% { filter: hue-rotate(270deg) saturate(2.2); }
+            100% { filter: hue-rotate(360deg) saturate(1.7); }
+        }
+
+        /* Secondary gradient layer for complexity */
+        .animated-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                circle at center
+,
+                rgba(0, 63, 255, 0.4) 0%,
+                rgba(139, 106, 230, 0.3) 25%,
+                rgba(76, 180, 187, 0.2) 50%,
+                rgba(255, 154, 158, 0.1)
+ 100%
+            );
+            animation: radialPulse 8s ease-in-out infinite alternate,
+                       rotationEffect 12s linear infinite
+;
+        }
+
+        @keyframes radialPulse {
+            0% { opacity: 0.3; transform: scale(1); }
+            100% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        @keyframes rotationEffect {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Content styling */
+        .content {
+            position: relative;
+            z-index: 1;
+            padding: 50px 20px;
+            text-align: center;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Scroll effect simulation */
+        .scroll-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            z-index: 1;
+        }
 
         /*Makkicv_Styles*/
         
@@ -215,7 +352,7 @@
 
 
   
-<body>
+<body id="body">
 
 
     <div class="cv-container">
@@ -417,7 +554,40 @@
         }
     </script>
 
+<script>
 
+        
+<!-- Animated gradient background -->
+    <div class="animated-gradient" id="gradient"></div>
+    
+    <!-- Content -->
+    <div class="content">
+        <h1>CSS3 Animated Gradient Background</h1>
+        <p>This is a pure CSS3 implementation of an animated gradient background inspired by the NeatGradient configuration. The animation combines multiple techniques including gradient shifts, wave effects, flow distortions, and radial pulses to create a dynamic visual experience.</p>
+        <p>Scroll down to see the parallax-inspired effect!</p>
+    </div>
+    
+    <div class="scroll-indicator">Scroll to see parallax effect</div>
+
+    <script>
+        // Parallax effect on scroll
+        window
+.addEventListener('scroll', function() {
+            const scrollPosition = window.scrollY;
+            const gradient = document.getElementById('gradient');
+            
+            // Apply subtle parallax effect
+            gradient
+.style.transform = `
+translateY(${scrollPosition * 0.3}px)`;
+            
+            // Adjust animation parameters based on scroll
+            const progress = (scrollPosition % 1000) / 1000;
+            gradient.style.filter = `brightness(${1 + progress * 0.5}) contrast(
+${1 + progress * 0.2})`;
+        });
+    </script>
+</script>
   
 </body>
          
