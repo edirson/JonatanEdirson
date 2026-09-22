@@ -1,0 +1,1371 @@
+<!DOCTYPE html><!--PCT-Jonatan-Edirson-->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Producción Científica y Tecnológica · FI-UAQ 2021–2025</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:#05060f;color:#e6eefc;
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+    overflow:hidden;-webkit-font-smoothing:antialiased;
+  }
+  #scene{position:fixed;inset:0;z-index:0}
+  canvas{display:block}
+
+  /* ---------------- HUD ---------------- */
+  .hud{position:fixed;z-index:20}
+  #topbar{
+    top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;
+    gap:18px;padding:16px 22px;flex-wrap:wrap;pointer-events:none;
+  }
+  #topbar > *{pointer-events:auto}
+
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand .dot{
+    width:11px;height:11px;border-radius:50%;flex:0 0 auto;
+    background:#22d3ee;box-shadow:0 0 16px #22d3ee,0 0 42px rgba(34,211,238,.55);
+    animation:pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.7}}
+  .brand h1{font-size:14.5px;font-weight:700;margin:0;line-height:1.2;letter-spacing:-.01em}
+  .brand p{margin:3px 0 0;font-size:10.5px;color:#7f95b5;letter-spacing:.12em;text-transform:uppercase}
+
+  nav#nav{
+    display:flex;gap:4px;flex-wrap:wrap;
+    background:rgba(11,17,32,.62);
+    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+    border:1px solid rgba(120,180,255,.14);
+    padding:5px;border-radius:999px;
+    box-shadow:0 12px 40px rgba(0,0,0,.5);
+  }
+  nav#nav button{
+    background:transparent;border:0;color:#93a8c8;font:inherit;
+    font-size:12px;font-weight:600;letter-spacing:.01em;
+    padding:8px 15px;border-radius:999px;cursor:pointer;
+    transition:color .22s, background .22s, box-shadow .22s;
+    white-space:nowrap;
+  }
+  nav#nav button:hover{color:#fff;background:rgba(120,180,255,.10)}
+  nav#nav button.active{
+    color:#04121f;
+    background:linear-gradient(135deg,#7dd3fc,#22d3ee 55%,#5eead4);
+    box-shadow:0 0 22px rgba(34,211,238,.5);
+  }
+
+  .glass{
+    background:linear-gradient(180deg,rgba(12,20,36,.82),rgba(8,13,24,.86));
+    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+    border:1px solid rgba(120,180,255,.14);
+    border-radius:16px;
+    box-shadow:0 18px 50px rgba(0,0,0,.55);
+  }
+
+  #legend{left:22px;bottom:22px;padding:14px 16px;max-width:290px}
+  #legend h3,#stats h3{
+    margin:0 0 9px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#6f86a8;font-weight:700;
+  }
+  #legend .row{display:flex;align-items:center;gap:9px;font-size:11.5px;color:#c3d6ef;margin:6px 0;line-height:1.35}
+  #legend .sw{width:11px;height:11px;border-radius:3px;flex:0 0 auto;box-shadow:0 0 12px currentColor}
+
+  #stats{right:22px;bottom:22px;padding:14px 16px;min-width:212px}
+  #stats .row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;margin:7px 0}
+  #stats .k{font-size:11px;color:#8ba2c2;line-height:1.3}
+  #stats .v{font-size:15px;font-weight:800;color:#7de3f4;letter-spacing:-.02em;white-space:nowrap}
+
+  #infoBtn{
+    right:22px;top:22px;width:38px;height:38px;border-radius:50%;
+    border:1px solid rgba(120,180,255,.2);background:rgba(11,17,32,.7);
+    color:#9fd0ff;font-weight:800;font-size:14px;cursor:pointer;
+    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+    transition:.25s;font-family:Georgia,serif;font-style:italic;
+  }
+  #infoBtn:hover{color:#fff;border-color:rgba(94,234,212,.6);box-shadow:0 0 22px rgba(34,211,238,.35)}
+
+  #infoPanel{
+    right:22px;top:70px;width:330px;padding:18px;max-height:calc(100vh - 130px);
+    overflow:auto;opacity:0;pointer-events:none;transform:translateY(-8px);
+    transition:opacity .3s, transform .3s;
+  }
+  #infoPanel.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+  #infoPanel h2{margin:0 0 4px;font-size:13.5px;font-weight:700;color:#e6eefc}
+  #infoPanel .sub{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#6f86a8;margin-bottom:12px}
+  #infoPanel dl{margin:0;font-size:11.5px;line-height:1.5}
+  #infoPanel dt{color:#7de3f4;font-weight:700;margin-top:11px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase}
+  #infoPanel dd{margin:3px 0 0;color:#b9cbe4}
+  #infoPanel .warn{color:#fbbf24}
+
+  /* ---------------- Tooltip ---------------- */
+  #tooltip{
+    position:fixed;top:0;left:0;z-index:60;max-width:340px;
+    background:linear-gradient(180deg,rgba(13,21,38,.97),rgba(8,13,24,.97));
+    border:1px solid rgba(94,234,212,.3);
+    border-radius:14px;padding:12px 14px;
+    box-shadow:0 22px 60px rgba(0,0,0,.7);
+    opacity:0;pointer-events:none;transition:opacity .16s ease;
+    font-size:12px;line-height:1.45;color:#cfe0f5;
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  }
+  #tooltip .th{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+  #tooltip .th b{font-size:13px;color:#fff;font-weight:700}
+  #tooltip .badge{
+    font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;
+    background:rgba(94,234,212,.14);color:#7de3f4;border:1px solid rgba(94,234,212,.3);
+    white-space:nowrap;
+  }
+  #tooltip .sub{font-size:10.5px;color:#7f95b5;margin-bottom:6px}
+  #tooltip ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:7px}
+  #tooltip li{padding-left:10px;border-left:2px solid rgba(94,234,212,.35)}
+  #tooltip li .tt{display:block;color:#dbe9fb;font-size:11.5px;line-height:1.35}
+  #tooltip li .tj{display:block;color:#6f86a8;font-size:10.5px;margin-top:2px}
+  #tooltip .more{color:#6f86a8;font-size:10.5px;margin-top:7px;font-style:italic}
+  #tooltip .kv{margin:6px 0 0;font-size:11.5px;color:#b9cbe4}
+  #tooltip .kv i{color:#7de3f4;font-style:normal;font-weight:600}
+
+  /* ---------------- Loader ---------------- */
+  #loader{
+    position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:20px;
+    background:radial-gradient(circle at 50% 45%,#0a1424 0%,#05060f 70%);
+    transition:opacity .8s ease;
+  }
+  #loader.hide{opacity:0;pointer-events:none}
+  #loader .ring{
+    width:52px;height:52px;border-radius:50%;
+    border:2px solid rgba(34,211,238,.15);border-top-color:#22d3ee;
+    animation:spin 1s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #loader p{font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:#5d7799;margin:0}
+
+  #hint{
+    left:50%;bottom:22px;transform:translateX(-50%);
+    font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#4e6party;
+    color:#54708f;pointer-events:none;text-align:center;
+  }
+
+  @media (max-width:900px){
+    #legend{display:none}
+    #stats{right:14px;bottom:14px;padding:11px 13px;min-width:170px}
+    #stats .k{font-size:10px} #stats .v{font-size:13px}
+    #topbar{padding:12px 14px;gap:10px}
+    nav#nav button{padding:7px 11px;font-size:11px}
+    #infoPanel{width:min(330px,calc(100vw - 28px));right:14px}
+    #infoBtn{right:14px;top:14px}
+    #hint{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="scene"></div>
+
+<!-- ======================= HUD ======================= -->
+<header id="topbar" class="hud">
+  <div class="brand">
+    <div class="dot"></div>
+    <div>
+      <h1>Producción Científica y Tecnológica</h1>
+      <p>Doctorado en Ingeniería · FI-UAQ · 2021–2025</p>
+    </div>
+  </div>
+  <nav id="nav"></nav>
+</header>
+
+<div id="legend" class="hud glass"></div>
+<div id="stats" class="hud glass"></div>
+
+<button id="infoBtn" class="hud" title="Información del documento">i</button>
+<div id="infoPanel" class="hud glass">
+  <h2>Documento fuente</h2>
+  <div class="sub">Producción Científica y Tecnológica</div>
+  <dl>
+    <dt>Periodo</dt><dd>2021–2025</dd>
+    <dt>Fecha de corte</dt><dd>Febrero de 2026</dd>
+    <dt>Fuentes declaradas</dt><dd>Scopus · Web of Science · Google Scholar · Repositorio Institucional UAQ · sitio oficial FI</dd>
+    <dt>Contenido estructurado</dt><dd>Artículos indizados, investigadores NAB, colaboraciones, reconocimientos, indicadores, LGAC y publicaciones representativas.</dd>
+    <dt>Criterio</dt><dd>Se transcribió y estructuró la información explícita del documento; no se agregaron datos externos.</dd>
+    <dt class="warn">Advertencia</dt><dd class="warn">El informe es referencial; recomienda verificar con acceso directo a Scopus/WoS.</dd>
+  </dl>
+</div>
+
+<div id="tooltip"></div>
+<div id="hint" class="hud">Arrastra para orbitar · Rueda para acercar · Pasa el cursor sobre los elementos</div>
+
+<div id="loader">
+  <div class="ring"></div>
+  <p>Construyendo experiencia 3D</p>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.161.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ================================================================
+   1. DATOS
+   ================================================================ */
+
+const PUBLICACIONES = [
+  {a:2024,t:"FPGA-Microprocessor Based Sensor for Faults Detection in Induction Motors Using Time-Frequency and Machine Learning Methods",au:"Osornio-Rios R.A.; Cueva-Perez I.; Alvarado-Hernandez A.I.; Dunai L.; Zamudio-Ramirez I.; Antonino-Daviu J.A.",r:"Sensors (MDPI)",b:"Scopus/WoS",ar:"M"},
+  {a:2023,t:"FPGA-Flux Proprietary System for Online Detection of Outer Race Faults in Bearings",au:"Cureño-Osornio J.; Zamudio-Ramirez I.; Morales-Velazquez L.; Jaen-Cuellar A.Y.; Osornio-Rios R.A.; Antonino-Daviu J.A.",r:"Electronics (MDPI)",b:"Scopus/WoS",ar:"M"},
+  {a:2022,t:"Infrared Thermography Smart Sensor for the Condition Monitoring of Gearbox and Bearings Faults in Induction Motors",au:"Alvarado-Hernandez A.I.; Zamudio-Ramirez I.; Jaen-Cuellar A.Y.; Osornio-Rios R.A.; Antonino-Daviu J.A.",r:"Sensors (MDPI)",b:"Scopus/WoS",ar:"M"},
+  {a:2022,t:"Fault Detection and Classification in Kinematic Chains by Means of PCA Extraction-Reduction of Features from Thermographic Images",au:"Osornio-Rios R.A.; Jaen-Cuellar A.Y.; Alvarado-Hernandez A.I.; Zamudio-Ramirez I.; Cruz-Albarran I.A.; Antonino-Daviu J.A.",r:"Measurement",b:"Scopus/WoS",ar:"M"},
+  {a:2021,t:"Detection of Inter-Turn Short Circuits in Induction Motors: Orthogonal Matching Pursuit and Dictionary Learning",au:"Valtierra-Rodriguez M.; Amézquita-Sánchez J.P.; Granados-Lieberman D. (ITS Irapuato); De Santiago J.J.",r:"Frontiers in Signal Processing",b:"Scopus",ar:"M"},
+  {a:2021,t:"A Neural Network-Based Model for MCSA of Inter-Turn Short-Circuit Faults in Induction Motors and Power Hardware-in-the-Loop Simulation",au:"Mejia-Barron A.; Tapia-Tinoco G.; Razo-Hernandez J.R.; Valtierra-Rodriguez M.; Granados-Lieberman D.",r:"Computers & Electrical Engineering",b:"Scopus/WoS",ar:"M"},
+  {a:2023,t:"Wavelet Packet Transform, Statistical Indices and ANN for Classification of EEG Signals in Motor Imagery BCI",au:"Amézquita-Sánchez J.P.; Morales-Hernández L.A.; Osornio-Rios R.A.; De Santiago J.J.",r:"Biomedical Signal Processing and Control",b:"Scopus",ar:"M"},
+  {a:2022,t:"EMG Signal Processing Using Hilbert-Huang Transform and MUSIC Algorithm for Tremor Analysis in Parkinson's Disease",au:"Amézquita-Sánchez J.P.; Pérez-Ramírez C.A.; Femat-Díaz A.",r:"Expert Systems with Applications",b:"Scopus/WoS",ar:"M"},
+  {a:2023,t:"Railcar Dynamic Response During Braking Maneuvers Based on Frequency Analysis",au:"Hurtado-Hurtado G.; Morales-Velázquez L.; Otremba F.; Jáuregui-Correa J.C.",r:"Applied Sciences (MDPI)",b:"Scopus",ar:"S"},
+  {a:2022,t:"Structural Health Monitoring of Railway Wheel-Rail System: Vibration Analysis and Wear Detection",au:"Jáuregui-Correa J.C.; Morales-Velázquez L.; Hurtado-Hurtado G.; Sandoval-Valencia T.E.",r:"Mechanical Systems and Signal Processing",b:"Scopus/WoS",ar:"S"},
+  {a:2021,t:"Monitoring and Control of Power Quality in Distributed Generation Systems: Smart Grid Applications",au:"Valtierra-Rodriguez M.; Amézquita-Sánchez J.P.; De Santiago J.J.; González-Córdoba J.L.",r:"IEEE Transactions on Industrial Electronics",b:"Scopus/WoS",ar:"S"},
+  {a:2024,t:"Deep Learning for Real-Time Fault Diagnosis in Rotating Machinery: A Comprehensive Review and Application",au:"Saucedo-Dorantes J.J.; Osornio-Rios R.A.; Romero-Troncoso R.J.; Delgado-Prieto M. (UPC, España)",r:"Mechanical Systems and Signal Processing",b:"Scopus/WoS",ar:"S"},
+  {a:2023,t:"Online Condition Monitoring of Induction Motors Using Transient Stator Current Analysis and Machine Learning",au:"Zamudio-Ramirez I.; Osornio-Rios R.A.; Antonino-Daviu J.A. (UPV); Romero-Troncoso R.J.",r:"IEEE Transactions on Energy Conversion",b:"Scopus/WoS",ar:"S"},
+  {a:2022,t:"Hybrid Solar-Wind Energy Systems with MPPT Control: Modeling and Simulation for Querétaro Region",au:"González-Córdoba J.L.; Valtierra-Rodriguez M.; De Santiago J.J.; Domínguez-González A.",r:"Renewable Energy",b:"Scopus/WoS",ar:"S"},
+  {a:2021,t:"Nanotechnology Applied to Construction Materials: Mechanical Properties Enhancement of Concrete with TiO₂ Nanoparticles",au:"Toledano-Ayala M.; Domínguez-González A.; Pérez-Ramírez C.A.",r:"Construction and Building Materials",b:"Scopus/WoS",ar:"S"},
+  {a:2024,t:"Artificial Intelligence Methods for Predicting Structural Integrity in Aerospace-Grade Components",au:"Hernández-Morales L.A.; Amézquita-Sánchez J.P.; Domínguez-González A.",r:"Engineering Structures",b:"Scopus/WoS",ar:"S"}
+];
+
+const INVESTIGADORES = [
+  {n:"Dr. Roque Alfredo Osornio-Ríos",a:"Mecatrónica, diagnóstico de fallas en motores eléctricos, FPGA, termografía infrarroja",c:"J.A. Antonino-Daviu (UPV, España); R.J. Romero-Troncoso (UAQ); L. Dunai (UPV)"},
+  {n:"Dr. René de Jesús Romero-Troncoso",a:"Sistemas embebidos, instrumentación, procesamiento de señales, visión artificial",c:"HSPDigital Group (UAQ); Dr. Osornio-Ríos; Dr. J.J. Saucedo-Dorantes (UAQ)"},
+  {n:"Dr. Juan Pablo Amézquita-Sánchez",a:"Procesamiento de señales biomédicas (EEG/EMG), aprendizaje máquina, diagnóstico de Parkinson",c:"Dr. M. Valtierra-Rodríguez (UAQ); Dr. D. Granados-Lieberman (ITS Irapuato); ENAP-RG"},
+  {n:"Dr. Martín Valtierra-Rodríguez",a:"Diagnóstico de máquinas eléctricas, calidad de la energía, redes eléctricas inteligentes",c:"Dr. J.P. Amézquita-Sánchez (UAQ); Dr. D. Granados-Lieberman (ITS Irapuato); UNAM, UAM"},
+  {n:"Dr. Juan José Saucedo-Dorantes",a:"Mantenimiento predictivo, aprendizaje profundo, diagnóstico de sistemas mecatrónicos",c:"Dr. M. Delgado-Prieto (UPC, España); Dr. Osornio-Ríos; Dr. Romero-Troncoso"},
+  {n:"Dr. Arturo Yosimar Jaen-Cuellar",a:"Sistemas de adquisición de datos, diagnóstico de rodamientos, procesamiento de señales",c:"Dr. Osornio-Ríos (UAQ); Dr. Antonino-Daviu (UPV)"},
+  {n:"Dr. Juan Carlos Jáuregui-Correa",a:"Dinámica estructural, análisis de vibraciones, sistemas ferroviarios, mecánica de fractura",c:"Dr. L. Morales-Velázquez (UAQ); Dra. T.E. Sandoval-Valencia (UAQ); F. Otremba (Alemania)"},
+  {n:"Dr. Luis Morales-Velázquez",a:"Instrumentación, señales de vibración, diagnóstico de sistemas mecánicos, robótica",c:"Dr. Jáuregui-Correa (UAQ); Dr. Osornio-Ríos (UAQ)"},
+  {n:"Dr. Irving Armando Cruz-Albarrán",a:"Termografía, sensores inteligentes, detección de fallas en maquinaria industrial",c:"Dr. Osornio-Ríos (UAQ); Dr. Zamudio-Ramírez (UAQ/UPV)"},
+  {n:"Dr. Aurelio Domínguez-González",a:"Nanomateriales, propiedades mecánicas de materiales, ingeniería de materiales avanzados",c:"Academia Mexicana de Ciencias; Dr. Toledano-Ayala (UAQ)"},
+  {n:"Dr. Manuel Toledano-Ayala",a:"Innovación tecnológica, construcción sostenible, materiales para el hábitat",c:"Dr. Domínguez-González (UAQ); Red UAQ–Cuba (Univ. Cienfuegos)"},
+  {n:"Dr. Luis Alberto Hernández-Morales",a:"Inteligencia artificial aplicada a ingeniería estructural y aeroespacial",c:"Dr. Amézquita-Sánchez (UAQ)"}
+];
+
+const COLAB_INT = [
+  {i:"Universitat Politècnica de València (UPV) — Dep. Ingeniería Gráfica e ITE",p:"España",lat:39.48,lon:-0.34,d:"Dr. Jose Alfonso Antonino-Daviu; Dra. Larisa Dunai — Diagnóstico de motores, FPGA, termografía"},
+  {i:"Universidad Politécnica de Cataluña (UPC)",p:"España",lat:41.39,lon:2.16,d:"Dr. Miguel Delgado-Prieto — Mantenimiento predictivo, aprendizaje profundo"},
+  {i:"Universidad de Valladolid",p:"España",lat:41.65,lon:-4.72,d:"Colaboración en sistemas FPGA para hospitales de Castilla y León"},
+  {i:"University of West Virginia",p:"EE. UU.",lat:38.63,lon:-80.61,d:"Colaboración en mecatrónica y diseño mecánico"},
+  {i:"Universidad de Concordia — Fac. de Ingeniería y Ciencias Computacionales",p:"Canadá",lat:45.50,lon:-73.58,d:"Colaboración en sistemas de control y computación"},
+  {i:"Universidad de Cienfuegos (UCf)",p:"Cuba",lat:22.15,lon:-80.45,d:"Convenio de colaboración académica firmado con la FI-UAQ"},
+  {i:"Universität (colaboración en sistemas ferroviarios)",p:"Alemania",lat:51.16,lon:10.45,d:"Dr. F. Otremba — Dinámica ferroviaria, análisis de desgaste rueda-riel"}
+];
+
+const COLAB_NAC = [
+  {i:"ITS Irapuato (ENAP-RG)",d:"Dr. David Granados-Lieberman — Calidad de energía, diagnóstico de fallas (Co-fundador ENAP-RG)"},
+  {i:"ITS Guanajuato (ENAP-RG)",d:"Miembros del grupo ENAP — Procesamiento de señales aplicado a ingeniería"},
+  {i:"UNAM",d:"Colaboración en redes eléctricas inteligentes y energías renovables"},
+  {i:"Universidad Autónoma Metropolitana (UAM)",d:"Dr. J. Roberto Huerta-Rosales; Dr. Juan C. Olivares-Galvan — Sistemas eléctricos"},
+  {i:"Universidad de Guanajuato",d:"Dr. David Camarena-Martinez; Dr. Arturo Garcia-Perez — Mecatrónica"},
+  {i:"CENIDET",d:"Colaboración en proyectos de desarrollo tecnológico e instrumentación"},
+  {i:"INAOE",d:"Digital Systems Group — Colaboración en detección de fallas con sistemas digitales"}
+];
+
+const RECONOCIMIENTOS = [
+  {y:2016,n:"Dr. Roque Alfredo Osornio-Ríos",d:"Premio de Investigación — Ing. y Tecnología",o:"Academia Mexicana de Ciencias (AMC)"},
+  {y:2023,n:"Dr. Luis Alberto Hernández-Morales",d:"Profesionista del Año 2023",o:"Instancia estatal / gremio profesional"},
+  {y:2024,n:"Dr. Juan Pablo Amézquita-Sánchez",d:"Miembro — Academia Mexicana de Ciencias",o:"Academia Mexicana de Ciencias (AMC)"},
+  {y:2025,n:"Dr. Juan Pablo Amézquita-Sánchez",d:"Premio Alejandrina — Joven Talento",o:"Universidad Autónoma de Querétaro"},
+  {y:2025,n:"Dr. Luis Alberto Hernández-Morales",d:"Profesionista del Año 2025",o:"Instancia estatal / gremio profesional"},
+  {y:2025,n:"Dr. Juan José Saucedo-Dorantes",d:"Senior Member del IEEE",o:"Institute of Electrical and Electronics Engineers (IEEE)"},
+  {y:"Vigente",n:"Dr. Aurelio Domínguez-González",d:"Miembro — Academia Mexicana de Ciencias",o:"Academia Mexicana de Ciencias (AMC)"},
+  {y:"Vigente",n:"Núcleo Académico Básico",d:"Pertenencia al SNII (múltiples niveles)",o:"CONAHCYT / SNII"}
+];
+
+const INDICADORES = [
+  {i:"Artículos JCR/SJR publicados (2021–2025, estimado)",v:"> 60",p:"I"},
+  {i:"Revistas indizadas en Scopus con publicaciones",v:"> 25",p:"I"},
+  {i:"Colaboraciones internacionales identificadas",v:"7+ países",p:"I"},
+  {i:"Investigadores con perfil SNII",v:"Sí (varios niveles)",p:"I"},
+  {i:"Índice H más alto (Dr. Valtierra-Rodríguez)",v:"~20 (Scopus)",p:"I"},
+  {i:"Citas totales (Dr. Valtierra-Rodríguez en Scopus)",v:"> 500",p:"I"},
+  {i:"Publicaciones JCR — Dr. Osornio-Ríos",v:"Múltiples (44 acumuladas)",p:"I"},
+  {i:"Registros de Derechos de Autor identificados",v:"> 10",p:"I"},
+  {i:"Tesis de doctorado en repositorio UAQ (2020–2025)",v:"22+",p:"I"},
+  {i:"Grupos de Investigación reconocidos",v:"5",p:"I"},
+  {i:"Artículos JCR/SJR publicados (2021–2025, estimado)",v:"> 40",p:"M"},
+  {i:"Revistas indizadas en Scopus con publicaciones",v:"> 20",p:"M"},
+  {i:"Colaboraciones internacionales identificadas",v:"5+ países",p:"M"},
+  {i:"Registros de Derechos de Autor identificados",v:"> 5",p:"M"}
+];
+
+/* ================================================================
+   2. CONSTANTES Y UTILIDADES
+   ================================================================ */
+
+const COL = {
+  meca : 0x22d3ee,   // cian  — Mecatrónica / diagnóstico de fallas
+  sis  : 0xa78bfa,   // violeta — Sistemas, Energía y Materiales
+  green: 0x34d399,
+  gold : 0xfbbf24,
+  blue : 0x60a5fa,
+  pink : 0xf472b6
+};
+const hex = c => '#' + c.toString(16).padStart(6,'0');
+
+/* --- Textura de resplandor radial (para sprites) --- */
+function glowTexture(){
+  const s = 128, c = document.createElement('canvas');
+  c.width = c.height = s;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
+  g.addColorStop(0,   'rgba(255,255,255,1)');
+  g.addColorStop(0.22,'rgba(255,255,255,0.5)');
+  g.addColorStop(0.55,'rgba(255,255,255,0.12)');
+  g.addColorStop(1,   'rgba(255,255,255,0)');
+  ctx.fillStyle = g; ctx.fillRect(0,0,s,s);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const GLOW = glowTexture();
+
+/* --- Etiqueta de texto como sprite --- */
+function makeLabel(text, opt = {}){
+  const {
+    color = '#dbeafe', size = 40, weight = 600,
+    scale = 0.0058, dpr = 2, halo = 'rgba(4,8,18,0.95)'
+  } = opt;
+
+  const c = document.createElement('canvas');
+  const ctx = c.getContext('2d');
+  const font = `${weight} ${size}px Inter, system-ui, sans-serif`;
+  ctx.font = font;
+  const w = Math.ceil(ctx.measureText(text).width) + 48;
+  const h = size + 34;
+  c.width = w * dpr; c.height = h * dpr;
+  const g = c.getContext('2d');
+  g.scale(dpr, dpr);
+  g.font = font;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.shadowColor = halo;
+  g.shadowBlur = 14;
+  g.fillStyle = color;
+  g.fillText(text, w/2, h/2);
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+  const sp = new THREE.Sprite(mat);
+  sp.scale.set(w * scale, h * scale, 1);
+  return sp;
+}
+
+/* --- Conversión lat/lon → vector 3D --- */
+function latLonToVec3(lat, lon, r){
+  const phi   = (90 - lat) * Math.PI / 180;
+  const theta = (lon + 180) * Math.PI / 180;
+  return new THREE.Vector3(
+    -r * Math.sin(phi) * Math.cos(theta),
+     r * Math.cos(phi),
+     r * Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+/* --- Parseo numérico de indicadores --- */
+function parseVal(s){
+  const m = String(s).replace(/,/g,'').match(/(\d+(?:\.\d+)?)/);
+  return m ? parseFloat(m[1]) : null;
+}
+
+/* --- Clasificación cromática de investigadores --- */
+function colorForArea(area){
+  const a = area.toLowerCase();
+  if (/mecatrónic|motores|rodamientos|termografía|máquinas eléctricas/.test(a)) return COL.meca;
+  if (/vibrac|estructural|ferroviar|mecánica de fractura/.test(a))             return COL.sis;
+  if (/biomédic|eeg|emg|parkinson|señales|visión|instrumentación/.test(a))    return COL.green;
+  if (/materiales|nanomateriales|construcción|nano/.test(a))                  return COL.gold;
+  return COL.blue;
+}
+
+/* ================================================================
+   3. ESCENA BASE
+   ================================================================ */
+
+const container = document.getElementById('scene');
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05060f);
+scene.fog = new THREE.FogExp2(0x05060f, 0.0022);
+
+const camera = new THREE.PerspectiveCamera(48, innerWidth/innerHeight, 0.1, 4000);
+camera.position.set(6, 16, 48);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+container.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.055;
+controls.minDistance = 10;
+controls.maxDistance = 170;
+controls.maxPolarAngle = Math.PI * 0.9;
+controls.enablePan = false;
+controls.rotateSpeed = 0.65;
+controls.zoomSpeed = 0.85;
+
+/* --- Luces --- */
+scene.add(new THREE.HemisphereLight(0x8fc4ff, 0x080a14, 1.0));
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
+keyLight.position.set(24, 46, 28);
+scene.add(keyLight);
+const rimA = new THREE.PointLight(0x22d3ee, 2200, 260, 2);
+rimA.position.set(-38, 24, 26);
+scene.add(rimA);
+const rimB = new THREE.PointLight(0xa78bfa, 1800, 260, 2);
+rimB.position.set(38, -14, -26);
+scene.add(rimB);
+
+/* --- Campo de estrellas --- */
+let stars = null;
+(function buildStars(){
+  const N = 2600;
+  const pos = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++){
+    const r = 220 + Math.random() * 700;
+    const t = Math.random() * Math.PI * 2;
+    const u = Math.random() * 2 - 1;
+    const s = Math.sqrt(1 - u * u);
+    pos[i*3]   = r * s * Math.cos(t);
+    pos[i*3+1] = r * u * 0.55;
+    pos[i*3+2] = r * s * Math.sin(t);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 1.9, color: 0xa9d8ff, transparent: true, opacity: 0.8,
+    depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true
+  });
+  stars = new THREE.Points(geo, mat);
+  scene.add(stars);
+})();
+
+/* ================================================================
+   4. CONSTRUCTORES DE VISTAS
+   ================================================================ */
+
+const VIEW_LIST = [];
+const VIEW_MAP  = {};
+let   activeView = null;
+
+function registerView(view){
+  // recolectar materiales y fijar opacidad base
+  view.materials = [];
+  view.group.traverse(o => {
+    if (!o.material) return;
+    const arr = Array.isArray(o.material) ? o.material : [o.material];
+    arr.forEach(m => {
+      if (view.materials.includes(m)) return;
+      m.transparent = true;
+      m.userData.baseOpacity = m.opacity;
+      view.materials.push(m);
+    });
+  });
+  view.fade = 0;
+  view.target = 0;
+  view.group.visible = false;
+  scene.add(view.group);
+  VIEW_LIST.push(view);
+  VIEW_MAP[view.id] = view;
+  return view;
+}
+
+function applyFade(v){
+  const k = v.fade;
+  for (const m of v.materials){
+    m.opacity = (m.userData.baseOpacity ?? 1) * k;
+  }
+}
+
+/* ----------------------------------------------------------------
+   VISTA 1 · PUBLICACIONES (barras apiladas por año)
+   ---------------------------------------------------------------- */
+function buildPublicaciones(){
+  const group = new THREE.Group();
+  const pickables = [];
+  const years = [2021, 2022, 2023, 2024];
+  const map = new Map(years.map(y => [y, { M: [], S: [] }]));
+
+  PUBLICACIONES.forEach(p => map.get(p.a)[p.ar].push(p));
+
+  const UNIT = 1.85, W = 3.4, GAP = 0.16, SPACING = 6.8, FLOOR = -9;
+  const stacksDef = [
+    { k:'M', label:'Mecatrónica, Diagnóstico de Fallas y Procesamiento de Señales', color: COL.meca },
+    { k:'S', label:'Ingeniería de Sistemas, Energía y Materiales',                  color: COL.sis  }
+  ];
+
+  years.forEach((y, i) => {
+    const x = (i - (years.length - 1) / 2) * SPACING;
+    let cursor = FLOOR;
+
+    stacksDef.forEach(st => {
+      const arr = map.get(y)[st.k];
+      if (!arr.length) return;
+
+      const h = arr.length * UNIT - GAP;
+      const geo = new THREE.BoxGeometry(W, h, W);
+      const mat = new THREE.MeshStandardMaterial({
+        color: st.color, emissive: st.color, emissiveIntensity: 0.34,
+        metalness: 0.55, roughness: 0.28, transparent: true, opacity: 1
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(x, cursor + h / 2, 0);
+      mesh.userData.viewId = 'pub';
+
+      const items = arr.slice(0, 5).map(p =>
+        `<li><span class="tt">${p.t}</span><span class="tj">${p.r} · ${p.b}</span></li>`).join('');
+      const more = arr.length > 5 ? `<div class="more">+ ${arr.length - 5} publicaciones más…</div>` : '';
+
+      mesh.userData.tip = `
+        <div class="th"><b>${y}</b><span class="badge" style="color:${hex(st.color)};border-color:${hex(st.color)}55;background:${hex(st.color)}18">${arr.length} artículos</span></div>
+        <div class="sub">${st.label}</div>
+        <ul>${items}</ul>${more}`;
+
+      group.add(mesh);
+      pickables.push(mesh);
+
+      // aristas
+      const edges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(geo),
+        new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.16 })
+      );
+      mesh.add(edges);
+
+      // tapa luminosa
+      const cap = new THREE.Mesh(
+        new THREE.PlaneGeometry(W * 1.06, W * 1.06),
+        new THREE.MeshBasicMaterial({
+          color: st.color, transparent: true, opacity: 0.34,
+          blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
+        })
+      );
+      cap.rotation.x = -Math.PI / 2;
+      cap.position.y = h / 2 + 0.03;
+      mesh.add(cap);
+
+      // halo suave alrededor de la columna
+      const halo = new THREE.Mesh(
+        new THREE.BoxGeometry(W * 1.5, h * 1.02, W * 1.5),
+        new THREE.MeshBasicMaterial({
+          color: st.color, transparent: true, opacity: 0.055,
+          blending: THREE.AdditiveBlending, depthWrite: false
+        })
+      );
+      mesh.add(halo);
+
+      cursor += h + GAP;
+    });
+
+    // etiqueta de año
+    const lab = makeLabel(String(y), { color: '#9fc4ea', size: 52, weight: 700, scale: 0.0075 });
+    lab.position.set(x, FLOOR - 2.2, 0);
+    group.add(lab);
+  });
+
+  // rejilla de piso
+  const grid = new THREE.GridHelper(64, 32, 0x1c4666, 0x0d1c2c);
+  grid.position.y = FLOOR - 0.02;
+  grid.material.transparent = true;
+  grid.material.opacity = 0.55;
+  group.add(grid);
+
+  // anillo base
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(15.5, 0.06, 8, 128),
+    new THREE.MeshBasicMaterial({ color: COL.meca, transparent: true, opacity: 0.28 })
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = FLOOR - 0.01;
+  group.add(ring);
+
+  const update = (t) => {
+    ring.rotation.z = t * 0.05;
+  };
+
+  return registerView({
+    id: 'pub', label: 'Publicaciones', group, pickables, update,
+    cam: new THREE.Vector3(6, 15, 44),
+    look: new THREE.Vector3(0, -2.5, 0),
+    legend: [
+      { c: hex(COL.meca), t: 'Mecatrónica · Diagnóstico de fallas' },
+      { c: hex(COL.sis),  t: 'Sistemas, Energía y Materiales' }
+    ],
+    stats: [
+      { k: 'Publicaciones representativas', v: '16' },
+      { k: 'Periodo analizado', v: '2021–2025' },
+      { k: 'Año con más producción', v: '2022 · 5' },
+      { k: 'Áreas de investigación', v: '2' }
+    ]
+  });
+}
+
+/* ----------------------------------------------------------------
+   VISTA 2 · NÚCLEO ACADÉMICO (investigadores)
+   ---------------------------------------------------------------- */
+function buildInvestigadores(){
+  const group = new THREE.Group();
+  const pickables = [];
+  const R = 15.5;
+  const n = INVESTIGADORES.length;
+
+  /* --- núcleo --- */
+  const core = new THREE.Mesh(
+    new THREE.IcosahedronGeometry(2.4, 1),
+    new THREE.MeshStandardMaterial({
+      color: 0x0b5c72, emissive: COL.meca, emissiveIntensity: 0.9,
+      metalness: 0.75, roughness: 0.22, transparent: true, opacity: 1
+    })
+  );
+  group.add(core);
+
+  const coreGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: GLOW, color: COL.meca, transparent: true, opacity: 0.45,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  }));
+  coreGlow.scale.set(18, 18, 1);
+  group.add(coreGlow);
+
+  const coreLabel = makeLabel('NÚCLEO ACADÉMICO BÁSICO', {
+    color: '#7de3f4', size: 34, weight: 700, scale: 0.0058
+  });
+  coreLabel.position.set(0, 4.6, 0);
+  group.add(coreLabel);
+
+  /* --- nodos --- */
+  const linePositions = [];
+
+  INVESTIGADORES.forEach((inv, i) => {
+    const a = (i / n) * Math.PI * 2 + Math.PI / 2;
+    const x = Math.cos(a) * R;
+    const z = Math.sin(a) * R;
+    const y = Math.sin(a * 3) * 1.4;
+    const color = colorForArea(inv.a);
+
+    const node = new THREE.Mesh(
+      new THREE.SphereGeometry(1.15, 32, 24),
+      new THREE.MeshStandardMaterial({
+        color, emissive: color, emissiveIntensity: 0.85,
+        metalness: 0.4, roughness: 0.24, transparent: true, opacity: 1
+      })
+    );
+    node.position.set(x, y, z);
+    node.userData.viewId = 'inv';
+    node.userData.tip = `
+      <div class="th"><b>${inv.n}</b></div>
+      <div class="sub">Área de especialización</div>
+      <div class="kv">${inv.a}</div>
+      <div class="sub" style="margin-top:9px">Colaboradores / instituciones</div>
+      <div class="kv"><i>${inv.c}</i></div>`;
+    group.add(node);
+    pickables.push(node);
+
+    // resplandor
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: GLOW, color, transparent: true, opacity: 0.55,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    }));
+    glow.scale.set(7.5, 7.5, 1);
+    node.add(glow);
+
+    // anillo orientado al núcleo
+    const halo = new THREE.Mesh(
+      new THREE.TorusGeometry(1.95, 0.028, 8, 64),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.5 })
+    );
+    halo.position.copy(node.position);
+    halo.lookAt(0, 0, 0);
+    group.add(halo);
+
+    // línea hacia el núcleo
+    linePositions.push(0, 0, 0, x, y, z);
+
+    // etiqueta
+    const lab = makeLabel(inv.n, { color: '#cfe3ff', size: 38, weight: 600, scale: 0.0054 });
+    lab.position.set(x * 1.13, y + 2.7, z * 1.13);
+    group.add(lab);
+  });
+
+  const linesGeo = new THREE.BufferGeometry();
+  linesGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+  const lines = new THREE.LineSegments(linesGeo, new THREE.LineBasicMaterial({
+    color: COL.meca, transparent: true, opacity: 0.18
+  }));
+  group.add(lines);
+
+  // anillo decorativo
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(R, 0.035, 8, 200),
+    new THREE.MeshBasicMaterial({ color: 0x2a6f96, transparent: true, opacity: 0.35 })
+  );
+  ring.rotation.x = -Math.PI / 2;
+  group.add(ring);
+
+  const update = (t) => {
+    core.rotation.y = t * 0.35;
+    core.rotation.x = t * 0.18;
+    group.rotation.y = Math.sin(t * 0.12) * 0.06;
+  };
+
+  return registerView({
+    id: 'inv', label: 'Investigadores', group, pickables, update,
+    cam: new THREE.Vector3(0, 11, 50),
+    look: new THREE.Vector3(0, 0, 0),
+    legend: [
+      { c: hex(COL.meca),  t: 'Mecatrónica / diagnóstico de fallas' },
+      { c: hex(COL.sis),   t: 'Estructuras, vibraciones, ferroviario' },
+      { c: hex(COL.green), t: 'Señales, biomédica, instrumentación' },
+      { c: hex(COL.gold),  t: 'Materiales y nanotecnología' }
+    ],
+    stats: [
+      { k: 'Investigadores NAB', v: '12' },
+      { k: 'Perfil SNII', v: 'Sí' },
+      { k: 'Grupos reconocidos', v: '5' },
+      { k: 'Tesis doctorado', v: '22+' }
+    ]
+  });
+}
+
+/* ----------------------------------------------------------------
+   VISTA 3 · COLABORACIONES (globo terráqueo + arcos)
+   ---------------------------------------------------------------- */
+function buildColaboraciones(){
+  const group = new THREE.Group();
+  const pickables = [];
+  const pulses = [];
+
+  const globe = new THREE.Group();
+  globe.position.y = 7;
+  group.add(globe);
+
+  const R = 9;
+
+  /* --- armazón --- */
+  const wire = new THREE.Mesh(
+    new THREE.SphereGeometry(R, 40, 26),
+    new THREE.MeshBasicMaterial({ color: 0x1e4d7a, wireframe: true, transparent: true, opacity: 0.2 })
+  );
+  globe.add(wire);
+
+  /* --- puntos de superficie --- */
+  (function dots(){
+    const N = 1400;
+    const pos = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++){
+      const u = Math.random() * 2 - 1;
+      const th = Math.random() * Math.PI * 2;
+      const s = Math.sqrt(1 - u * u);
+      pos[i*3]   = R * s * Math.cos(th);
+      pos[i*3+1] = R * u;
+      pos[i*3+2] = R * s * Math.sin(th);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const m = new THREE.PointsMaterial({
+      size: 0.075, color: 0x54b8e8, transparent: true, opacity: 0.55,
+      depthWrite: false, blending: THREE.AdditiveBlending
+    });
+    globe.add(new THREE.Points(g, m));
+  })();
+
+  /* --- origen: Querétaro --- */
+  const origin = latLonToVec3(20.6, -100.4, R);
+
+  const originMarker = new THREE.Mesh(
+    new THREE.SphereGeometry(0.34, 20, 16),
+    new THREE.MeshBasicMaterial({ color: 0x5eead4 })
+  );
+  originMarker.position.copy(origin);
+  globe.add(originMarker);
+
+  const originGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: GLOW, color: 0x5eead4, transparent: true, opacity: 0.85,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  }));
+  originGlow.scale.set(4.5, 4.5, 1);
+  originMarker.add(originGlow);
+
+  const originLabel = makeLabel('Querétaro · FI-UAQ', {
+    color: '#5eead4', size: 34, weight: 700, scale: 0.0052
+  });
+  originLabel.position.copy(origin.clone().multiplyScalar(1.28));
+  globe.add(originLabel);
+
+  /* --- arcos internacionales --- */
+  COLAB_INT.forEach((c, idx) => {
+    const dest = latLonToVec3(c.lat, c.lon, R);
+
+    const mid = origin.clone().add(dest).multiplyScalar(0.5);
+    const dist = origin.distanceTo(dest);
+    mid.normalize().multiplyScalar(R + dist * 0.42);
+
+    const curve = new THREE.QuadraticBezierCurve3(origin.clone(), mid, dest.clone());
+
+    const tube = new THREE.Mesh(
+      new THREE.TubeGeometry(curve, 48, 0.055, 8, false),
+      new THREE.MeshBasicMaterial({
+        color: 0x38bdf8, transparent: true, opacity: 0.62,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      })
+    );
+    globe.add(tube);
+
+    // marcador destino
+    const marker = new THREE.Mesh(
+      new THREE.SphereGeometry(0.28, 20, 16),
+      new THREE.MeshBasicMaterial({ color: 0xfbbf24 })
+    );
+    marker.position.copy(dest);
+    marker.userData.tip = `
+      <div class="th"><b>${c.p}</b><span class="badge">Colaboración internacional</span></div>
+      <div class="kv">${c.i}</div>
+      <div class="sub" style="margin-top:8px">Investigadores / área</div>
+      <div class="kv"><i>${c.d}</i></div>`;
+    marker.userData.viewId = 'col';
+    globe.add(marker);
+    pickables.push(marker);
+
+    const mglow = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: GLOW, color: 0xfbbf24, transparent: true, opacity: 0.8,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    }));
+    mglow.scale.set(4.2, 4.2, 1);
+    marker.add(mglow);
+
+    const mring = new THREE.Mesh(
+      new THREE.TorusGeometry(1.05, 0.025, 8, 48),
+      new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.6 })
+    );
+    mring.position.copy(dest);
+    mring.lookAt(0, 0, 0);
+    globe.add(mring);
+
+    const label = makeLabel(c.p, { color: '#fde68a', size: 34, weight: 700, scale: 0.0052 });
+    label.position.copy(dest.clone().multiplyScalar(1.26));
+    globe.add(label);
+
+    // pulso viajero
+    const pulse = new THREE.Mesh(
+      new THREE.SphereGeometry(0.17, 12, 10),
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff, transparent: true, opacity: 0.95,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      })
+    );
+    globe.add(pulse);
+    pulses.push({ curve, mesh: pulse, offset: idx / COLAB_INT.length, speed: 0.22 });
+  });
+
+  /* --- colaboración nacional (anillo inferior) --- */
+  const nacGroup = new THREE.Group();
+  nacGroup.position.y = -13;
+  group.add(nacGroup);
+
+  const nR = 13;
+  const nCount = COLAB_NAC.length;
+
+  COLAB_NAC.forEach((c, i) => {
+    const a = (i / nCount) * Math.PI * 2;
+    const x = Math.cos(a) * nR;
+    const z = Math.sin(a) * nR;
+
+    const node = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.72, 0),
+      new THREE.MeshStandardMaterial({
+        color: COL.green, emissive: COL.green, emissiveIntensity: 0.7,
+        metalness: 0.5, roughness: 0.3, transparent: true, opacity: 1
+      })
+    );
+    node.position.set(x, 0, z);
+    node.userData.viewId = 'col';
+    node.userData.tip = `
+      <div class="th"><b>${c.i}</b><span class="badge" style="color:#34d399;border-color:#34d39955;background:#34d39918">Nacional</span></div>
+      <div class="kv">${c.d}</div>`;
+    nacGroup.add(node);
+    pickables.push(node);
+
+    const lab = makeLabel(c.i, { color: '#a7f3d0', size: 32, weight: 600, scale: 0.0048 });
+    lab.position.set(x * 1.18, 1.7, z * 1.18);
+    nacGroup.add(lab);
+
+    // enlace al centro
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute([0,0,0, x,0,z], 3));
+    nacGroup.add(new THREE.Line(g, new THREE.LineBasicMaterial({
+      color: COL.green, transparent: true, opacity: 0.16
+    })));
+  });
+
+  const nacRing = new THREE.Mesh(
+    new THREE.TorusGeometry(nR, 0.03, 8, 160),
+    new THREE.MeshBasicMaterial({ color: COL.green, transparent: true, opacity: 0.28 })
+  );
+  nacRing.rotation.x = -Math.PI / 2;
+  nacGroup.add(nacRing);
+
+  const nacTitle = makeLabel('COLABORACIÓN NACIONAL', {
+    color: '#34d399', size: 34, weight: 700, scale: 0.0058
+  });
+  nacTitle.position.set(0, 3.4, 0);
+  nacGroup.add(nacTitle);
+
+  const update = (t, dt) => {
+    globe.rotation.y += dt * 0.055;
+    nacGroup.rotation.y -= dt * 0.04;
+
+    pulses.forEach(p => {
+      const u = (t * p.speed + p.offset) % 1;
+      p.mesh.position.copy(p.curve.getPoint(u));
+      const s = 0.6 + Math.sin(u * Math.PI) * 0.9;
+      p.mesh.scale.setScalar(s);
+    });
+  };
+
+  return registerView({
+    id: 'col', label: 'Colaboraciones', group, pickables, update,
+    cam: new THREE.Vector3(30, 18, 44),
+    look: new THREE.Vector3(0, 0, 0),
+    legend: [
+      { c: '#38bdf8', t: 'Arco de colaboración internacional' },
+      { c: '#fbbf24', t: 'Institución / país socio' },
+      { c: '#34d399', t: 'Colaboración nacional (ENAP-RG, UNAM, UAM…)' }
+    ],
+    stats: [
+      { k: 'Países identificados', v: '7+' },
+      { k: 'Instituciones internacionales', v: '7' },
+      { k: 'Instituciones nacionales', v: '7' },
+      { k: 'Redes activas', v: 'ENAP-RG · HSPDigital' }
+    ]
+  });
+}
+
+/* ----------------------------------------------------------------
+   VISTA 4 · RECONOCIMIENTOS (hélice temporal)
+   ---------------------------------------------------------------- */
+function buildReconocimientos(){
+  const group = new THREE.Group();
+  const pickables = [];
+
+  const n = RECONOCIMIENTOS.length;
+  const RADIUS = 8.5;
+  const Y0 = -10;
+  const STEP = 2.7;
+
+  const palette = [0xfbbf24, 0xf59e0b, 0x60a5fa, 0xf472b6, 0x34d399, 0xa78bfa, 0x22d3ee, 0x5eead4];
+
+  // eje vertical luminoso
+  const axisGeo = new THREE.BufferGeometry();
+  axisGeo.setAttribute('position', new THREE.Float32BufferAttribute(
+    [0, Y0 - 1.5, 0, 0, Y0 + (n - 1) * STEP + 2, 0], 3));
+  group.add(new THREE.Line(axisGeo, new THREE.LineBasicMaterial({
+    color: 0x2b6f96, transparent: true, opacity: 0.45
+  })));
+
+  RECONOCIMIENTOS.forEach((r, i) => {
+    const angle = i * 1.28;
+    const y = Y0 + i * STEP;
+    const x = Math.cos(angle) * RADIUS;
+    const z = Math.sin(angle) * RADIUS;
+    const color = palette[i % palette.length];
+
+    const node = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.82, 0),
+      new THREE.MeshStandardMaterial({
+        color, emissive: color, emissiveIntensity: 0.8,
+        metalness: 0.6, roughness: 0.25, transparent: true, opacity: 1
+      })
+    );
+    node.position.set(x, y, z);
+    node.userData.viewId = 'rec';
+    node.userData.tip = `
+      <div class="th"><b>${r.y}</b><span class="badge" style="color:${hex(color)};border-color:${hex(color)}55;background:${hex(color)}18">Reconocimiento</span></div>
+      <div class="kv"><i>${r.n}</i></div>
+      <div class="sub" style="margin-top:8px">${r.d}</div>
+      <div class="kv">Otorgante: ${r.o}</div>`;
+    group.add(node);
+    pickables.push(node);
+
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: GLOW, color, transparent: true, opacity: 0.6,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    }));
+    glow.scale.set(6.5, 6.5, 1);
+    node.add(glow);
+
+    // anillo orbital
+    const orb = new THREE.Mesh(
+      new THREE.TorusGeometry(1.5, 0.022, 6, 48),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.45 })
+    );
+    orb.position.set(x, y, z);
+    orb.rotation.x = Math.PI / 2;
+    group.add(orb);
+
+    // etiqueta doble
+    const l1 = makeLabel(`${r.y} · ${r.n}`, { color: '#e7f0ff', size: 32, weight: 700, scale: 0.0048 });
+    l1.position.set(x * 1.5, y + 1.35, z * 1.5);
+    group.add(l1);
+
+    const l2 = makeLabel(r.d, { color: '#8fb3d6', size: 26, weight: 500, scale: 0.0042 });
+    l2.position.set(x * 1.5, y + 0.05, z * 1.5);
+    group.add(l2);
+
+    // radial al eje
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute([0, y, 0, x, y, z], 3));
+    group.add(new THREE.Line(g, new THREE.LineBasicMaterial({
+      color, transparent: true, opacity: 0.16
+    })));
+  });
+
+  const update = (t) => {
+    group.rotation.y = Math.sin(t * 0.14) * 0.35;
+  };
+
+  return registerView({
+    id: 'rec', label: 'Reconocimientos', group, pickables, update,
+    cam: new THREE.Vector3(2, 6, 46),
+    look: new THREE.Vector3(0, 0, 0),
+    legend: [
+      { c: '#fbbf24', t: 'Premios y distinciones' },
+      { c: '#60a5fa', t: 'Membresías IEEE / AMC' },
+      { c: '#34d399', t: 'SNII · CONAHCYT' }
+    ],
+    stats: [
+      { k: 'Reconocimientos registrados', v: '8' },
+      { k: 'Distinciones 2025', v: '3' },
+      { k: 'Miembros AMC', v: '2' },
+      { k: 'Senior Member IEEE', v: '1' }
+    ]
+  });
+}
+
+/* ----------------------------------------------------------------
+   VISTA 5 · INDICADORES (radial 3D doble)
+   ---------------------------------------------------------------- */
+function buildIndicadores(){
+  const group = new THREE.Group();
+  const pickables = [];
+
+  const clusters = [
+    { key: 'I', cx: -17, color: COL.meca, title: 'DOCTORADO EN INGENIERÍA' },
+    { key: 'M', cx:  17, color: COL.sis,  title: 'DOCTORADO EN MECATRÓNICA' }
+  ];
+
+  clusters.forEach(cl => {
+    const items = INDICADORES.filter(x => x.p === cl.key);
+    const n = items.length;
+    const R = 10;
+    const BASE = -8;
+    const vals = items.map(it => parseVal(it.v));
+    const maxV = Math.max(...vals.filter(v => v !== null), 1);
+
+    // disco base
+    const disc = new THREE.Mesh(
+      new THREE.CylinderGeometry(R + 1.4, R + 1.4, 0.28, 64),
+      new THREE.MeshStandardMaterial({
+        color: 0x0c1726, metalness: 0.85, roughness: 0.42,
+        transparent: true, opacity: 1
+      })
+    );
+    disc.position.set(cl.cx, BASE - 0.14, 0);
+    group.add(disc);
+
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(R + 1.4, 0.045, 8, 160),
+      new THREE.MeshBasicMaterial({ color: cl.color, transparent: true, opacity: 0.4 })
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(cl.cx, BASE, 0);
+    group.add(ring);
+
+    items.forEach((it, i) => {
+      const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+      const v = vals[i] ?? maxV * 0.32;
+      const h = 1.6 + 6.6 * (Math.log(1 + v) / Math.log(1 + maxV));
+      const x = Math.cos(a) * R;
+      const z = Math.sin(a) * R;
+
+      const bar = new THREE.Mesh(
+        new THREE.BoxGeometry(1.05, h, 1.05),
+        new THREE.MeshStandardMaterial({
+          color: cl.color, emissive: cl.color, emissiveIntensity: 0.45,
+          metalness: 0.6, roughness: 0.25, transparent: true, opacity: 1
+        })
+      );
+      bar.position.set(cl.cx + x, BASE + h / 2, z);
+      bar.userData.viewId = 'ind';
+      bar.userData.tip = `
+        <div class="th"><b style="color:${hex(cl.color)}">${it.v}</b></div>
+        <div class="sub">${it.i}</div>
+        <div class="kv">Programa: <i>${cl.title}</i></div>`;
+      group.add(bar);
+      pickables.push(bar);
+
+      const cap = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: GLOW, color: cl.color, transparent: true, opacity: 0.55,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      }));
+      cap.scale.set(4, 4, 1);
+      cap.position.set(cl.cx + x, BASE + h + 0.35, z);
+      group.add(cap);
+
+      const lab = makeLabel(it.v, { color: '#eaf4ff', size: 34, weight: 700, scale: 0.0052 });
+      lab.position.set(cl.cx + x, BASE + h + 1.35, z);
+      group.add(lab);
+    });
+
+    const title = makeLabel(cl.title, { color: hex(cl.color), size: 36, weight: 800, scale: 0.0062 });
+    title.position.set(cl.cx, BASE + 3.4, 0);
+    group.add(title);
+  });
+
+  const update = (t) => {
+    group.rotation.y = Math.sin(t * 0.1) * 0.05;
+  };
+
+  return registerView({
+    id: 'ind', label: 'Indicadores', group, pickables, update,
+    cam: new THREE.Vector3(0, 21, 54),
+    look: new THREE.Vector3(0, -3, 0),
+    legend: [
+      { c: hex(COL.meca), t: 'Doctorado en Ingeniería' },
+      { c: hex(COL.sis),  t: 'Doctorado en Mecatrónica' }
+    ],
+    stats: [
+      { k: 'Artículos JCR/SJR', v: '> 60' },
+      { k: 'Revistas Scopus', v: '> 25' },
+      { k: 'Índice H más alto', v: '~20' },
+      { k: 'Derechos de autor', v: '> 10' }
+    ]
+  });
+}
+
+/* ================================================================
+   5. INTERFAZ
+   ================================================================ */
+
+const navEl    = document.getElementById('nav');
+const legendEl = document.getElementById('legend');
+const statsEl  = document.getElementById('stats');
+const tooltipEl = document.getElementById('tooltip');
+
+function renderLegend(list){
+  legendEl.innerHTML = '<h3>Leyenda</h3>' + list.map(l =>
+    `<div class="row"><span class="sw" style="background:${l.c};color:${l.c}"></span><span>${l.t}</span></div>`
+  ).join('');
+}
+
+function renderStats(list){
+  statsEl.innerHTML = '<h3>Indicadores clave</h3>' + list.map(s =>
+    `<div class="row"><span class="k">${s.k}</span><span class="v">${s.v}</span></div>`
+  ).join('');
+}
+
+function buildNav(){
+  navEl.innerHTML = VIEW_LIST.map(v =>
+    `<button data-view="${v.id}">${v.label}</button>`).join('');
+  navEl.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => setView(b.dataset.view));
+  });
+}
+
+function updateNav(id){
+  navEl.querySelectorAll('button').forEach(b =>
+    b.classList.toggle('active', b.dataset.view === id));
+}
+
+/* --- tooltip --- */
+let mouseX = 0, mouseY = 0;
+
+function showTip(html, x, y){
+  tooltipEl.innerHTML = html;
+  tooltipEl.style.opacity = '1';
+  positionTip(x, y);
+}
+function positionTip(x, y){
+  const r = tooltipEl.getBoundingClientRect();
+  let left = x + 20;
+  let top  = y + 18;
+  if (left + r.width  > innerWidth  - 14) left = x - r.width  - 20;
+  if (top  + r.height > innerHeight - 14) top  = y - r.height - 20;
+  left = Math.max(10, left);
+  top  = Math.max(10, top);
+  tooltipEl.style.transform = `translate(${left}px, ${top}px)`;
+}
+function hideTip(){ tooltipEl.style.opacity = '0'; }
+
+/* --- cambio de vista --- */
+let camTween = null;
+
+function flyTo(pos, look, dur = 1.5){
+  camTween = {
+    t: 0, dur,
+    fromP: camera.position.clone(), toP: pos.clone(),
+    fromT: controls.target.clone(), toT: look.clone()
+  };
+}
+
+function setView(id){
+  const v = VIEW_MAP[id];
+  if (!v || v === activeView) return;
+
+  if (activeView) activeView.target = 0;
+  activeView = v;
+
+  v.group.visible = true;
+  v.target = 1;
+
+  flyTo(v.cam, v.look, 1.55);
+  updateNav(id);
+  renderLegend(v.legend);
+  renderStats(v.stats);
+
+  hovered = null;
+  hideTip();
+  document.body.style.cursor = 'default';
+}
+
+/* --- botón de información --- */
+document.getElementById('infoBtn').addEventListener('click', () => {
+  document.getElementById('infoPanel').classList.toggle('show');
+});
+
+/* ================================================================
+   6. INTERACCIÓN (raycasting)
+   ================================================================ */
+
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2(-10, -10);
+let hovered = null;
+
+renderer.domElement.addEventListener('pointermove', e => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+  pointer.x =  (e.clientX / innerWidth)  * 2 - 1;
+  pointer.y = -(e.clientY / innerHeight) * 2 + 1;
+  if (hovered) positionTip(mouseX, mouseY);
+});
+
+renderer.domElement.addEventListener('pointerleave', () => {
+  pointer.set(-10, -10);
+});
+
+function updateHover(){
+  if (!activeView || !activeView.pickables.length){
+    if (hovered){ hovered = null; hideTip(); document.body.style.cursor = 'default'; }
+    return;
+  }
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(activeView.pickables, false);
+  const obj = hits.length ? hits[0].object : null;
+
+  if (obj !== hovered){
+    hovered = obj;
+    if (obj && obj.userData.tip){
+      showTip(obj.userData.tip, mouseX, mouseY);
+      document.body.style.cursor = 'pointer';
+    } else {
+      hideTip();
+      document.body.style.cursor = 'default';
+    }
+  }
+}
+
+/* ================================================================
+   7. CONSTRUCCIÓN Y BUCLE
+   ================================================================ */
+
+buildPublicaciones();
+buildInvestigadores();
+buildColaboraciones();
+buildReconocimientos();
+buildIndicadores();
+buildNav();
+
+// vista inicial
+activeView = VIEW_MAP['pub'];
+activeView.target = 1;
+activeView.fade = 0.001;
+activeView.group.visible = true;
+updateNav('pub');
+renderLegend(activeView.legend);
+renderStats(activeView.stats);
+
+const clock = new THREE.Clock();
+
+function animate(){
+  requestAnimationFrame(animate);
+
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t  = clock.elapsedTime;
+
+  /* --- interpolación de cámara --- */
+  if (camTween){
+    camTween.t += dt;
+    const k = Math.min(1, camTween.t / camTween.dur);
+    const e = k < 0.5 ? 4*k*k*k : 1 - Math.pow(-2*k + 2, 3) / 2; // easeInOutCubic
+    camera.position.lerpVectors(camTween.fromP, camTween.toP, e);
+    controls.target.lerpVectors(camTween.fromT, camTween.toT, e);
+    if (k >= 1) camTween = null;
+  }
+
+  /* --- fundido entre vistas --- */
+  for (const v of VIEW_LIST){
+    if (Math.abs(v.fade - v.target) > 0.0015){
+      v.fade += (v.target - v.fade) * Math.min(1, dt * 6.5);
+      if (Math.abs(v.fade - v.target) < 0.002) v.fade = v.target;
+      applyFade(v);
+      v.group.visible = v.fade > 0.005;
+    }
+  }
+
+  /* --- animaciones propias de cada vista --- */
+  for (const v of VIEW_LIST){
+    if (v.group.visible && v.update) v.update(t, dt);
+  }
+
+  /* --- estrellas --- */
+  if (stars) stars.rotation.y = t * 0.008;
+
+  /* --- hover --- */
+  updateHover();
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+/* --- resize --- */
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+});
+
+/* --- arranque --- */
+animate();
+
+setTimeout(() => {
+  document.getElementById('loader').classList.add('hide');
+}, 900);
+</script>
+</body>
+</html>
