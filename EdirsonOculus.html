@@ -1,4 +1,1366 @@
+<!--Edirson2026-NEW-CODE-->
 <!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QWEN 3D Studio — Jonatan E. Casado Avendaño</title>
+<meta name="description" content="Estudio 3D inmersivo y portfolio XR de Jonatan Edirson Casado Avendaño: WebXR, Three.js, arte generativo, videojuegos, teatro multimedia e IA con propósito.">
+<meta name="theme-color" content="#06070a">
+<meta property="og:title" content="QWEN 3D Studio — JECA.XR">
+<meta property="og:description" content="Experiencias inmersivas con propósito: VR, AR, WebXR, arte generativo e IA ética.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2306070a'/%3E%3Crect x='7' y='7' width='18' height='18' rx='4' fill='none' stroke='%23a78bfa' stroke-width='2.5'/%3E%3Crect x='14' y='14' width='4' height='4' fill='%2322d3ee'/%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Tailwind v4 (CSS-first, tokens vía @theme) -->
+<style type="text/tailwindcss">
+@import "tailwindcss";
+
+@theme {
+  --color-ink-950: #06070a;
+  --color-ink-900: #0a0c11;
+  --color-ink-850: #0d1016;
+  --color-ink-800: #12151d;
+  --color-ink-700: #191d28;
+  --color-line: #232937;
+  --color-line-soft: #1a1f2a;
+  --color-vio-300: #c4b5fd;
+  --color-vio-400: #a78bfa;
+  --color-vio-500: #8b5cf6;
+  --color-vio-600: #7c3aed;
+  --color-cy-300: #67e8f9;
+  --color-cy-400: #22d3ee;
+  --color-lim-400: #a3e635;
+  --color-amb-400: #fbbf24;
+  --color-mag-400: #e879f9;
+  --font-display: "Chakra Petch", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Space Grotesk", system-ui, sans-serif;
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+<style>
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:#06070a;margin:0;overflow-x:hidden}
+  .mono{font-family:"JetBrains Mono",monospace}
+  .micro{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-track{background:#0a0c11}
+  ::-webkit-scrollbar-thumb{background:#2a3140;border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:#7c3aed}
+  :focus-visible{outline:2px solid #8b5cf6;outline-offset:2px}
+
+  .panel{background:#0a0c11;border:1px solid #1a1f2a;border-radius:10px;overflow:hidden}
+  .panel-head{display:flex;align-items:center;gap:8px;padding:0 10px;height:32px;border-bottom:1px solid #1a1f2a;background:#0d1016}
+  .pill{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.1em;padding:2px 7px;border-radius:4px;border:1px solid #232937;color:#6b7488;background:#0d1016;white-space:nowrap}
+  .pill b{color:#a78bfa;font-weight:700}
+  .pill.lime{color:#a3e635;border-color:#3f4a1c;background:#131a0b}
+  .pill.cy{color:#22d3ee;border-color:#14393f;background:#08171a}
+
+  .tool{width:34px;height:34px;display:grid;place-items:center;border-radius:7px;color:#5b6478;border:1px solid transparent;transition:.16s;background:none;cursor:pointer}
+  .tool:hover{color:#c4b5fd;background:#12151d}
+  .tool.on{color:#06070a;background:linear-gradient(140deg,#a78bfa,#22d3ee);border-color:#a78bfa}
+  .tool.on svg{stroke-width:2.4}
+
+  .tab{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.1em;padding:0 12px;height:32px;display:inline-flex;align-items:center;gap:6px;color:#5b6478;border-right:1px solid #1a1f2a;border-bottom:2px solid transparent;text-decoration:none;white-space:nowrap;background:none;cursor:pointer}
+  .tab:hover{color:#c4b5fd;background:#0d1016}
+  .tab.on{color:#c4b5fd;border-bottom-color:#8b5cf6;background:#0d1016}
+
+  input[type=range]{-webkit-appearance:none;appearance:none;height:3px;border-radius:3px;background:#1a1f2a;outline:none;flex:1;min-width:40px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;border-radius:2px;background:#a78bfa;cursor:pointer;box-shadow:0 0 8px rgba(167,139,250,.7)}
+  input[type=range]::-moz-range-thumb{width:11px;height:11px;border:0;border-radius:2px;background:#a78bfa;cursor:pointer}
+
+  .row{display:flex;align-items:center;gap:8px;padding:3px 0}
+  .row span.lbl{font-family:"JetBrains Mono",monospace;font-size:9px;color:#5b6478;width:54px;letter-spacing:.06em;flex-shrink:0}
+  .row b.val{font-family:"JetBrains Mono",monospace;font-size:9px;color:#8b93a6;width:40px;text-align:right;flex-shrink:0}
+
+  .field{background:#0d1016;border:1px solid #1a1f2a;border-radius:6px;padding:8px 10px;font-family:"JetBrains Mono",monospace;font-size:11px;color:#d6dae3;width:100%;outline:none;transition:.16s}
+  .field:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.14)}
+  .field::placeholder{color:#444c5e}
+  select.field option{background:#0d1016}
+
+  .swatch{width:16px;height:16px;border-radius:3px;border:1px solid rgba(255,255,255,.16);cursor:pointer;padding:0}
+  .swatch.on{outline:2px solid #fff;outline-offset:1px}
+
+  .out-row{display:flex;align-items:center;gap:6px;padding:4px 8px;font-family:"JetBrains Mono",monospace;font-size:10px;color:#6b7488;cursor:pointer;border-left:2px solid transparent;background:none;width:100%;text-align:left}
+  .out-row:hover{background:#12151d;color:#c4b5fd}
+  .out-row.on{background:#150f26;color:#c4b5fd;border-left-color:#8b5cf6}
+
+  .card-hover{transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .3s}
+  .card-hover:hover{transform:translateY(-3px);border-color:#4c3a86}
+
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  .scan::after{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(180deg,rgba(255,255,255,.028) 0 1px,transparent 1px 3px)}
+  .grain::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.3;background-image:radial-gradient(rgba(255,255,255,.09) .5px,transparent .5px);background-size:3px 3px;mix-blend-mode:overlay}
+
+  .glow-txt{text-shadow:0 0 24px rgba(167,139,250,.55)}
+  .beam{background:linear-gradient(90deg,transparent,#8b5cf6,#22d3ee,transparent)}
+  .logo-3d{background:linear-gradient(140deg,#a78bfa,#22d3ee)}
+  .btn-primary{background:linear-gradient(135deg,#a78bfa,#8b5cf6 45%,#22d3ee);color:#06070a;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+  .btn-primary:hover{filter:brightness(1.12)}
+  .btn-ghost{border:1px solid #232937;color:#c4b5fd;background:none;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+  .btn-ghost:hover{background:#150f26;border-color:#7c3aed}
+  .btn-ghost:disabled{opacity:.4;cursor:not-allowed}
+
+  .node{border:1px solid #2a2038;background:#0d0a14;border-radius:7px;padding:7px 9px;font-family:"JetBrains Mono",monospace;font-size:9px;color:#8b93a6}
+  .wire{stroke:#2a2038;stroke-width:1.2;fill:none}
+  .wire.hot{stroke:#8b5cf6}
+
+  #viewport:fullscreen{height:100vh;width:100vw;border-radius:0}
+
+  @keyframes blink{50%{opacity:0}}
+  .caret{animation:blink 1s steps(1) infinite}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .float{animation:floaty 4s ease-in-out infinite}
+  @keyframes dashmove{to{stroke-dashoffset:-220}}
+  .dash{stroke-dasharray:5 7;animation:dashmove 6s linear infinite}
+  @keyframes pulsedot{0%,100%{opacity:.35;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
+  .pdot{animation:pulsedot 1.8s ease-in-out infinite}
+
+  @media (prefers-reduced-motion:reduce){
+    .reveal{opacity:1;transform:none}
+    .float,.dash,.pdot,.caret{animation:none}
+  }
+  @media print{
+    #boot,#viewport,#gcv{display:none}
+    body{background:#fff;color:#000}
+  }
+</style>
+</head>
+
+<body class="font-sans text-zinc-300 antialiased selection:bg-vio-500/30">
+
+<noscript>
+  <div style="padding:24px;font-family:monospace;color:#c4b5fd">QWEN 3D Studio necesita JavaScript para montar el viewport WebGL.</div>
+</noscript>
+
+<!-- ═════════ PRELOADER ═════════ -->
+<div id="boot" class="fixed inset-0 z-[200] bg-ink-950 p-5 font-mono text-[11px] leading-relaxed flex flex-col">
+  <div class="flex items-center gap-2 mb-4">
+    <div class="logo-3d w-5 h-5 rounded grid place-items-center"><span class="w-1.5 h-1.5 bg-ink-950 rounded-sm"></span></div>
+    <span class="text-zinc-200 tracking-[.2em] text-[10px]">QWEN3D STUDIO</span>
+    <span class="pill cy ml-1">v4.2.0-XR</span>
+  </div>
+  <div id="boot-log" class="space-y-1 text-lim-400"></div>
+  <div class="mt-auto flex items-center justify-between text-zinc-600">
+    <span>qwen3d://session<span class="caret">_</span></span>
+    <span id="boot-pct" class="text-vio-400">0%</span>
+  </div>
+  <div class="h-0.5 w-full bg-ink-800 mt-2 overflow-hidden rounded">
+    <div id="boot-bar" class="h-full w-0 bg-gradient-to-r from-vio-500 to-cy-400 transition-all duration-200"></div>
+  </div>
+</div>
+
+<!-- ═════════ MENUBAR ═════════ -->
+<header class="h-10 flex items-center gap-3 px-3 border-b border-line bg-ink-900 select-none sticky top-0 z-40">
+  <a href="#top" class="flex items-center gap-2 shrink-0 no-underline">
+    <div class="logo-3d w-4 h-4 rounded-[4px] grid place-items-center"><span class="w-1.5 h-1.5 bg-ink-950 rounded-[1px]"></span></div>
+    <span class="font-display text-[11px] tracking-[.2em] text-zinc-100">QWEN<span class="text-vio-400">3D</span>STUDIO</span>
+    <span class="pill cy">v4.2.0-XR</span>
+  </a>
+  <nav class="hidden md:flex items-center gap-0.5 ml-3 text-[11px] text-zinc-500 font-mono">
+    <button class="px-2 py-1 rounded hover:bg-ink-800 hover:text-vio-300" data-menu="archivo">archivo</button>
+    <button class="px-2 py-1 rounded hover:bg-ink-800 hover:text-vio-300" data-menu="editar">editar</button>
+    <button class="px-2 py-1 rounded hover:bg-ink-800 hover:text-vio-300" data-menu="objeto">objeto</button>
+    <button class="px-2 py-1 rounded hover:bg-ink-800 hover:text-vio-300" data-menu="render">render</button>
+    <button class="px-2 py-1 rounded hover:bg-ink-800 hover:text-vio-300" data-menu="ayuda">ayuda</button>
+  </nav>
+  <div class="ml-auto flex items-center gap-1.5">
+    <span class="pill hidden lg:inline">GPU <b id="hud-gpu">webgl2</b></span>
+    <span class="pill">FPS <b id="hud-fps">60</b></span>
+    <span class="pill lime hidden sm:inline"><span class="inline-block w-1 h-1 rounded-full bg-lim-400 pdot align-middle mr-1"></span>XR READY</span>
+    <button id="fs-btn" class="tool !w-7 !h-7" title="Pantalla completa" aria-label="Pantalla completa">
+      <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+    </button>
+    <div class="w-6 h-6 rounded-full bg-vio-500/20 border border-vio-500/50 grid place-items-center mono text-[8px] text-vio-300">JC</div>
+  </div>
+</header>
+
+<!-- ═════════ TABS / NAV ═════════ -->
+<nav class="flex items-stretch h-8 bg-ink-950 border-b border-line-soft overflow-x-auto" aria-label="Secciones">
+  <a href="#top" class="tab on">escena_principal</a>
+  <a href="#escena" class="tab">entidad_perfil</a>
+  <a href="#atributos" class="tab">atributos</a>
+  <a href="#assets" class="tab">assets_3d</a>
+  <a href="#runtime" class="tab">runtime_xr</a>
+  <a href="#shaderlab" class="tab">shader_lab</a>
+  <a href="#webxr" class="tab">webxr_export</a>
+  <a href="#ia" class="tab">ia_ética</a>
+  <a href="#teatro" class="tab">teatro</a>
+  <a href="#contacto" class="tab">contacto</a>
+</nav>
+
+<!-- ═════════ WORKSPACE ═════════ -->
+<main id="top" class="grid lg:grid-cols-[48px_1fr_300px] bg-ink-950 border-b border-line">
+
+  <!-- TOOL RAIL -->
+  <div class="hidden lg:flex flex-col items-center gap-1 py-2 border-r border-line-soft bg-ink-900">
+    <button class="tool on" data-tool="select" title="Seleccionar (V)" aria-label="Seleccionar"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg></button>
+    <button class="tool" data-tool="translate" title="Mover (G)" aria-label="Mover"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M2 12h20M9 5l3-3 3 3M9 19l3 3 3-3M5 9l-3 3 3 3M19 9l3 3-3 3"/></svg></button>
+    <button class="tool" data-tool="rotate" title="Rotar (R)" aria-label="Rotar"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-9-9c2.5 0 4.8 1 6.4 2.6L21 8"/><path d="M21 3v5h-5"/></svg></button>
+    <button class="tool" data-tool="scale" title="Escalar (S)" aria-label="Escalar"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21V9m0 12h12M3 21l8-8M21 3h-6m6 0v6m0-6-6 6"/></svg></button>
+    <div class="w-5 h-px bg-line my-1"></div>
+    <button class="tool" data-add="box" title="Cubo" aria-label="Añadir cubo"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 21v-8"/></svg></button>
+    <button class="tool" data-add="sphere" title="Esfera" aria-label="Añadir esfera"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18"/></svg></button>
+    <button class="tool" data-add="knot" title="Torus knot" aria-label="Añadir nudo"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/></svg></button>
+    <button class="tool" data-add="cone" title="Cono" aria-label="Añadir cono"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 8 15H4z"/><ellipse cx="12" cy="18" rx="8" ry="3"/></svg></button>
+    <div class="w-5 h-px bg-line my-1"></div>
+    <button class="tool" id="t-grid" title="Rejilla" aria-label="Alternar rejilla"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg></button>
+    <button class="tool" id="t-snap" title="Captura PNG" aria-label="Captura"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
+    <div class="mt-auto"><button class="tool" id="t-del" title="Eliminar (Supr)" aria-label="Eliminar"><svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></button></div>
+  </div>
+
+  <!-- VIEWPORT -->
+  <div class="relative min-w-0">
+    <div id="viewport" class="relative h-[52vh] lg:h-[calc(100vh-10rem)] min-h-[340px] bg-[#05060a] overflow-hidden scan grain">
+      <canvas id="gl" class="block w-full h-full"></canvas>
+
+      <div class="absolute top-2 left-2 flex items-center gap-1.5 z-20 flex-wrap">
+        <span class="pill">perspectiva</span>
+        <span class="pill cy">gizmo: <b id="hud-mode">seleccionar</b></span>
+        <span class="pill" id="hud-sel">sin selección</span>
+      </div>
+      <div class="absolute top-2 right-2 flex flex-col gap-1 z-20">
+        <button class="w-6 h-6 grid place-items-center rounded bg-ink-900/80 border border-line text-zinc-500 hover:text-vio-300" data-view="iso" title="Vista isométrica">◇</button>
+        <button class="w-6 h-6 grid place-items-center rounded bg-ink-900/80 border border-line text-zinc-500 hover:text-vio-300" data-view="top" title="Vista superior">▤</button>
+        <button class="w-6 h-6 grid place-items-center rounded bg-ink-900/80 border border-line text-zinc-500 hover:text-vio-300" data-view="front" title="Vista frontal">▣</button>
+      </div>
+
+      <div class="absolute bottom-2 right-2 z-20 pointer-events-none">
+        <svg width="54" height="54" viewBox="0 0 54 54" aria-hidden="true">
+          <circle cx="27" cy="27" r="19" fill="none" stroke="#1a1f2a"/>
+          <line x1="27" y1="27" x2="44" y2="35" stroke="#e879f9" stroke-width="1.6"/>
+          <line x1="27" y1="27" x2="27" y2="8" stroke="#a3e635" stroke-width="1.6"/>
+          <line x1="27" y1="27" x2="10" y2="35" stroke="#22d3ee" stroke-width="1.6"/>
+          <text x="46" y="40" fill="#e879f9" font-size="6" font-family="monospace">X</text>
+          <text x="24" y="7" fill="#a3e635" font-size="6" font-family="monospace">Y</text>
+          <text x="5" y="40" fill="#22d3ee" font-size="6" font-family="monospace">Z</text>
+        </svg>
+      </div>
+
+      <div id="hero-card" class="absolute left-3 bottom-3 z-30 max-w-[360px]">
+        <div class="mono text-[9px] tracking-[.28em] text-cy-400 mb-1">&lt; EXPORTAR_MUNDO / XR &gt;</div>
+        <h1 class="font-display text-[20px] sm:text-[26px] leading-[1.08] font-bold text-white glow-txt">
+          JONATAN E. CASADO<br><span class="text-vio-300">AVENDAÑO</span>
+        </h1>
+        <p class="text-[10.5px] text-zinc-500 mt-1.5 leading-snug font-mono">
+          VR · AR · WebXR · arte generativo · juegos · teatro multimedia · IA con propósito
+        </p>
+        <div class="flex gap-1.5 mt-2.5 flex-wrap">
+          <a href="#escena" class="btn-primary font-display text-[10px] tracking-wider px-3 py-1.5 rounded font-bold">EXPLORAR ESCENA</a>
+          <a href="#runtime" class="btn-ghost font-display text-[10px] tracking-wider px-3 py-1.5 rounded">▶ PLAYTEST</a>
+        </div>
+      </div>
+
+      <div id="toasts" class="absolute top-10 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-1.5 pointer-events-none"></div>
+    </div>
+
+    <!-- barra de herramientas móvil -->
+    <div class="lg:hidden flex items-center gap-1 px-2 h-11 bg-ink-900 border-t border-line-soft overflow-x-auto">
+      <button class="tool on !w-8 !h-8" data-tool="select" aria-label="Seleccionar">✥</button>
+      <button class="tool !w-8 !h-8" data-tool="translate" aria-label="Mover">↔</button>
+      <button class="tool !w-8 !h-8" data-tool="rotate" aria-label="Rotar">↻</button>
+      <button class="tool !w-8 !h-8" data-tool="scale" aria-label="Escalar">⤢</button>
+      <span class="w-px h-5 bg-line mx-0.5"></span>
+      <button class="tool !w-8 !h-8" data-add="box" aria-label="Cubo">□</button>
+      <button class="tool !w-8 !h-8" data-add="sphere" aria-label="Esfera">○</button>
+      <button class="tool !w-8 !h-8" data-add="knot" aria-label="Nudo">✧</button>
+      <button class="tool !w-8 !h-8 ml-auto" id="t-del-m" aria-label="Eliminar">⌫</button>
+    </div>
+
+    <!-- consola -->
+    <div class="h-[104px] bg-ink-900 border-t border-line-soft flex flex-col">
+      <div class="flex items-center gap-2 h-6 px-2 border-b border-line-soft">
+        <span class="micro text-zinc-600">consola</span>
+        <span class="micro text-lim-400">● activa</span>
+        <button id="clear-log" class="ml-auto micro text-zinc-600 hover:text-vio-300">limpiar</button>
+      </div>
+      <div id="log" class="flex-1 overflow-y-auto px-2 py-1 font-mono text-[9.5px] leading-[1.55] text-zinc-500"></div>
+    </div>
+  </div>
+
+  <!-- DOCK -->
+  <aside class="hidden lg:flex flex-col border-l border-line-soft bg-ink-900 h-[calc(100vh-10rem)] sticky top-[72px]">
+    <div class="flex h-7 border-b border-line-soft shrink-0">
+      <button class="dock-tab flex-1 micro text-vio-300 bg-ink-800 border-b border-vio-500" data-dock="outliner">outliner</button>
+      <button class="dock-tab flex-1 micro text-zinc-600" data-dock="inspector">inspector</button>
+    </div>
+
+    <div id="dock-outliner" class="flex-1 min-h-0 flex flex-col">
+      <div class="px-2 py-1 border-b border-line-soft flex items-center gap-1">
+        <span class="micro text-zinc-600">colección</span>
+        <span class="ml-auto micro text-vio-400" id="obj-count">0</span>
+      </div>
+      <div id="outliner" class="flex-1 overflow-y-auto py-1"></div>
+    </div>
+
+    <div id="dock-inspector" class="hidden flex-1 min-h-0 flex-col">
+      <div class="px-2 py-1 border-b border-line-soft"><span class="micro text-zinc-600">transformada</span></div>
+      <div class="flex-1 overflow-y-auto p-2 space-y-1">
+        <div class="micro text-zinc-600">posición</div>
+        <div class="row"><span class="lbl">X</span><input type="range" data-t="p.x" min="-8" max="8" step="0.01" value="0" aria-label="Posición X"><b class="val" data-v="p.x">0.00</b></div>
+        <div class="row"><span class="lbl">Y</span><input type="range" data-t="p.y" min="0" max="6" step="0.01" value="1" aria-label="Posición Y"><b class="val" data-v="p.y">1.00</b></div>
+        <div class="row"><span class="lbl">Z</span><input type="range" data-t="p.z" min="-8" max="8" step="0.01" value="0" aria-label="Posición Z"><b class="val" data-v="p.z">0.00</b></div>
+        <div class="micro text-zinc-600 pt-1">rotación</div>
+        <div class="row"><span class="lbl">X</span><input type="range" data-t="r.x" min="-3.14" max="3.14" step="0.01" value="0" aria-label="Rotación X"><b class="val" data-v="r.x">0.00</b></div>
+        <div class="row"><span class="lbl">Y</span><input type="range" data-t="r.y" min="-3.14" max="3.14" step="0.01" value="0" aria-label="Rotación Y"><b class="val" data-v="r.y">0.00</b></div>
+        <div class="row"><span class="lbl">Z</span><input type="range" data-t="r.z" min="-3.14" max="3.14" step="0.01" value="0" aria-label="Rotación Z"><b class="val" data-v="r.z">0.00</b></div>
+        <div class="micro text-zinc-600 pt-1">escala</div>
+        <div class="row"><span class="lbl">XYZ</span><input type="range" data-t="s" min="0.2" max="2.5" step="0.01" value="1" aria-label="Escala"><b class="val" data-v="s">1.00</b></div>
+        <div class="micro text-zinc-600 pt-1">material</div>
+        <div class="flex items-center gap-1 flex-wrap pt-0.5">
+          <button class="swatch on" style="background:#a78bfa" data-col="#a78bfa" aria-label="Violeta"></button>
+          <button class="swatch" style="background:#22d3ee" data-col="#22d3ee" aria-label="Cian"></button>
+          <button class="swatch" style="background:#e879f9" data-col="#e879f9" aria-label="Magenta"></button>
+          <button class="swatch" style="background:#a3e635" data-col="#a3e635" aria-label="Lima"></button>
+          <button class="swatch" style="background:#fbbf24" data-col="#fbbf24" aria-label="Ámbar"></button>
+          <button class="swatch" style="background:#f87171" data-col="#f87171" aria-label="Rojo"></button>
+        </div>
+        <label class="flex items-center gap-2 pt-1.5 cursor-pointer"><input type="checkbox" id="wire" class="accent-vio-500 w-3 h-3"><span class="micro text-zinc-500">wireframe</span></label>
+        <div class="row pt-1"><span class="lbl">emisión</span><input type="range" id="emis" min="0" max="1" step="0.01" value="0.35" aria-label="Emisión"></div>
+      </div>
+      <div class="p-2 border-t border-line-soft"><button id="focus-btn" class="w-full btn-ghost text-[10px] font-mono py-1.5 rounded">enfocar (F)</button></div>
+    </div>
+  </aside>
+</main>
+
+<!-- ═════════ STATUS BAR ═════════ -->
+<div class="h-6 flex items-center gap-3 px-3 bg-ink-900 border-b border-line micro text-zinc-600">
+  <span class="text-lim-400">●</span>
+  <span>three r160 · webgl2</span>
+  <span id="hud-tris">0 tris</span>
+  <span id="hud-objs">0 objetos</span>
+  <span class="ml-auto hidden md:inline">V · G · R · S &nbsp;|&nbsp; F enfocar &nbsp;|&nbsp; Supr borrar</span>
+</div>
+
+<!-- ═════════ CONTENIDO ═════════ -->
+<div class="max-w-6xl mx-auto px-4 sm:px-6">
+
+  <!-- 01 PERFIL -->
+  <section id="escena" class="py-10 border-b border-line-soft reveal">
+    <div class="flex items-center gap-3 mb-5">
+      <span class="micro text-vio-400">01</span>
+      <h2 class="font-display text-lg font-bold text-white">entidad_perfil</h2>
+      <div class="flex-1 h-px beam opacity-40"></div>
+      <span class="pill">inspector</span>
+    </div>
+    <div class="grid md:grid-cols-[1fr_250px] gap-4">
+      <div class="panel p-4">
+        <p class="text-[13px] leading-relaxed text-zinc-400">
+          Soy <strong class="text-vio-300 font-medium">Jonatan Edirson Casado Avendaño</strong>, creador multidisciplinario especializado en experiencias inmersivas que fusionan tecnología, arte y educación.
+        </p>
+        <p class="text-[12.5px] leading-relaxed text-zinc-500 mt-2.5">
+          Desarrollo web interactivo, videojuegos, animación 2D/3D, realidades extendidas (VR/AR/XR/WebXR), arte generativo, producciones multimedia para teatro y uso ético de la IA. La tecnología como puente hacia experiencias significativas.
+        </p>
+        <div class="flex flex-wrap gap-1.5 mt-3.5">
+          <span class="mono text-[9px] px-2 py-0.5 rounded bg-vio-500/10 text-vio-300 border border-vio-500/25">WebXR</span>
+          <span class="mono text-[9px] px-2 py-0.5 rounded bg-cy-400/10 text-cy-300 border border-cy-400/25">Three.js</span>
+          <span class="mono text-[9px] px-2 py-0.5 rounded bg-mag-400/10 text-mag-400 border border-mag-400/25">A-Frame</span>
+          <span class="mono text-[9px] px-2 py-0.5 rounded bg-lim-400/10 text-lim-400 border border-lim-400/25">Unity</span>
+          <span class="mono text-[9px] px-2 py-0.5 rounded bg-amb-400/10 text-amb-400 border border-amb-400/25">Canvas</span>
+          <span class="mono text-[9px] px-2 py-0.5 rounded bg-zinc-500/10 text-zinc-400 border border-line">IA ética</span>
+        </div>
+      </div>
+      <div class="panel p-3 font-mono text-[10px] leading-[1.9] text-zinc-500">
+        <div class="micro text-zinc-600 mb-1.5">propiedades</div>
+        <div class="flex justify-between"><span>tipo</span><span class="text-vio-300">creador_xr</span></div>
+        <div class="flex justify-between"><span>modo</span><span class="text-lim-400">abierto</span></div>
+        <div class="flex justify-between"><span>stack</span><span class="text-zinc-400">18</span></div>
+        <div class="flex justify-between"><span>proyectos</span><span class="text-zinc-400">40+</span></div>
+        <div class="mt-2 pt-2 border-t border-line-soft text-[9px] text-zinc-600">id: jeca-0001<br>licencia: cc-by-nc</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 ATRIBUTOS -->
+  <section id="atributos" class="py-10 border-b border-line-soft reveal">
+    <div class="flex items-center gap-3 mb-5">
+      <span class="micro text-cy-400">02</span>
+      <h2 class="font-display text-lg font-bold text-white">árbol_de_atributos</h2>
+      <div class="flex-1 h-px beam opacity-40"></div>
+      <span class="pill cy">9 nodos</span>
+    </div>
+    <div class="panel relative p-4 overflow-hidden">
+      <svg class="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none" aria-hidden="true">
+        <path class="wire dash" d="M90,60 C180,20 260,110 340,70 S480,30 600,80"/>
+        <path class="wire" d="M90,140 C200,180 300,90 420,150 S560,120 620,160"/>
+        <path class="wire hot" d="M120,200 C240,150 320,220 460,190"/>
+      </svg>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 relative">
+        <div class="node">web_interactivo<span class="block text-vio-300 text-[13px] font-bold">95%</span></div>
+        <div class="node">3d_webgl<span class="block text-vio-300 text-[13px] font-bold">90%</span></div>
+        <div class="node">vr_ar_xr<span class="block text-cy-300 text-[13px] font-bold">92%</span></div>
+        <div class="node">videojuegos<span class="block text-vio-300 text-[13px] font-bold">88%</span></div>
+        <div class="node">arte_generativo<span class="block text-mag-400 text-[13px] font-bold">85%</span></div>
+        <div class="node">responsive<span class="block text-vio-300 text-[13px] font-bold">93%</span></div>
+        <div class="node">animación<span class="block text-mag-400 text-[13px] font-bold">87%</span></div>
+        <div class="node">ia_propósito<span class="block text-cy-300 text-[13px] font-bold">82%</span></div>
+        <div class="node">video_teatro<span class="block text-amb-400 text-[13px] font-bold">80%</span></div>
+      </div>
+      <div class="mt-3 space-y-1.5">
+        <div class="row"><span class="lbl">render</span><div class="h-1 flex-1 bg-ink-800 rounded overflow-hidden"><div class="h-full bg-gradient-to-r from-vio-500 to-cy-400 skill-fill" data-w="92%" style="width:0"></div></div></div>
+        <div class="row"><span class="lbl">lógica</span><div class="h-1 flex-1 bg-ink-800 rounded overflow-hidden"><div class="h-full bg-gradient-to-r from-cy-400 to-lim-400 skill-fill" data-w="88%" style="width:0"></div></div></div>
+        <div class="row"><span class="lbl">arte</span><div class="h-1 flex-1 bg-ink-800 rounded overflow-hidden"><div class="h-full bg-gradient-to-r from-mag-400 to-amb-400 skill-fill" data-w="90%" style="width:0"></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 ASSETS -->
+  <section id="assets" class="py-10 border-b border-line-soft reveal">
+    <div class="flex items-center gap-3 mb-5">
+      <span class="micro text-mag-400">03</span>
+      <h2 class="font-display text-lg font-bold text-white">navegador_de_assets</h2>
+      <div class="flex-1 h-px beam opacity-40"></div>
+      <span class="pill">clic = instanciar</span>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5" id="assets-grid"></div>
+  </section>
+
+  <!-- 04 RUNTIME -->
+  <section id="runtime" class="py-10 border-b border-line-soft reveal">
+    <div class="flex items-center gap-3 mb-5">
+      <span class="micro text-lim-400">04</span>
+      <h2 class="font-display text-lg font-bold text-white">runtime_xr · playtest</h2>
+      <div class="flex-1 h-px beam opacity-40"></div>
+      <span class="pill lime">build estable</span>
+    </div>
+    <div class="panel">
+      <div class="panel-head flex-wrap !h-auto !py-1.5">
+        <span class="micro text-zinc-500">misión_vr.exe</span>
+        <div class="ml-auto flex items-center gap-2 flex-wrap">
+          <span class="micro text-zinc-600">score <b id="g-score" class="text-white">0</b></span>
+          <span class="micro text-zinc-600">nodos <b id="g-data" class="text-lim-400">0/5</b></span>
+          <span class="micro text-zinc-600">t <b id="g-time" class="text-amb-400">45</b></span>
+          <button id="g-start" class="mono text-[9px] px-2 py-0.5 rounded bg-lim-400/15 text-lim-400 border border-lim-400/30">▶ iniciar</button>
+          <button id="g-reset" class="mono text-[9px] px-2 py-0.5 rounded border border-line text-zinc-500">reset</button>
+        </div>
+      </div>
+      <div class="relative h-[340px] bg-[#05060a]">
+        <canvas id="gcv" class="block w-full h-full"></canvas>
+        <div id="g-overlay" class="absolute inset-0 grid place-items-center bg-ink-950/85 text-center px-6">
+          <div>
+            <div class="w-14 h-8 border-2 border-lim-400 rounded-full mx-auto mb-4 float relative">
+              <span class="absolute w-3 h-3 rounded-full border border-cy-400 left-2 top-1/2 -translate-y-1/2"></span>
+              <span class="absolute w-3 h-3 rounded-full border border-cy-400 right-2 top-1/2 -translate-y-1/2"></span>
+            </div>
+            <h3 class="font-display text-base text-lim-400 mb-2">XR MISSION</h3>
+            <p class="text-[11.5px] text-zinc-400 max-w-[340px] mx-auto mb-3">Recoge los 5 nodos de datos VR para desbloquear la documentación sobre realidad virtual educativa.</p>
+            <div class="mono text-[10px] text-zinc-500 mb-3">WASD / flechas · arrastrar para orbitar</div>
+            <button id="g-play" class="btn-primary font-display text-[11px] tracking-wider px-5 py-1.5 rounded font-bold">JUGAR</button>
+          </div>
+        </div>
+        <div id="g-info" class="absolute bottom-2 left-2 right-2 sm:right-auto sm:w-[300px] panel p-2.5 hidden">
+          <div class="flex items-start gap-2">
+            <span class="text-mag-400 shrink-0 mt-0.5">◈</span>
+            <div><h4 id="g-info-t" class="mono text-[10px] text-mag-400 mb-0.5"></h4><p id="g-info-x" class="text-[10px] text-zinc-500 leading-snug"></p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 SHADER LAB -->
+  <section id="shaderlab" class="py-10 border-b border-line-soft reveal">
+    <div class="flex items-center gap-3 mb-5">
+      <span class="micro text-amb-400">05</span>
+      <h2 class="font-display text-lg font-bold text-white">shader_lab</h2>
+      <div class="flex-1 h-px beam opacity-40"></div>
+      <span class="pill">canvas 2d</span>
+    </div>
+    <div class="grid sm:grid-cols-2 gap-3">
+      <div class="panel">
+        <div class="panel-head"><span class="micro text-mag-400">flujo_neural.frag</span><button class="ml-auto micro text-zinc-600 hover:text-mag-400" data-regen="1">regenerar</button></div>
+        <div class="h-[240px] relative"><canvas id="ga1" class="block w-full h-full"></canvas></div>
+        <div class="p-2"><div class="row"><span class="lbl">densidad</span><input type="range" id="ga1-d" min="40" max="220" value="140" aria-label="Densidad"><b class="val" id="ga1-v">140</b></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="micro text-amb-400">particulas_caos.frag</span><button class="ml-auto micro text-zinc-600 hover:text-amb-400" data-regen="2">regenerar</button></div>
+        <div class="h-[240px] relative"><canvas id="ga2" class="block w-full h-full"></canvas></div>
+        <div class="p-2"><div class="row"><span class="lbl">gravedad</span><input type="range" id="ga2-g" min="0" max="0.12" step="0.005" value="0.03" aria-label="Gravedad"><b class="val" id="ga2-v">0.030</b></div></div>
+      </div>
+    </div>
+    <p class="mono text-[9.5px] text-zinc-600 mt-2">// interactúa: mueve el cursor en el flujo · clic para detonar partículas</p>
+  </section>
+
+  <!-- 06 WEBXR -->
+  <section id="webxr" class="py-10 border-b border-line-soft reveal">
+    <div class="flex items-center gap-3 mb-5">
+      <span class="micro text-cy-400">06</span>
+      <h2 class="font-display text-lg font-bold text-white">webxr_export</h2>
+      <div class="flex-1 h-px beam opacity-40"></div>
+      <span class="pill cy">a-frame 1.5</span>
+    </div>
+    <div class="grid sm:grid-cols-2 gap-3">
+      <div class="panel p-3">
+        <div class="micro text-zinc-600 mb-2">cargar assets</div>
+        <div id="drop" class="border border-dashed border-line rounded-lg p-5 text-center cursor-pointer hover:border-cy-400 hover:bg-cy-400/5 transition">
+          <div class="text-zinc-600 text-xl mb-1">⇪</div>
+          <p class="text-[11px] text-zinc-500">arrastra o haz clic</p>
+          <p class="mono text-[9px] text-zinc-700 mt-0.5">.glb · .gltf · .obj · .html · .js</p>
+          <input type="file" id="file" class="hidden" multiple>
+        </div>
+        <div id="files" class="mt-2 space-y-1 max-h-[110px] overflow-y-auto"></div>
+        <div class="flex gap-1.5 mt-2">
+          <button id="prev-btn" disabled class="flex-1 mono text-[9.5px] py-1.5 rounded border border-line text-zinc-600">vista previa</button>
+          <button id="dep-btn" disabled class="flex-1 mono text-[9.5px] py-1.5 rounded bg-lim-400/15 text-lim-400 border border-lim-400/30">desplegar</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="micro text-cy-400">escena.aframe.html</span></div>
+        <pre class="p-2.5 mono text-[9.5px] leading-[1.7] text-zinc-500 overflow-x-auto"><span class="text-cy-400">&lt;a-scene</span> <span class="text-lim-400">renderer</span>=<span class="text-amb-400">"antialias:true"</span><span class="text-cy-400">&gt;</span>
+  <span class="text-cy-400">&lt;a-box</span> <span class="text-lim-400">position</span>=<span class="text-amb-400">"0 1 -3"</span>
+         <span class="text-lim-400">color</span>=<span class="text-amb-400">"#a78bfa"</span><span class="text-cy-400">&gt;&lt;/a-box&gt;</span>
+  <span class="text-cy-400">&lt;a-sphere</span> <span class="text-lim-400">position</span>=<span class="text-amb-400">"2 1 -3"</span>
+            <span class="text-lim-400">color</span>=<span class="text-amb-400">"#22d3ee"</span><span class="text-cy-400">&gt;&lt;/a-sphere&gt;</span>
+  <span class="text-cy-400">&lt;a-plane</span> <span class="text-lim-400">rotation</span>=<span class="text-amb-400">"-90 0 0"</span>
+           <span class="text-lim-400">width</span>=<span class="text-amb-400">"8"</span> <span class="text-lim-400">height</span>=<span class="text-amb-400">"8"</span><span class="text-cy-400">&gt;&lt;/a-plane&gt;</span>
+  <span class="text-cy-400">&lt;a-sky</span> <span class="text-lim-400">color</span>=<span class="text-amb-400">"#05060a"</span><span class="text-cy-400">&gt;&lt;/a-sky&gt;</span>
+<span class="text-cy-400">&lt;/a-scene&gt;</span></pre>
+        <div class="p-2 flex flex-wrap gap-1 border-t border-line-soft">
+          <span class="mono text-[8.5px] px-1.5 py-0.5 rounded bg-cy-400/10 text-cy-300 border border-cy-400/20">webxr api</span>
+          <span class="mono text-[8.5px] px-1.5 py-0.5 rounded bg-vio-500/10 text-vio-300 border border-vio-500/20">hand tracking</span>
+          <span class="mono text-[8.5px] px-1.5 py-0.5 rounded bg-lim-400/10 text-lim-400 border border-lim-400/20">immersive vr</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07 IA -->
+  <section id="ia" class="py-10 border-b border-line-soft reveal">
+    <div class="flex items-center gap-3 mb-5">
+      <span class="micro text-amb-400">07</span>
+      <h2 class="font-display text-lg font-bold text-white">grafo_ia_ética</h2>
+      <div class="flex-1 h-px beam opacity-40"></div>
+      <span class="pill">6 módulos</span>
+    </div>
+    <div class="grid sm:grid-cols-3 gap-2.5">
+      <div class="panel p-3 card-hover"><span class="text-amb-400 text-sm">◇</span><h3 class="font-display text-[12px] text-white mt-1.5 mb-1">IA educacional</h3><p class="text-[10.5px] text-zinc-500 leading-snug">Modelos de lenguaje para aprendizaje significativo y personalizado.</p></div>
+      <div class="panel p-3 card-hover"><span class="text-lim-400 text-sm">◈</span><h3 class="font-display text-[12px] text-white mt-1.5 mb-1">Ética digital</h3><p class="text-[10.5px] text-zinc-500 leading-snug">Transparencia, sesgo mitigado, privacidad y consentimiento.</p></div>
+      <div class="panel p-3 card-hover"><span class="text-cy-400 text-sm">◉</span><h3 class="font-display text-[12px] text-white mt-1.5 mb-1">Accesibilidad</h3><p class="text-[10.5px] text-zinc-500 leading-snug">XR + IA para experiencias inmersivas universales.</p></div>
+      <div class="panel p-3 card-hover"><span class="text-mag-400 text-sm">✧</span><h3 class="font-display text-[12px] text-white mt-1.5 mb-1">Arte co-creativo</h3><p class="text-[10.5px] text-zinc-500 leading-snug">IA como herramienta, nunca como sustituto del criterio.</p></div>
+      <div class="panel p-3 card-hover"><span class="text-vio-400 text-sm">⚖</span><h3 class="font-display text-[12px] text-white mt-1.5 mb-1">Gobernanza</h3><p class="text-[10.5px] text-zinc-500 leading-snug">Marcos regulatorios y autorregulación para IA en XR.</p></div>
+      <div class="panel p-3 card-hover"><span class="text-amb-400 text-sm">◎</span><h3 class="font-display text-[12px] text-white mt-1.5 mb-1">Comunidad</h3><p class="text-[10.5px] text-zinc-500 leading-snug">Herramientas abiertas para colectivos educativos y culturales.</p></div>
+    </div>
+  </section>
+
+  <!-- 08 TEATRO -->
+  <section id="teatro" class="py-10 border-b border-line-soft reveal">
+    <div class="flex items-center gap-3 mb-5">
+      <span class="micro text-mag-400">08</span>
+      <h2 class="font-display text-lg font-bold text-white">teatro_multimedia</h2>
+      <div class="flex-1 h-px beam opacity-40"></div>
+      <span class="pill">escénico</span>
+    </div>
+    <div class="grid sm:grid-cols-2 gap-3">
+      <div class="panel card-hover">
+        <div class="h-[140px] relative overflow-hidden bg-gradient-to-br from-vio-600/25 via-ink-800 to-ink-950 grid place-items-center">
+          <div class="absolute inset-0 opacity-30" style="background-image:linear-gradient(90deg,#8b5cf6 1px,transparent 1px),linear-gradient(#8b5cf6 1px,transparent 1px);background-size:18px 18px"></div>
+          <span class="text-2xl text-vio-300 relative">▤</span>
+          <span class="absolute top-2 right-2 mono text-[8.5px] px-1.5 py-0.5 rounded bg-ink-950/80 text-vio-300 border border-vio-500/30">TEATRO</span>
+        </div>
+        <div class="p-3"><h3 class="font-display text-[12px] text-white mb-1">Escenas digitales</h3><p class="text-[10.5px] text-zinc-500 leading-snug">Proyecciones y visuales inmersivos para montajes: mapping, XR y narrativa en tiempo real.</p></div>
+      </div>
+      <div class="panel card-hover">
+        <div class="h-[140px] relative overflow-hidden bg-gradient-to-br from-mag-400/25 via-ink-800 to-ink-950 grid place-items-center">
+          <div class="absolute inset-0 opacity-30" style="background-image:radial-gradient(#e879f9 1px,transparent 1px);background-size:14px 14px"></div>
+          <span class="text-2xl text-mag-400 relative">✧</span>
+          <span class="absolute top-2 right-2 mono text-[8.5px] px-1.5 py-0.5 rounded bg-ink-950/80 text-mag-400 border border-mag-400/30">MULTIMEDIA</span>
+        </div>
+        <div class="p-3"><h3 class="font-display text-[12px] text-white mb-1">Narrativa interactiva</h3><p class="text-[10.5px] text-zinc-500 leading-snug">El espectador como participante activo mediante interfaces XR y control gestual.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09 CONTACTO -->
+  <section id="contacto" class="py-10 reveal">
+    <div class="flex items-center gap-3 mb-5">
+      <span class="micro text-vio-400">09</span>
+      <h2 class="font-display text-lg font-bold text-white">exportar_proyecto</h2>
+      <div class="flex-1 h-px beam opacity-40"></div>
+      <span class="pill">contacto</span>
+    </div>
+    <div class="panel p-4 max-w-2xl">
+      <form id="cform" class="space-y-2.5">
+        <div class="grid sm:grid-cols-2 gap-2.5">
+          <div><label class="micro text-zinc-600 block mb-1" for="cf-n">nombre</label><input id="cf-n" class="field" placeholder="tu nombre" required></div>
+          <div><label class="micro text-zinc-600 block mb-1" for="cf-e">email</label><input id="cf-e" type="email" class="field" placeholder="tu@email.com" required></div>
+        </div>
+        <div><label class="micro text-zinc-600 block mb-1" for="cf-s">tipo_de_proyecto</label>
+          <select id="cf-s" class="field"><option>proyecto WebXR</option><option>videojuego</option><option>arte generativo</option><option>producción teatral</option><option>consultoría IA</option><option>otro</option></select>
+        </div>
+        <div><label class="micro text-zinc-600 block mb-1" for="cf-m">mensaje</label><textarea id="cf-m" rows="3" class="field resize-none" placeholder="cuéntame sobre tu proyecto..."></textarea></div>
+        <button type="submit" class="w-full btn-primary font-display text-[11px] tracking-wider py-2 rounded font-bold">ENVIAR →</button>
+      </form>
+      <div id="ok" class="hidden text-center py-6">
+        <span class="text-lim-400 text-2xl">✓</span>
+        <h3 class="font-display text-sm text-lim-400 mt-1 mb-1">build enviado</h3>
+        <p class="text-[11px] text-zinc-500">Responderé lo antes posible.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer class="px-4 sm:px-6 py-5 border-t border-line bg-ink-900">
+  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+    <span class="font-display text-[11px] tracking-[.2em] text-vio-300">QWEN<span class="text-zinc-600">3D</span>STUDIO</span>
+    <p class="mono text-[9px] text-zinc-600 text-center">© 2024 Jonatan E. Casado Avendaño · experiencias inmersivas con propósito</p>
+    <div class="flex gap-1.5">
+      <a href="#" class="w-6 h-6 grid place-items-center rounded border border-line text-zinc-500 hover:text-vio-300 hover:border-vio-500 no-underline" aria-label="GitHub">gh</a>
+      <a href="#" class="w-6 h-6 grid place-items-center rounded border border-line text-zinc-500 hover:text-cy-300 hover:border-cy-400 no-underline" aria-label="LinkedIn">in</a>
+      <a href="#" class="w-6 h-6 grid place-items-center rounded border border-line text-zinc-500 hover:text-mag-400 hover:border-mag-400 no-underline" aria-label="Twitter">x</a>
+    </div>
+  </div>
+</footer>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ── consola ── */
+const logEl = $('#log');
+function log(msg, kind = 'info') {
+  const c = { info: 'text-zinc-500', ok: 'text-lim-400', warn: 'text-amb-400', vio: 'text-vio-300', cy: 'text-cy-300' }[kind] || 'text-zinc-500';
+  const t = new Date().toLocaleTimeString('es-ES', { hour12: false });
+  const d = document.createElement('div');
+  d.className = c;
+  d.innerHTML = `<span class="text-zinc-700">[${t}] ›</span> ${msg}`;
+  logEl.appendChild(d);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+$('#clear-log').onclick = () => { logEl.innerHTML = ''; log('consola reiniciada', 'vio'); };
+
+/* ── toast ── */
+function toast(msg, color = 'vio') {
+  const map = { vio: 'text-vio-300 border-vio-500/40 bg-vio-500/10', lim: 'text-lim-400 border-lim-400/40 bg-lim-400/10', cy: 'text-cy-300 border-cy-400/40 bg-cy-400/10' };
+  const el = document.createElement('div');
+  el.className = `mono text-[9.5px] px-2.5 py-1 rounded border backdrop-blur ${map[color]}`;
+  el.textContent = msg;
+  $('#toasts').appendChild(el);
+  setTimeout(() => { el.style.transition = 'all .5s'; el.style.opacity = '0'; el.style.transform = 'translateY(-6px)'; setTimeout(() => el.remove(), 500); }, 2200);
+}
+
+/* ── boot ── */
+const bootLines = [
+  ['init qwen.studio kernel v4.2.0', 'ok'],
+  ['mount webgl2 context', 'ok'],
+  ['compilar tokens tailwind v4 @theme', 'ok'],
+  ['cargar escena jeca.xr · 4 assets', 'ok'],
+  ['sondear runtime XR · immersive-vr', 'ok'],
+  ['bloom pass habilitado · umbral 0.72', 'vio'],
+  ['sesión lista', 'ok'],
+];
+(async () => {
+  const bar = $('#boot-bar'), pct = $('#boot-pct'), bl = $('#boot-log');
+  for (let i = 0; i < bootLines.length; i++) {
+    const [line, k] = bootLines[i];
+    const d = document.createElement('div');
+    d.className = k === 'ok' ? 'text-lim-400' : 'text-vio-300';
+    d.innerHTML = `<span class="text-zinc-700">›</span> ${line} <span class="text-zinc-700">[${k}]</span>`;
+    bl.appendChild(d);
+    log(line, k === 'ok' ? 'ok' : 'vio');
+    const p = Math.round((i + 1) / bootLines.length * 100);
+    bar.style.width = p + '%'; pct.textContent = p + '%';
+    await new Promise(r => setTimeout(r, reduce ? 40 : 150));
+  }
+  await new Promise(r => setTimeout(r, 220));
+  const b = $('#boot');
+  b.style.transition = 'opacity .55s';
+  b.style.opacity = '0';
+  setTimeout(() => b.remove(), 600);
+})();
+
+/* ═════════ VIEWPORT 3D ═════════ */
+const vp = $('#viewport');
+const canvas = $('#gl');
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x05060a, 0.045);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+camera.position.set(7, 5.5, 9);
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+
+try {
+  const gl = renderer.getContext();
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+  const name = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'webgl2';
+  $('#hud-gpu').textContent = String(name).replace(/\(.*?\)/g, '').trim().slice(0, 16).toLowerCase() || 'gpu';
+} catch (e) {}
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
+controls.target.set(0, 1, 0);
+controls.minDistance = 3;
+controls.maxDistance = 26;
+controls.maxPolarAngle = Math.PI * 0.49;
+
+const tcontrols = new TransformControls(camera, canvas);
+tcontrols.setSize(0.8);
+scene.add(tcontrols);
+tcontrols.addEventListener('dragging-changed', e => { controls.enabled = !e.value; if (!e.value) syncInspector(); });
+
+scene.add(new THREE.HemisphereLight(0x9aa8ff, 0x05060a, 0.55));
+const keyLight = new THREE.DirectionalLight(0xffffff, 2.2); keyLight.position.set(6, 9, 5); scene.add(keyLight);
+const pVio = new THREE.PointLight(0x8b5cf6, 26, 24); pVio.position.set(-5, 3, -4); scene.add(pVio);
+const pCy = new THREE.PointLight(0x22d3ee, 22, 24); pCy.position.set(5, 2.5, -5); scene.add(pCy);
+
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(22, 64).rotateX(-Math.PI / 2),
+  new THREE.MeshStandardMaterial({ color: 0x0a0d14, metalness: 0.9, roughness: 0.42 })
+);
+scene.add(floor);
+
+const grid = new THREE.GridHelper(40, 40, 0x7c3aed, 0x161b25);
+grid.position.y = 0.002;
+grid.material.transparent = true;
+grid.material.opacity = 0.5;
+scene.add(grid);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.62, 0.72, 0.72);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+const selBox = new THREE.BoxHelper(new THREE.Object3D(), 0xa78bfa);
+selBox.visible = false;
+scene.add(selBox);
+
+const objects = [];
+let selected = null;
+let tool = 'select';
+const PALETTE = ['#a78bfa', '#22d3ee', '#e879f9', '#a3e635', '#fbbf24', '#f87171'];
+const counter = { n: 0 };
+
+function makeGeo(type) {
+  switch (type) {
+    case 'sphere': return new THREE.SphereGeometry(0.62, 40, 28);
+    case 'knot': return new THREE.TorusKnotGeometry(0.52, 0.17, 140, 18);
+    case 'cone': return new THREE.ConeGeometry(0.6, 1.2, 32);
+    case 'torus': return new THREE.TorusGeometry(0.6, 0.2, 22, 60);
+    case 'ico': return new THREE.IcosahedronGeometry(0.72, 0);
+    case 'capsule': return new THREE.CapsuleGeometry(0.4, 0.7, 8, 18);
+    default: return new THREE.BoxGeometry(0.9, 0.9, 0.9);
+  }
+}
+
+function addObject(type = 'box', col) {
+  const color = col || PALETTE[Math.floor(Math.random() * PALETTE.length)];
+  const mat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(color), metalness: 0.55, roughness: 0.22,
+    emissive: new THREE.Color(color), emissiveIntensity: 0.35,
+  });
+  const m = new THREE.Mesh(makeGeo(type), mat);
+  counter.n++;
+  m.name = `${type}_${String(counter.n).padStart(3, '0')}`;
+  m.position.set((Math.random() - 0.5) * 6, 0.8 + Math.random() * 0.6, (Math.random() - 0.5) * 6);
+  scene.add(m);
+  objects.push(m);
+  select(m);
+  log(`instanciado <b class="text-vio-300">${m.name}</b>`, 'vio');
+  return m;
+}
+
+function select(o) {
+  selected = o;
+  if (!o) {
+    tcontrols.detach();
+    selBox.visible = false;
+    $('#hud-sel').textContent = 'sin selección';
+  } else {
+    selBox.setFromObject(o);
+    selBox.visible = true;
+    $('#hud-sel').textContent = o.name;
+    applyTool();
+  }
+  refreshOutliner();
+  syncInspector();
+}
+
+function applyTool() {
+  if (tool === 'select') tcontrols.detach();
+  else if (selected) { tcontrols.attach(selected); tcontrols.setMode(tool); }
+  $('#hud-mode').textContent = { select: 'seleccionar', translate: 'mover', rotate: 'rotar', scale: 'escalar' }[tool];
+}
+
+$$('[data-tool]').forEach(b => b.onclick = () => {
+  tool = b.dataset.tool;
+  $$('[data-tool]').forEach(x => x.classList.toggle('on', x === b));
+  applyTool();
+  log(`herramienta: ${tool}`);
+});
+$$('[data-add]').forEach(b => b.onclick = () => addObject(b.dataset.add));
+
+$('#t-grid').onclick = () => { grid.visible = !grid.visible; log(`rejilla ${grid.visible ? 'on' : 'off'}`); };
+$('#t-snap').onclick = () => {
+  composer.render();
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'qwen3d_snapshot.png';
+  a.click();
+  toast('snapshot guardado', 'lim');
+  log('render → png', 'ok');
+};
+$('#focus-btn').onclick = () => { if (selected) { controls.target.copy(selected.position); toast('enfocado', 'cy'); } };
+
+const delObj = () => {
+  if (!selected) return;
+  const n = selected.name;
+  scene.remove(selected);
+  objects.splice(objects.indexOf(selected), 1);
+  select(null);
+  log(`borrado ${n}`, 'warn');
+};
+$('#t-del').onclick = delObj;
+$('#t-del-m').onclick = delObj;
+
+$$('[data-view]').forEach(b => b.onclick = () => {
+  const v = b.dataset.view;
+  if (v === 'top') camera.position.set(0.01, 14, 0.01);
+  else if (v === 'front') camera.position.set(0, 2.5, 14);
+  else camera.position.set(7, 5.5, 9);
+  controls.target.set(0, 1, 0);
+  log(`vista: ${v}`);
+});
+
+$('#fs-btn').onclick = () => {
+  if (!document.fullscreenElement) vp.requestFullscreen?.().catch(() => {});
+  else document.exitFullscreen?.();
+};
+
+/* selección por raycast */
+const ray = new THREE.Raycaster();
+const ptr = new THREE.Vector2();
+let down = null;
+canvas.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; });
+canvas.addEventListener('pointerup', e => {
+  if (!down) return;
+  const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+  down = null;
+  if (moved > 5 || tool !== 'select') return;
+  const r = canvas.getBoundingClientRect();
+  ptr.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+  ptr.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+  ray.setFromCamera(ptr, camera);
+  const hit = ray.intersectObjects(objects, false)[0];
+  if (hit) { select(hit.object); log(`seleccionado ${hit.object.name}`); }
+  else select(null);
+});
+
+/* outliner */
+const outliner = $('#outliner');
+function refreshOutliner() {
+  outliner.innerHTML = '';
+  $('#obj-count').textContent = objects.length;
+  $('#hud-objs').textContent = `${objects.length} objetos`;
+  objects.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'out-row' + (selected === o ? ' on' : '');
+    b.innerHTML = `<span class="w-1.5 h-1.5 rounded-sm shrink-0" style="background:#${o.material.color.getHexString()}"></span><span class="truncate">${o.name}</span>`;
+    b.onclick = () => select(o);
+    outliner.appendChild(b);
+  });
+}
+
+/* inspector */
+function syncInspector() {
+  if (!selected) return;
+  const v = { 'p.x': selected.position.x, 'p.y': selected.position.y, 'p.z': selected.position.z, 'r.x': selected.rotation.x, 'r.y': selected.rotation.y, 'r.z': selected.rotation.z, s: selected.scale.x };
+  for (const k in v) {
+    const i = $(`[data-t="${k}"]`), o = $(`[data-v="${k}"]`);
+    if (i) i.value = v[k];
+    if (o) o.textContent = (+v[k]).toFixed(2);
+  }
+  $('#wire').checked = selected.material.wireframe;
+  $('#emis').value = selected.material.emissiveIntensity;
+}
+$$('[data-t]').forEach(i => i.oninput = () => {
+  if (!selected) return;
+  const k = i.dataset.t, v = parseFloat(i.value), o = $(`[data-v="${k}"]`);
+  if (o) o.textContent = v.toFixed(2);
+  if (k[0] === 'p') selected.position[k[2]] = v;
+  if (k[0] === 'r') selected.rotation[k[2]] = v;
+  if (k === 's') selected.scale.setScalar(v);
+  selBox.setFromObject(selected);
+});
+$$('.swatch').forEach(s => s.onclick = () => {
+  $$('.swatch').forEach(x => x.classList.toggle('on', x === s));
+  if (!selected) return;
+  selected.material.color.set(s.dataset.col);
+  selected.material.emissive.set(s.dataset.col);
+  selBox.setFromObject(selected);
+  refreshOutliner();
+  log(`color → ${s.dataset.col}`);
+});
+$('#wire').onchange = e => { if (selected) selected.material.wireframe = e.target.checked; };
+$('#emis').oninput = e => { if (selected) selected.material.emissiveIntensity = parseFloat(e.target.value); };
+
+$$('.dock-tab').forEach(t => t.onclick = () => {
+  $$('.dock-tab').forEach(x => {
+    const on = x === t;
+    x.classList.toggle('text-vio-300', on);
+    x.classList.toggle('bg-ink-800', on);
+    x.classList.toggle('border-b', on);
+    x.classList.toggle('border-vio-500', on);
+    x.classList.toggle('text-zinc-600', !on);
+  });
+  const isOut = t.dataset.dock === 'outliner';
+  $('#dock-outliner').classList.toggle('hidden', !isOut);
+  $('#dock-outliner').classList.toggle('flex', isOut);
+  $('#dock-inspector').classList.toggle('hidden', isOut);
+  $('#dock-inspector').classList.toggle('flex', !isOut);
+});
+
+/* teclado */
+addEventListener('keydown', e => {
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const k = e.key.toLowerCase();
+  const tools = $$('[data-tool]');
+  if (k === 'v') tools[0].click();
+  if (k === 'g') tools[1].click();
+  if (k === 'r') tools[2].click();
+  if (k === 's') tools[3].click();
+  if (k === 'f' && selected) controls.target.copy(selected.position);
+  if (e.key === 'Delete' || e.key === 'Backspace') delObj();
+});
+
+/* resize */
+function resize() {
+  const w = vp.clientWidth, h = vp.clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  composer.setSize(w, h);
+  bloom.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(vp);
+resize();
+
+/* loop */
+let last = performance.now(), frames = 0, fpsT = performance.now();
+function tick(now) {
+  requestAnimationFrame(tick);
+  const dt = now - last;
+  last = now;
+  frames++;
+  if (now - fpsT > 500) {
+    $('#hud-fps').textContent = Math.round(frames * 1000 / (now - fpsT));
+    frames = 0; fpsT = now;
+  }
+  if (!reduce) objects.forEach((o, i) => { o.rotation.y += dt * 0.00022 * (i % 2 ? -1 : 1); });
+  if (selected) selBox.setFromObject(selected);
+  $('#hud-tris').textContent = `${renderer.info.render.triangles.toLocaleString()} tris`;
+  controls.update();
+  composer.render();
+}
+
+/* escena semilla */
+[['knot', '#a78bfa', -2.4, 1.3, -1.2], ['ico', '#22d3ee', 2.3, 1.1, -1.6], ['box', '#e879f9', 0.2, 0.7, 1.9], ['capsule', '#a3e635', -1.4, 0.9, 2.2]]
+  .forEach(([t, c, x, y, z]) => { addObject(t, c).position.set(x, y, z); });
+select(null);
+requestAnimationFrame(tick);
+log('viewport listo · 4 objetos en escena', 'ok');
+
+/* assets */
+const ASSETS = [
+  ['knot', 'nodo_neural', 'estructura de red generativa', '#a78bfa'],
+  ['ico', 'cristal_vr', 'forma cristalina inmersiva', '#22d3ee'],
+  ['torus', 'portal_ar', 'geometría de portal aumentado', '#e879f9'],
+  ['box', 'matriz_datos', 'volumen data-driven', '#a3e635'],
+  ['sphere', 'domo_360', 'cúpula de proyección', '#fbbf24'],
+  ['capsule', 'avatar_base', 'rig de avatar XR', '#f87171'],
+];
+$('#assets-grid').innerHTML = ASSETS.map(([g, n, d, c]) => `
+  <button class="panel card-hover text-left group" data-a="${g}" data-c="${c}">
+    <div class="h-[80px] grid place-items-center relative overflow-hidden" style="background:radial-gradient(circle at 50% 120%,${c}22,transparent 70%)">
+      <div class="w-8 h-8 border rotate-45 group-hover:rotate-0 transition-transform duration-500" style="border-color:${c};box-shadow:0 0 16px ${c}55"></div>
+    </div>
+    <div class="p-2 border-t border-line-soft">
+      <div class="mono text-[9.5px] text-zinc-300">${n}</div>
+      <div class="mono text-[8.5px] text-zinc-600">${d}</div>
+    </div>
+  </button>`).join('');
+
+$$('[data-a]').forEach(b => b.onclick = () => {
+  addObject(b.dataset.a, b.dataset.c);
+  toast(`+ ${b.dataset.a} → viewport`, 'vio');
+  scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+/* reveal + barras */
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  e.target.classList.add('in');
+  $$('.skill-fill', e.target).forEach((f, i) => setTimeout(() => f.style.width = f.dataset.w, i * 130));
+}), { threshold: 0.12 });
+$$('.reveal').forEach(el => io.observe(el));
+
+/* tabs activos */
+const secs = ['escena', 'atributos', 'assets', 'runtime', 'shaderlab', 'webxr', 'ia', 'teatro', 'contacto'];
+const tabs = $$('.tab');
+const tabIO = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  const i = secs.indexOf(e.target.id);
+  if (i < 0) return;
+  tabs.forEach(t => t.classList.remove('on'));
+  tabs[i + 1]?.classList.add('on');
+}), { rootMargin: '-45% 0px -50% 0px' });
+secs.forEach(id => { const el = document.getElementById(id); if (el) tabIO.observe(el); });
+
+/* ═════════ RUNTIME / JUEGO ═════════ */
+(() => {
+  const cv = $('#gcv');
+  const gs = new THREE.Scene();
+  gs.fog = new THREE.FogExp2(0x05060a, 0.05);
+  const cam = new THREE.PerspectiveCamera(65, 1, 0.1, 120);
+  const rd = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+  rd.setPixelRatio(Math.min(devicePixelRatio, 2));
+  rd.toneMapping = THREE.ACESFilmicToneMapping;
+
+  gs.add(new THREE.HemisphereLight(0x8899ff, 0x05060a, 0.7));
+  const dl = new THREE.DirectionalLight(0x22d3ee, 2); dl.position.set(4, 9, 4); gs.add(dl);
+  const pl = new THREE.PointLight(0xe879f9, 24, 30); pl.position.set(0, 5, 0); gs.add(pl);
+
+  const gh = new THREE.GridHelper(70, 35, 0x7c3aed, 0x141922);
+  gh.material.transparent = true; gh.material.opacity = 0.55; gs.add(gh);
+
+  const player = new THREE.Mesh(
+    new THREE.CapsuleGeometry(0.32, 0.66, 6, 14),
+    new THREE.MeshStandardMaterial({ color: 0xa3e635, emissive: 0xa3e635, emissiveIntensity: 0.5, metalness: 0.4, roughness: 0.3 })
+  );
+  player.position.set(0, 0.7, 0);
+  gs.add(player);
+
+  const halo = new THREE.Mesh(
+    new THREE.RingGeometry(0.5, 0.6, 32).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0xa3e635, transparent: true, opacity: 0.35 })
+  );
+  halo.position.y = -0.66;
+  player.add(halo);
+
+  const INFO = [
+    ['¿Qué es VR?', 'La realidad virtual sumerge al usuario en un entorno digital completo mediante HMD, generando presencia inmersiva.'],
+    ['VR educativa', 'Permite simulaciones de bajo riesgo en formación médica y técnica, mejorando la retención hasta un 75%.'],
+    ['WebXR API', 'Accede a dispositivos VR/AR desde el navegador, democratizando las experiencias inmersivas.'],
+    ['VR y empatía', 'Proyectos como Clouds Over Sidra demuestran que la VR genera empatía profunda.'],
+    ['Futuro de VR', 'Háptica avanzada, eye-tracking y neurointerfaces apuntan a experiencias multisensoriales.'],
+  ];
+
+  const nodes = [];
+  [[5, 5], [-5, 7], [8, -3], [-7, -5], [0, 10]].forEach(([x, z], i) => {
+    const n = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.5),
+      new THREE.MeshStandardMaterial({ color: 0xe879f9, emissive: 0xe879f9, emissiveIntensity: 0.8, metalness: 0.5, roughness: 0.2 })
+    );
+    n.position.set(x, 1.2, z);
+    n.userData = { taken: false, info: INFO[i] };
+    gs.add(n);
+    nodes.push(n);
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(0.85, 0.015, 8, 40).rotateX(-Math.PI / 2),
+      new THREE.MeshBasicMaterial({ color: 0xe879f9, transparent: true, opacity: 0.4 })
+    );
+    ring.position.y = -1.19;
+    n.add(ring);
+  });
+
+  for (let i = 0; i < 26; i++) {
+    const h = 1.5 + Math.random() * 5;
+    const p = new THREE.Mesh(
+      new THREE.BoxGeometry(0.28, h, 0.28),
+      new THREE.MeshStandardMaterial({ color: 0x121722, metalness: 0.8, roughness: 0.4 })
+    );
+    p.position.set((Math.random() - 0.5) * 34, h / 2, (Math.random() - 0.5) * 34);
+    gs.add(p);
+  }
+
+  cam.position.set(0, 5, 8);
+
+  let active = false, score = 0, got = 0, left = 45, timer = null, ang = 0;
+  const keys = {};
+  addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; });
+  addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+  const hud = () => { $('#g-score').textContent = score; $('#g-data').textContent = `${got}/5`; $('#g-time').textContent = left; };
+
+  function start() {
+    active = true; score = 0; got = 0; left = 45; ang = 0;
+    player.position.set(0, 0.7, 0);
+    nodes.forEach(n => { n.userData.taken = false; n.visible = true; });
+    hud();
+    $('#g-overlay').classList.add('hidden');
+    clearInterval(timer);
+    timer = setInterval(() => { left--; hud(); if (left <= 0) end(); }, 1000);
+    log('runtime iniciado', 'ok');
+  }
+
+  function end() {
+    active = false;
+    clearInterval(timer);
+    const o = $('#g-overlay');
+    o.classList.remove('hidden');
+    o.querySelector('h3').textContent = got >= 5 ? 'MISIÓN COMPLETA' : 'FIN DEL TIEMPO';
+    o.querySelector('p').textContent = `score ${score} · nodos ${got}/5`;
+    o.querySelector('button').textContent = 'REINTENTAR';
+    log(`runtime detenido · score ${score}`, got >= 5 ? 'ok' : 'warn');
+  }
+
+  $('#g-start').onclick = start;
+  $('#g-play').onclick = start;
+  $('#g-reset').onclick = () => {
+    active = false;
+    clearInterval(timer);
+    score = 0; got = 0; left = 45;
+    player.position.set(0, 0.7, 0);
+    nodes.forEach(n => { n.userData.taken = false; n.visible = true; });
+    hud();
+    const o = $('#g-overlay');
+    o.classList.remove('hidden');
+    o.querySelector('h3').textContent = 'XR MISSION';
+    o.querySelector('button').textContent = 'JUGAR';
+  };
+
+  let drag = false, sx = 0;
+  cv.addEventListener('pointerdown', e => { drag = true; sx = e.clientX; });
+  cv.addEventListener('pointerup', () => { drag = false; });
+  cv.addEventListener('pointermove', e => { if (!drag || !active) return; ang += (e.clientX - sx) * 0.006; sx = e.clientX; });
+
+  function rsz() {
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (!w || !h) return;
+    rd.setSize(w, h, false);
+    cam.aspect = w / h;
+    cam.updateProjectionMatrix();
+  }
+  new ResizeObserver(rsz).observe(cv);
+  rsz();
+
+  const fwd = new THREE.Vector3(), rgt = new THREE.Vector3();
+  (function loop() {
+    requestAnimationFrame(loop);
+    const t = performance.now() * 0.001;
+    if (active) {
+      fwd.set(-Math.sin(ang), 0, -Math.cos(ang));
+      rgt.set(-Math.cos(ang), 0, Math.sin(ang));
+      const sp = 0.085;
+      if (keys['w'] || keys['arrowup']) player.position.addScaledVector(fwd, sp);
+      if (keys['s'] || keys['arrowdown']) player.position.addScaledVector(fwd, -sp);
+      if (keys['a'] || keys['arrowleft']) player.position.addScaledVector(rgt, -sp);
+      if (keys['d'] || keys['arrowright']) player.position.addScaledVector(rgt, sp);
+      player.position.x = THREE.MathUtils.clamp(player.position.x, -30, 30);
+      player.position.z = THREE.MathUtils.clamp(player.position.z, -30, 30);
+
+      nodes.forEach(n => {
+        if (n.userData.taken) return;
+        if (player.position.distanceTo(n.position) < 1.5) {
+          n.userData.taken = true;
+          n.visible = false;
+          score += 100; got++; hud();
+          $('#g-info-t').textContent = n.userData.info[0];
+          $('#g-info-x').textContent = n.userData.info[1];
+          $('#g-info').classList.remove('hidden');
+          log(`nodo capturado: ${n.userData.info[0]}`, 'ok');
+          if (got >= 5) setTimeout(end, 450);
+        }
+      });
+    }
+    nodes.forEach((n, i) => { if (!n.userData.taken) { n.rotation.y += 0.02; n.position.y = 1.2 + Math.sin(t + i) * 0.28; } });
+    player.rotation.y += 0.012;
+    cam.position.lerp(new THREE.Vector3(player.position.x + Math.sin(ang) * 8, player.position.y + 4.2, player.position.z + Math.cos(ang) * 8), 0.06);
+    cam.lookAt(player.position.x, player.position.y, player.position.z);
+    rd.render(gs, cam);
+  })();
+})();
+
+/* ═════════ SHADER LAB ═════════ */
+function setup2D(sel) {
+  const c = $(sel);
+  const ctx = c.getContext('2d');
+  const dpr = Math.min(devicePixelRatio, 2);
+  const w = c.clientWidth, h = c.clientHeight;
+  c.width = w * dpr;
+  c.height = h * dpr;
+  ctx.scale(dpr, dpr);
+  return { c, ctx, w, h };
+}
+let A1 = null, A2 = null, density = 140, gravity = 0.03;
+
+function initA1() {
+  A1 = setup2D('#ga1');
+  A1.ps = Array.from({ length: density }, () => ({
+    x: Math.random() * A1.w, y: Math.random() * A1.h,
+    vx: (Math.random() - 0.5) * 1.4, vy: (Math.random() - 0.5) * 1.4,
+    s: Math.random() * 2.2 + 0.8, hue: 280 + Math.random() * 60,
+  }));
+  A1.m = { x: -999, y: -999 };
+  A1.c.addEventListener('pointermove', e => {
+    const r = A1.c.getBoundingClientRect();
+    A1.m.x = e.clientX - r.left;
+    A1.m.y = e.clientY - r.top;
+  });
+  A1.c.addEventListener('pointerleave', () => { A1.m.x = -999; A1.m.y = -999; });
+}
+
+function initA2() {
+  A2 = setup2D('#ga2');
+  A2.ps = Array.from({ length: 120 }, () => ({
+    x: A2.w / 2 + (Math.random() - 0.5) * 90, y: A2.h / 2,
+    vx: (Math.random() - 0.5) * 2, vy: -Math.random() * 2,
+    life: 70 + Math.random() * 70, hue: 30 + Math.random() * 40,
+  }));
+  A2.c.addEventListener('pointerdown', e => {
+    const r = A2.c.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    for (let i = 0; i < 26; i++) {
+      const a = Math.random() * Math.PI * 2, sp = Math.random() * 4.5 + 1;
+      A2.ps.push({ x: mx, y: my, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 70, hue: Math.random() * 50 + 20 });
+    }
+  });
+}
+
+function frameA1() {
+  requestAnimationFrame(frameA1);
+  if (!A1) return;
+  A1.ctx.fillStyle = 'rgba(5,6,10,.11)';
+  A1.ctx.fillRect(0, 0, A1.w, A1.h);
+  A1.ps.forEach((p, i) => {
+    const dx = A1.m.x - p.x, dy = A1.m.y - p.y, d = Math.hypot(dx, dy);
+    if (d < 140) { p.vx += dx * 0.00035; p.vy += dy * 0.00035; }
+    p.x += p.vx; p.y += p.vy;
+    p.vx *= 0.992; p.vy *= 0.992;
+    if (p.x < 0) p.x = A1.w;
+    if (p.x > A1.w) p.x = 0;
+    if (p.y < 0) p.y = A1.h;
+    if (p.y > A1.h) p.y = 0;
+    A1.ctx.beginPath();
+    A1.ctx.arc(p.x, p.y, p.s, 0, 7);
+    A1.ctx.fillStyle = `hsl(${p.hue},95%,68%)`;
+    A1.ctx.fill();
+    for (let j = i + 1; j < A1.ps.length; j++) {
+      const q = A1.ps[j], dd = Math.hypot(p.x - q.x, p.y - q.y);
+      if (dd < 76) {
+        A1.ctx.beginPath();
+        A1.ctx.moveTo(p.x, p.y);
+        A1.ctx.lineTo(q.x, q.y);
+        A1.ctx.strokeStyle = `rgba(167,139,250,${(1 - dd / 76) * 0.5})`;
+        A1.ctx.lineWidth = 0.5;
+        A1.ctx.stroke();
+      }
+    }
+  });
+}
+
+function frameA2() {
+  requestAnimationFrame(frameA2);
+  if (!A2) return;
+  A2.ctx.fillStyle = 'rgba(5,6,10,.07)';
+  A2.ctx.fillRect(0, 0, A2.w, A2.h);
+  A2.ps = A2.ps.filter(p => p.life > 0);
+  A2.ps.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += gravity; p.vx *= 0.99; p.life--;
+    const a = p.life / 140;
+    A2.ctx.beginPath();
+    A2.ctx.arc(p.x, p.y, Math.max(0.4, a * 3.4), 0, 7);
+    A2.ctx.fillStyle = `hsla(${p.hue},100%,62%,${a})`;
+    A2.ctx.fill();
+  });
+  while (A2.ps.length < 90) {
+    A2.ps.push({ x: A2.w / 2 + (Math.random() - 0.5) * 90, y: A2.h / 2, vx: (Math.random() - 0.5) * 2, vy: -Math.random() * 2, life: 70 + Math.random() * 70, hue: Math.random() * 50 + 20 });
+  }
+}
+
+initA1(); initA2(); frameA1(); frameA2();
+$('#ga1-d').oninput = e => { density = +e.target.value; $('#ga1-v').textContent = density; initA1(); };
+$('#ga2-g').oninput = e => { gravity = +e.target.value; $('#ga2-v').textContent = gravity.toFixed(3); };
+$$('[data-regen]').forEach(b => b.onclick = () => {
+  if (b.dataset.regen === '1') { A1.ctx.clearRect(0, 0, A1.w, A1.h); initA1(); }
+  else { A2.ctx.clearRect(0, 0, A2.w, A2.h); A2.ps = []; initA2(); }
+  log(`shader regenerado #${b.dataset.regen}`, 'vio');
+});
+
+/* ═════════ UPLOAD ═════════ */
+(() => {
+  const drop = $('#drop'), input = $('#file'), list = $('#files'), pv = $('#prev-btn'), dp = $('#dep-btn');
+  let files = [];
+  const state = () => { pv.disabled = dp.disabled = files.length === 0; };
+
+  drop.onclick = () => input.click();
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add('border-cy-400'); };
+  drop.ondragleave = () => drop.classList.remove('border-cy-400');
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove('border-cy-400'); add(e.dataTransfer.files); };
+  input.onchange = () => add(input.files);
+
+  function add(fs) {
+    [...fs].forEach(f => {
+      files.push(f);
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-1.5 mono text-[9px] text-zinc-400 border border-line rounded px-1.5 py-1';
+      row.innerHTML = `<span class="text-cy-300 truncate flex-1">${f.name}</span><span class="text-zinc-600">${(f.size / 1024).toFixed(0)}k</span><button class="text-zinc-600 hover:text-red-400 px-1">×</button>`;
+      row.querySelector('button').onclick = () => { files = files.filter(x => x !== f); row.remove(); state(); };
+      list.appendChild(row);
+      log(`asset añadido: ${f.name}`, 'cy');
+    });
+    state();
+  }
+  pv.onclick = () => { toast('preview XR montado', 'cy'); log('preview → escena webxr', 'ok'); };
+  dp.onclick = () => { toast('desplegando…', 'lim'); log('deploy → bundle a-frame', 'ok'); };
+})();
+
+/* ═════════ FORM ═════════ */
+$('#cform').addEventListener('submit', e => {
+  e.preventDefault();
+  $('#cform').classList.add('hidden');
+  $('#ok').classList.remove('hidden');
+  log('mensaje enviado', 'ok');
+  toast('build enviado', 'lim');
+  setTimeout(() => {
+    $('#cform').classList.remove('hidden');
+    $('#ok').classList.add('hidden');
+    $('#cform').reset();
+  }, 4200);
+});
+
+/* menús (placeholder informativo) */
+$$('[data-menu]').forEach(b => b.onclick = () => log(`menú «${b.dataset.menu}» · atajos: V/G/R/S · F enfocar · Supr borrar`));
+</script>
+</body>
+</html>
+
+
+
+<!--<!DOCTYPE html>
 <html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
@@ -199,7 +1561,7 @@
 </head>
 <body class="bg-dark-900 text-white font-space overflow-x-hidden">
 
-    <!-- Preloader -->
+    <!-- Preloader ->
     <div id="preloader">
         <div class="relative flex items-center justify-center">
             <div class="loader-ring"></div>
@@ -210,10 +1572,10 @@
         </div>
     </div>
 
-    <!-- Custom Cursor -->
+    <!-- Custom Cursor ->
     <div class="particle-cursor" id="cursor"></div>
 
-    <!-- Navigation -->
+    <!-- Navigation ->
     <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 glass transition-all duration-500">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
             <div class="flex items-center justify-between h-16">
@@ -251,7 +1613,7 @@
         </div>
     </nav>
 
-    <!-- HERO -->
+    <!-- HERO ->
     <section id="hero" class="relative min-h-screen flex items-center justify-center overflow-hidden">
         <canvas id="hero-canvas"></canvas>
         <div class="absolute inset-0 pointer-events-none z-10">
@@ -294,7 +1656,7 @@
         </div>
     </section>
 
-    <!-- ABOUT -->
+    <!-- ABOUT ->
     <section id="about" class="relative py-24 overflow-hidden section-reveal parallax-section">
         <div class="absolute inset-0 bg-gradient-to-b from-dark-900 via-dark-800 to-dark-900"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
@@ -329,7 +1691,7 @@
         </div>
     </section>
 
-    <!-- SKILLS -->
+    <!-- SKILLS ->
     <section id="skills" class="relative py-24 overflow-hidden section-reveal parallax-section">
         <div class="absolute inset-0 bg-dark-900"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
@@ -344,7 +1706,7 @@
         </div>
     </section>
 
-    <!-- 3D GALLERY -->
+    <!-- 3D GALLERY ->
     <section id="gallery3d" class="relative py-24 overflow-hidden section-reveal parallax-section">
         <div class="absolute inset-0 bg-gradient-to-b from-dark-900 via-dark-700 to-dark-900"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
@@ -378,7 +1740,7 @@
         </div>
     </section>
 
-    <!-- 3D XR GAME -->
+    <!-- 3D XR GAME ->
     <section id="game" class="relative py-24 overflow-hidden section-reveal parallax-section">
         <div class="absolute inset-0 bg-dark-900"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
@@ -450,7 +1812,7 @@
         </div>
     </section>
 
-    <!-- GENERATIVE ART -->
+    <!-- GENERATIVE ART ->
     <section id="genart" class="relative py-24 overflow-hidden section-reveal parallax-section">
         <div class="absolute inset-0 bg-gradient-to-b from-dark-900 via-dark-800 to-dark-900"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
@@ -486,7 +1848,7 @@
         </div>
     </section>
 
-    <!-- WEBXR & A-FRAME -->
+    <!-- WEBXR & A-FRAME ->
     <section id="webxr" class="relative py-24 overflow-hidden section-reveal parallax-section">
         <div class="absolute inset-0 bg-dark-900"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
@@ -546,7 +1908,7 @@
         </div>
     </section>
 
-    <!-- AI ETHICS -->
+    <!-- AI ETHICS ->
     <section id="ai" class="relative py-24 overflow-hidden section-reveal parallax-section">
         <div class="absolute inset-0 bg-gradient-to-b from-dark-900 via-dark-700 to-dark-900"></div>
         <canvas id="ai-particles" class="absolute inset-0 w-full h-full opacity-30"></canvas>
@@ -605,7 +1967,7 @@
         </div>
     </section>
 
-    <!-- THEATER & MULTIMEDIA -->
+    <!-- THEATER & MULTIMEDIA ->
     <section id="theater" class="relative py-24 overflow-hidden section-reveal parallax-section">
         <div class="absolute inset-0 bg-dark-900"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
@@ -643,7 +2005,7 @@
         </div>
     </section>
 
-    <!-- CONTACT -->
+    <!-- CONTACT ->
     <section id="contact" class="relative py-24 overflow-hidden section-reveal parallax-section">
         <div class="absolute inset-0 bg-gradient-to-b from-dark-900 via-dark-800 to-dark-900"></div>
         <div class="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
@@ -695,7 +2057,7 @@
         </div>
     </section>
 
-    <!-- FOOTER -->
+    <!-- FOOTER ->
     <footer class="relative py-12 border-t border-neon-cyan/10">
         <div class="absolute inset-0 bg-dark-900"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
@@ -1696,11 +3058,11 @@
     </script>
 <script src="https://aeideepsite.hf.co/deepsite-badge.js"></script>
 </body>
-</html>
+</html>->
 
 
 
-<!--  body {
+  <!--body {
 	padding: 2rem;
 	font-family: -apple-system, BlinkMacSystemFont, "Arial", sans-serif;
 }
